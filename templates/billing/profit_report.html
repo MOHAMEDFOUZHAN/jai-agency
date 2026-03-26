@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Jai Agency - Profit Analysis{% endblock %}
+
+{% block content %}
+<div class="dashboard-container fade-in report-shell">
+    <!-- Header Section -->
+    <div class="report-nexus-header no-print">
+        <div class="header-main">
+            <h1>Profit Analysis</h1>
+            <p>Intelligence-driven margin tracking</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-intelligence primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="/billing/navigation" class="btn-intelligence secondary">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="neural-grid no-print" style="margin-bottom: 2rem;">
+        <div class="neural-card summary-card">
+            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;"><i class="fas fa-shopping-cart" style="color: var(--neon-blue);"></i></div>
+            <span class="card-label">TOTAL REVENUE</span>
+            <div class="card-value" id="valRevenue">₹0.00</div>
+            <span class="card-sub" style="color: #94a3b8;">Gross income (after discounts)</span>
+        </div>
+        <div class="neural-card summary-card">
+            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;"><i class="fas fa-truck-loading" style="color: var(--neon-purple);"></i></div>
+            <span class="card-label">TOTAL COST</span>
+            <div class="card-value" id="valCost">₹0.00</div>
+            <span class="card-sub" style="color: #94a3b8;">Total purchase value of sold units</span>
+        </div>
+        <div class="neural-card summary-card">
+            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;"><i class="fas fa-chart-line" style="color: var(--neon-emerald);"></i></div>
+            <span class="card-label">NET PROFIT</span>
+            <div class="card-value" id="valProfit" style="color: #10b981;">₹0.00</div>
+            <span class="card-sub" style="color: #94a3b8;" id="valMargin">Calculated margin: 0%</span>
+        </div>
+        <div class="neural-card summary-card" id="cardDynamic">
+            <!-- This card switches between PERIOD and QTY depending on filter -->
+            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;" id="dynIcon"><i class="fas fa-calendar-alt" style="color: var(--neon-cyan);"></i></div>
+            <span class="card-label" id="dynLabel">PERIOD</span>
+            <div class="card-value" id="dynValue" style="font-size: 1.5rem; margin-top: 1.5rem;">{{ date_from }} - {{ date_to }}</div>
+            <span class="card-sub" style="color: #94a3b8;" id="dynSub">Reporting window</span>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-nexus glass-panel no-print">
+        <div class="filter-group">
+            <label>FROM DATE</label>
+            <input type="date" id="fromDate" value="{{ from_date_raw }}">
+        </div>
+        <div class="filter-group">
+            <label>TO DATE</label>
+            <input type="date" id="toDate" value="{{ to_date_raw }}">
+        </div>
+        
+        <div class="filter-group" style="flex: 1.5;">
+            <label>SELECT PRODUCT</label>
+            <select id="productFilter" class="modern-select" onchange="applyProductFilter()">
+                <option value="ALL">All Products (Global View)</option>
+                {% for p in summary %}
+                <option value="{{ p.name }}">{{ p.name }} ({{ p.qty }} units)</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group action-group">
+            <button class="btn-cyber" onclick="applyFilters()">
+                <i class="fas fa-sync-alt"></i> Update Report
+            </button>
+        </div>
+    </div>
+        <div class="filter-group action-group">
+            <button class="btn-cyber" onclick="applyFilters()">
+                <i class="fas fa-sync-alt"></i> Update Report
+            </button>
+            <button class="btn-intelligence secondary" onclick="window.location.href='/billing/reports/profit'" title="Reset">
+                <i class="fas fa-history"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="tab-scaffold no-print" style="margin-bottom: 2rem; display: flex; gap: 1rem;">
+        <button class="tab-btn active" onclick="switchTab('product-wise')">Product Performance</button>
+        <button class="tab-btn" onclick="switchTab('detailed-log')" id="tabDetailedLog">General Profit Log</button>
+    </div>
+
+    <!-- Product Performance Table -->
+    <div id="product-wise" class="table-vessel glass-panel no-print report-section active" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 24px; padding: 1.5rem;">
+        <h3 style="margin-bottom: 1.5rem; letter-spacing: 1px; color: var(--neon-blue);">PRODUCT ANALYSIS</h3>
+        <table class="nexus-table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <thead>
+                <tr style="text-align: left;">
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">PRODUCT NAME</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: center;">UNITS SOLD</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">REVENUE</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">PURCHASE COST</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">NET PROFIT</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: center;">MARGIN %</th>
+                </tr>
+            </thead>
+            <tbody id="summaryTableBody">
+                <!-- Dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Detailed Profit Log -->
+    <div id="detailed-log" class="table-vessel glass-panel no-print report-section" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 24px; padding: 1.5rem; display: none;">
+        <h3 id="logTitle" style="margin-bottom: 1.5rem; letter-spacing: 1px; color: var(--neon-purple);">TRANSACTION MARGIN LOG</h3>
+        <table class="nexus-table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <thead id="logTableHeader">
+                <!-- Dynamically Populated Header -->
+            </thead>
+            <tbody id="logTableBody">
+                <!-- Dynamically populated -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Print Layout (Consolidated Style) -->
+    <div class="print-layout print-only" style="display: none;">
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 15px;">
+            <h1 style="margin: 0; font-size: 22pt;">Profit Analysis Report</h1>
+            <h2 style="margin: 5px 0; font-size: 18pt; font-weight: 900;">JAI AGENCY</h2>
+            <p style="margin: 5px 0; font-weight: bold; font-size: 12pt;">Period: {{ date_from }} to {{ date_to }}</p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+                <label style="display: block; font-size: 10pt; color: #666;">Total Revenue</label>
+                <div style="font-size: 16pt; font-weight: 800;">₹{{ "%.2f"|format(total_revenue) }}</div>
+            </div>
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
+                <label style="display: block; font-size: 10pt; color: #666;">Total Purch. Cost</label>
+                <div style="font-size: 16pt; font-weight: 800;">₹{{ "%.2f"|format(total_cost) }}</div>
+            </div>
+            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; background: #f0fdf4;">
+                <label style="display: block; font-size: 10pt; color: #666;">Net Profit</label>
+                <div style="font-size: 16pt; font-weight: 800; color: #166534;">₹{{ "%.2f"|format(total_profit) }}</div>
+            </div>
+        </div>
+
+        <h3 style="margin: 20px 0 10px; font-size: 14pt;">PRODUCT PERFORMANCE</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: left;">Product Name</th>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">Qty Sold</th>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: right;">Revenue</th>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: right;">Margin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in summary %}
+                <tr>
+                    <td style="border: 1px solid #000; padding: 6px;">{{ p.name }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ p.qty }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">{{ "%.2f"|format(p.revenue) }}</td>
+                    <td style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ "%.2f"|format(p.profit) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr style="background: #eee;">
+                    <td colspan="3" style="border: 1px solid #000; padding: 10px; font-weight: bold;">Grand Total Profit</td>
+                    <td style="border: 1px solid #000; padding: 10px; text-align: right; font-weight: bold;">{{ "%.2f"|format(total_profit) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+    .report-shell { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+    .report-nexus-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; }
+    .report-nexus-header h1 { font-size: 3rem; margin-bottom: 0.2rem; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
+    .report-nexus-header p { color: #94a3b8; font-weight: 600; font-size: 1.1rem; }
+    
+    .filter-nexus { display: flex; gap: 1.5rem; padding: 1.5rem 2rem; border-radius: 20px; align-items: flex-end; margin-bottom: 2rem; }
+    .filter-group { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+    .modern-select {
+        background: rgba(255,255,255,0.05); 
+        border: 1px solid rgba(255,255,255,0.1); 
+        border-radius: 12px; 
+        padding: 10px 15px; 
+        color: #fff; 
+        font-weight: 700;
+        width: 100%;
+        outline: none;
+        cursor: pointer;
+        appearance: none;
+    }
+    .modern-select option {
+        background: #0d1122;
+        color: white;
+    }
+
+    .select-wrapper {
+        position: relative;
+        flex: 1;
+    }
+
+    .summary-card { min-height: 180px; text-align: left; align-items: flex-start; padding: 2rem; transition: 0.3s; }
+    .summary-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.05); }
+
+    .td-styled {
+        padding: 1.25rem 1.5rem; 
+        background: rgba(255, 255, 255, 0.02); 
+        border-top: 1px solid rgba(255, 255, 255, 0.03); 
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+    .td-left { border-left: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px 0 0 12px; }
+    .td-right { border-right: 1px solid rgba(255, 255, 255, 0.03); border-radius: 0 12px 12px 0; }
+
+    @media print {
+        @page { size: A4 portrait; margin: 10mm; }
+        body { background: white !important; color: black !important; padding: 0 !important; }
+        .no-print, .navbar, .site-footer { display: none !important; }
+        .print-only { display: block !important; }
+        .dashboard-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    }
+</style>
+
+<script>
+    const serverData = {
+        profitData: {{ data | tojson }},
+        summaryData: {{ summary | tojson }},
+        itemLogData: {{ item_log | tojson }},
+        globalTotals: {
+            revenue: {{ total_revenue }},
+            cost: {{ total_cost }},
+            profit: {{ total_profit }}
+        },
+        dateFrom: "{{ date_from }}",
+        dateTo: "{{ date_to }}"
+    };
+
+    function formatMoney(num) {
+        return '₹' + parseFloat(num).toFixed(2);
+    }
+
+    function calculateMargin(profit, revenue) {
+        if (revenue <= 0) return 0;
+        return ((profit / revenue) * 100).toFixed(1);
+    }
+
+    function applyProductFilter() {
+        const filterVal = document.getElementById('productFilter').value;
+        const sumBody = document.getElementById('summaryTableBody');
+        const logBody = document.getElementById('logTableBody');
+        const logHead = document.getElementById('logTableHeader');
+        let rev = 0, cost = 0, prof = 0;
+
+        if (filterVal === 'ALL') {
+            rev = serverData.globalTotals.revenue;
+            cost = serverData.globalTotals.cost;
+            prof = serverData.globalTotals.profit;
+            
+            // Render All Summary
+            document.getElementById('dynIcon').innerHTML = '<i class="fas fa-calendar-alt" style="color: var(--neon-cyan);"></i>';
+            document.getElementById('dynLabel').innerText = 'PERIOD';
+            document.getElementById('dynValue').innerText = `${serverData.dateFrom} - ${serverData.dateTo}`;
+            document.getElementById('dynValue').style.fontSize = '1.5rem';
+            document.getElementById('dynSub').innerText = 'Reporting window';
+            
+            document.getElementById('logTitle').innerHTML = 'TRANSACTION MARGIN LOG (GLOBAL)';
+            document.getElementById('tabDetailedLog').innerText = 'General Profit Log';
+
+            renderSummaryTable(serverData.summaryData);
+            renderLogTableHeader(false);
+            renderLogTableGeneral(serverData.profitData);
+
+        } else {
+            // Filter specific product
+            const pStats = serverData.summaryData.find(p => p.name === filterVal);
+            if (pStats) {
+                rev = pStats.revenue;
+                cost = pStats.cost;
+                prof = pStats.profit;
+            }
+            
+            document.getElementById('dynIcon').innerHTML = '<i class="fas fa-cubes" style="color: var(--neon-cyan);"></i>';
+            document.getElementById('dynLabel').innerText = 'UNITS SOLD';
+            document.getElementById('dynValue').innerText = pStats ? pStats.qty : 0;
+            document.getElementById('dynValue').style.fontSize = '2.5rem';
+            document.getElementById('dynSub').innerText = 'For selected period';
+
+            document.getElementById('logTitle').innerHTML = `ITEM LOG: ${filterVal}`;
+            document.getElementById('tabDetailedLog').innerText = 'Product Profit Log';
+
+            renderSummaryTable(pStats ? [pStats] : []);
+            renderLogTableHeader(true);
+            const filteredLogs = serverData.itemLogData.filter(i => i.product_name === filterVal);
+            renderLogTableSpecific(filteredLogs);
+        }
+
+        document.getElementById('valRevenue').innerText = formatMoney(rev);
+        document.getElementById('valCost').innerText = formatMoney(cost);
+        document.getElementById('valProfit').innerText = formatMoney(prof);
+        document.getElementById('valMargin').innerText = `Calculated margin: ${calculateMargin(prof, rev)}%`;
+    }
+
+    function renderSummaryTable(dataArr) {
+        document.getElementById('summaryTableBody').innerHTML = dataArr.map(p => `
+            <tr style="transition:all 0.3s">
+                <td class="td-styled td-left" style="font-weight: 800;">${p.name}</td>
+                <td class="td-styled" style="text-align: center; color: var(--neon-cyan); font-weight: 700;">${p.qty}</td>
+                <td class="td-styled" style="text-align: right;">${formatMoney(p.revenue)}</td>
+                <td class="td-styled" style="text-align: right; color: var(--text-tertiary);">${formatMoney(p.cost)}</td>
+                <td class="td-styled" style="text-align: right; font-weight: 900; color: #10b981;">${formatMoney(p.profit)}</td>
+                <td class="td-styled td-right" style="text-align: center;">
+                    <span style="font-size: 0.7rem; font-weight: 950; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px;">${calculateMargin(p.profit, p.revenue)}%</span>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderLogTableHeader(isSpecific) {
+        if (!isSpecific) {
+            document.getElementById('logTableHeader').innerHTML = `
+                <tr style="text-align: left;">
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">SALE DATE</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">BILL #</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">CUSTOMER</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">BILL REVENUE</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">PURCHASE COST</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">NET PROFIT</th>
+                </tr>
+            `;
+        } else {
+            document.getElementById('logTableHeader').innerHTML = `
+                <tr style="text-align: left;">
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">SALE DATE</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">BILL #</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: center;">UNITS</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">ITEM REVENUE</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">PURCHASE COST</th>
+                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">NET PROFIT</th>
+                </tr>
+            `;
+        }
+    }
+
+    function renderLogTableGeneral(dataArr) {
+        document.getElementById('logTableBody').innerHTML = dataArr.map(item => `
+            <tr>
+                <td class="td-styled td-left">${item.date}</td>
+                <td class="td-styled" style="font-weight: 800; color: var(--neon-blue);">#${item.id}</td>
+                <td class="td-styled">${item.customer}</td>
+                <td class="td-styled" style="text-align: right;">${formatMoney(item.revenue)}</td>
+                <td class="td-styled" style="text-align: right; color: var(--text-tertiary);">${formatMoney(item.cost)}</td>
+                <td class="td-styled td-right" style="text-align: right; font-weight: 900; color: #10b981;">${formatMoney(item.profit)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderLogTableSpecific(dataArr) {
+        document.getElementById('logTableBody').innerHTML = dataArr.map(item => `
+            <tr>
+                <td class="td-styled td-left">${item.date}</td>
+                <td class="td-styled" style="font-weight: 800; color: var(--neon-blue);">#${item.id}</td>
+                <td class="td-styled" style="text-align: center; font-weight: 800; color: var(--neon-cyan);">${item.qty}</td>
+                <td class="td-styled" style="text-align: right;">${formatMoney(item.revenue)}</td>
+                <td class="td-styled" style="text-align: right; color: var(--text-tertiary);">${formatMoney(item.cost)}</td>
+                <td class="td-styled td-right" style="text-align: right; font-weight: 900; color: #10b981;">${formatMoney(item.profit)}</td>
+            </tr>
+        `).join('');
+    }
+
+    function applyFilters() {
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        window.location.href = `/billing/reports/profit?from=${from}&to=${to}`;
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.report-section').forEach(s => s.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(tabId).style.display = 'block';
+        event.currentTarget.classList.add('active');
+    }
+
+    // Initialize View
+    document.addEventListener('DOMContentLoaded', () => {
+        applyProductFilter(); 
+    });
+</script>
+{% endblock %}

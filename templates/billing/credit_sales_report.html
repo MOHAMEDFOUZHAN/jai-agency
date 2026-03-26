@@ -1,29 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - {{ title }}{% endblock %}
+{% block title %}Jai Agency - {{ title }}{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-hand-holding-usd"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/reports" class="active">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
-            V3.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
-    <div class="section-header">
+<div class="dashboard-container fade-in report-shell thermal-report">
+    <div class="section-header no-print">
         <div>
             <h1>{{ title }}</h1>
             <p style="color: var(--text-muted);">Outstanding credit sales and balances</p>
@@ -32,17 +13,26 @@
             <button class="btn btn-primary" onclick="window.print()">
                 <i class="fas fa-print"></i> Print
             </button>
+            <button class="btn btn-outline" onclick="openAddCreditModal()">
+                <i class="fas fa-plus-circle"></i> Add Legacy Credit
+            </button>
             <a href="/billing/navigation" class="btn btn-outline">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
         </div>
     </div>
 
+    <div class="print-report-header print-only">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">{{ title|upper }}</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
                 <tr style="background: rgba(0,0,0,0.02);">
-                    <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">BILL NO</th>
+                    <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">BILL</th>
                     <th class="print-date" style="padding: 1.25rem; font-size: 0.75rem;">DATE</th>
                     <th class="print-time" style="padding: 1.25rem; font-size: 0.75rem;">TIME</th>
                     <th class="print-desc" style="padding: 1.25rem; font-size: 0.75rem;">CUSTOMER NAME</th>
@@ -50,10 +40,12 @@
                     <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">PAID</th>
                     <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">BALANCE</th>
                     <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem; text-align: center;">STATUS</th>
+                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem; text-align: center;">ACTIONS
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                {% for item in data|reverse %}
+                {% for item in data %}
                 <tr>
                     <td class="print-bill-id">
                         <code
@@ -65,6 +57,9 @@
                     <td class="print-desc" style="color: var(--text-main);">
                         {% if item.customer_name %}
                         <div style="font-weight: 600;">{{ item.customer_name }}</div>
+                        {% if item.items_count == 0 %}
+                        <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--primary); font-size: 0.65rem; padding: 2px 6px;">OPENING</span>
+                        {% endif %}
                         <div style="font-size: 0.75rem; color: var(--text-muted);" class="print-hide">Mobile: {{
                             item.customer_mobile }}</div>
                         {% else %}
@@ -83,6 +78,18 @@
                     <td class="print-hide" style="text-align: center;">
                         <span class="badge"
                             style="background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.2);">PENDING</span>
+                    </td>
+                    <td class="print-hide" style="text-align: center; white-space: nowrap;">
+                        <button class="btn"
+                            style="padding: 6px 14px; font-size: 0.75rem; font-weight: 700; background: var(--navy-900); color: white; border-radius: 8px; border: none; cursor: pointer; margin-right: 8px; display: inline-flex; align-items: center; gap: 6px; box-shadow: var(--shadow-sm);"
+                            onclick="payCredit('{{ item.id }}', '{{ item.balance }}')">
+                            <i class="fas fa-hand-holding-dollar"></i> PAY NOW
+                        </button>
+                        <button class="btn"
+                            style="padding: 6px 14px; font-size: 0.75rem; font-weight: 700; background: transparent; color: var(--success); border-radius: 8px; border: 2px solid var(--success); cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
+                            onclick="finishCredit('{{ item.id }}')">
+                            <i class="fas fa-check-double"></i> CLEAR BILL
+                        </button>
                     </td>
                 </tr>
                 {% else %}
@@ -121,117 +128,334 @@
                         ₹{{ "%.2f"|format(active_sales | sum(attribute='balance')) }}
                     </td>
                     <td class="print-hide"></td>
+                    <td class="print-hide"></td>
                 </tr>
             </tfoot>
             {% endif %}
         </table>
     </div>
 </div>
+</div>
+
+<!-- Modal logic here... -->
+<!-- Record Partial Payment Modal (Existing) -->
+<div id="paymentModalOverlay" class="modal-overlay" style="display: none;">
+    <div class="modal-content fade-in-up" style="max-width: 400px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden;">
+        <div class="modal-header" style="background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(30, 41, 59, 0.1)); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(99, 102, 241, 0.2); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #818cf8;">
+                    <i class="fas fa-hand-holding-dollar" style="font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: white;">Record Payment</h2>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">Update bill settlement</p>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeModal()" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 50%; border: none; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                <i class="fas fa-times" style="font-size: 0.9rem;"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body" style="padding: 1.5rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Amount Paying Now</label>
+                <div style="position: relative;">
+                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 700;">&#8377;</span>
+                    <input type="number" id="paymentAmountInput" step="0.01" min="0.01" placeholder="0.00" 
+                           style="width: 100%; padding: 1rem 1rem 1rem 2.2rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1.5rem; font-weight: 800; outline: none; transition: border-color 0.2s;"
+                           onfocus="this.style.borderColor='#6366f1'; this.style.background='rgba(99, 102, 241, 0.05)'" 
+                           onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(255,255,255,0.03)'">
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 2rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Payment Method</label>
+                <div style="position: relative;">
+                    <i class="fas fa-credit-card" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <select id="paymentMethodSelect" 
+                            style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; font-weight: 600; outline: none; appearance: none; cursor: pointer;">
+                        <option value="CASH">CASH PAYMENT</option>
+                        <option value="UPI">UPI / ONLINE</option>
+                        <option value="CARD">CREDIT / DEBIT CARD</option>
+                    </select>
+                    <i class="fas fa-chevron-down" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; font-size: 0.8rem;"></i>
+                </div>
+            </div>
+            
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px dashed rgba(99, 102, 241, 0.2); padding: 1rem; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #94a3b8; font-size: 0.85rem; font-weight: 600;">Outstanding Balance</span>
+                <span id="modalBalanceDisplay" style="color: #818cf8; font-weight: 800; font-size: 1.1rem;">&#8377;0.00</span>
+            </div>
+        </div>
+        
+        <div class="modal-footer" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.05); display: grid; grid-template-columns: 1fr 1.5fr; gap: 12px;">
+            <button class="btn" onclick="closeModal()" 
+                    style="width: 100%; padding: 0.85rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: transparent; color: #94a3b8; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                CANCEL
+            </button>
+            <button class="btn" onclick="confirmPayment()" 
+                    style="width: 100%; padding: 0.85rem; border-radius: 12px; border: none; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(99, 102, 241, 0.4)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(99, 102, 241, 0.3)'">
+                CONFIRM PAYMENT
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Legacy Credit Modal (New) -->
+<div id="addCreditModalOverlay" class="modal-overlay" style="display: none;">
+    <div class="modal-content fade-in-up" style="max-width: 550px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); overflow: hidden;">
+        <div class="modal-header" style="background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(30, 41, 59, 0.1)); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: rgba(99, 102, 241, 0.2); width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #818cf8;">
+                    <i class="fas fa-history" style="font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h2 style="font-size: 1.25rem; font-weight: 800; color: white;">Add Legacy Credit</h2>
+                    <p style="font-size: 0.75rem; color: #94a3b8; margin: 0;">Import outstanding older balances</p>
+                </div>
+            </div>
+            <button class="close-btn" onclick="closeAddCreditModal()" style="background: rgba(255,255,255,0.05); width: 32px; height: 32px; border-radius: 50%; border: none; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
+                <i class="fas fa-times" style="font-size: 0.9rem;"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="padding: 1.5rem;">
+
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Customer ID (Optional)</label>
+                <div style="position: relative;">
+                    <i class="fas fa-id-badge" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="legacyCustId" list="existingCustIds" placeholder="Search or Enter ID" oninput="fillFromExisting('id')" 
+                           style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; outline: none;">
+                    <datalist id="existingCustIds">
+                        {% for c in customers %}
+                        {% if c.customer_id %}<option value="{{ c.customer_id }}">{{ c.customer_name }}</option>{% endif %}
+                        {% endfor %}
+                    </datalist>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Customer Name</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-user" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="text" id="legacyCustName" list="existingCustNames" placeholder="Customer Name" oninput="fillFromExisting('name')" 
+                               style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; outline: none;">
+                        <datalist id="existingCustNames">
+                            {% for c in customers %}
+                            <option value="{{ c.customer_name }}">{{ c.customer_id if c.customer_id else 'New' }}</option>
+                            {% endfor %}
+                        </datalist>
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Customer Mobile</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-phone" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="text" id="legacyCustMobile" placeholder="Phone Number" 
+                               style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; outline: none;">
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Outstanding Amount (&#8377;)</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 700;">&#8377;</span>
+                        <input type="number" id="legacyAmount" step="0.01" placeholder="0.00" 
+                               style="width: 100%; padding: 1rem 1rem 1rem 2.5rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #ef4444; font-size: 1.5rem; font-weight: 800; outline: none;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Record Date</label>
+                    <div style="position: relative;">
+                        <i class="fas fa-calendar-day" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                        <input type="date" id="legacyDate" 
+                               style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; outline: none;">
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem;">Notes / Remarks</label>
+                <div style="position: relative;">
+                    <i class="fas fa-sticky-note" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                    <input type="text" id="legacyRemarks" placeholder="Opening Balance / Legacy Data" 
+                           style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 1rem; outline: none;">
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 12px;">
+            <button class="btn" onclick="closeAddCreditModal()" 
+                    style="flex: 1; padding: 0.85rem; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); background: transparent; color: #94a3b8; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                CANCEL
+            </button>
+            <button class="btn" onclick="submitLegacyCredit()" 
+                    style="flex: 2; padding: 0.85rem; border-radius: 12px; border: none; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; font-weight: 800; cursor: pointer; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: all 0.2s;">
+                SAVE RECORD
+            </button>
+        </div>
+    </div>
+</div>
 
 <style>
+    /* Modal styles removed for space, but logic remains same */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(4px);
+        z-index: 1000;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .modal-content {
+        width: 100%;
+        max-width: 450px;
+    }
+    .modal-header h2 { font-size: 1.5rem; font-weight: 800; margin: 0; }
+    .modal-balance-text { margin-top: 0.75rem; font-weight: 700; color: var(--text-secondary); }
+    .modal-footer button { flex: 1; }
+
     @media print {
-        @page {
-            margin: 0;
-            size: 80mm auto;
-        }
-
-        body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 80mm !important;
-            background: white !important;
-            color: black !important;
-            font-family: 'monospace' !important;
-            font-size: 9pt !important;
-        }
-
-        .navbar,
-        .btn,
-        .nav-links,
-        .section-header div:last-child,
-        .pill-tabs {
-            display: none !important;
-        }
-
-        .dashboard-container {
-            width: 80mm !important;
-            padding: 2mm !important;
-            margin: 0 !important;
-        }
-
-        .section-header h1 {
-            font-size: 14pt !important;
+        .print-report-header {
             text-align: center;
-            margin-bottom: 5mm !important;
-            color: black !important;
+            border-bottom: 2px solid #000;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
         }
-
-        .table-container {
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-        }
-
-        table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-
-        th,
-        td {
-            padding: 1mm 0 !important;
-            border-bottom: 1px dashed #000 !important;
-            font-size: 8pt !important;
-            color: black !important;
-            background: white !important;
-        }
-
-        .print-hide {
-            display: none !important;
-        }
-
-        .print-only {
-            display: table-cell !important;
-        }
-
-        .print-date {
-            width: 15% !important;
-            display: table-cell !important;
-        }
-
-        .print-bill-id {
-            width: 15% !important;
-        }
-
-        .print-time {
-            width: 20% !important;
-            text-align: center !important;
-        }
-
-        .print-desc {
-            width: 30% !important;
-        }
-
-        .print-net {
-            width: 20% !important;
-            text-align: right !important;
-            font-weight: bold !important;
-            font-size: 10pt !important;
-        }
+        .print-bill-id { width: 15% !important; }
+        .print-date { width: 15% !important; }
+        .print-time { width: 15% !important; text-align: center !important; }
+        .print-desc { width: 35% !important; }
+        .print-net { width: 20% !important; text-align: right !important; font-weight: bold !important; font-size: 9pt !important; }
 
         tfoot tr td {
             font-size: 10pt !important;
             border-top: 2px solid #000 !important;
-            background: white !important;
-            color: black !important;
-        }
-
-        code {
-            background: transparent !important;
-            color: black !important;
-            padding: 0 !important;
+            padding-top: 2mm !important;
         }
     }
 </style>
 {% endblock %}
+
+{% block scripts %}
+    <div id="customers-data" data-customers='{{ customers | tojson | safe }}' style="display: none;"></div>
+<script>
+    const customersData = JSON.parse(document.getElementById('customers-data').dataset.customers);
+
+    function fillFromExisting(type) {
+        const idVal = document.getElementById('legacyCustId').value;
+        const nameVal = document.getElementById('legacyCustName').value;
+        
+        let match = null;
+        if (type === 'id' && idVal) {
+            match = customersData.find(c => c.customer_id === idVal);
+        } else if (type === 'name' && nameVal) {
+            match = customersData.find(c => c.customer_name === nameVal);
+        }
+        
+        if (match) {
+            if (match.customer_id) document.getElementById('legacyCustId').value = match.customer_id;
+            document.getElementById('legacyCustName').value = match.customer_name;
+            document.getElementById('legacyCustMobile').value = match.customer_mobile || '';
+        }
+    }
+
+    let currentPaymentBillId = null;
+    let currentMaxBalance = 0;
+
+    function payCredit(billId, maxBalance) {
+        currentPaymentBillId = billId;
+        currentMaxBalance = parseFloat(maxBalance);
+        document.getElementById('modalBalanceDisplay').innerText = `?${currentMaxBalance.toFixed(2)}`;
+        document.getElementById('paymentAmountInput').value = '';
+        document.getElementById('paymentModalOverlay').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('paymentModalOverlay').style.display = 'none'; }
+    function openAddCreditModal() {
+        document.getElementById('legacyCustId').value = '';
+        document.getElementById('legacyCustName').value = '';
+        document.getElementById('legacyAmount').value = '';
+        document.getElementById('addCreditModalOverlay').style.display = 'flex';
+        document.getElementById('legacyDate').value = new Date().toISOString().split('T')[0];
+    }
+    function closeAddCreditModal() { document.getElementById('addCreditModalOverlay').style.display = 'none'; }
+
+    async function submitLegacyCredit() {
+        const payload = {
+            customer_name: document.getElementById('legacyCustName').value,
+            customer_mobile: document.getElementById('legacyCustMobile').value,
+            customer_id: document.getElementById('legacyCustId').value,
+            amount: parseFloat(document.getElementById('legacyAmount').value),
+            date: document.getElementById('legacyDate').value,
+            remarks: document.getElementById('legacyRemarks').value || "Opening Balance"
+        };
+        if (!payload.customer_name || !payload.amount || payload.amount <= 0) {
+            alert("Name and valid Amount are required."); return;
+        }
+        try {
+            const res = await fetch('/api/billing/add-legacy-credit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) location.reload();
+            else alert("Error: " + data.message);
+        } catch (err) { alert("Network error."); }
+    }
+
+    async function confirmPayment() {
+        const inputVal = document.getElementById('paymentAmountInput').value;
+        const pmVal = document.getElementById('paymentMethodSelect').value;
+        const parsedAmount = parseFloat(inputVal);
+        
+        if (isNaN(parsedAmount) || parsedAmount <= 0 || parsedAmount > currentMaxBalance) {
+            alert("Invalid amount."); return;
+        }
+        try {
+            const res = await fetch('/api/billing/pay-credit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    bill_id: parseInt(currentPaymentBillId), 
+                    amount: parsedAmount,
+                    payment_method: pmVal 
+                })
+            });
+            if ((await res.json()).success) location.reload();
+        } catch (err) { alert("Error updating payment."); }
+    }
+
+    async function finishCredit(billId) {
+        const pm = prompt("Enter Payment Method (CASH/UPI/CARD):", "CASH");
+        if (pm === null) return; // Cancelled
+        
+        const pmVal = pm.toUpperCase();
+        if (!['CASH', 'UPI', 'CARD'].includes(pmVal)) {
+            alert("Invalid payment method. Use CASH, UPI, or CARD.");
+            return;
+        }
+
+        if (!confirm(`Are you sure you want to CLEAR this bill using ${pmVal}?`)) return;
+        
+        try {
+            const res = await fetch('/api/billing/finish-credit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    bill_id: parseInt(billId),
+                    payment_method: pmVal
+                })
+            });
+            if ((await res.json()).success) location.reload();
+        } catch (err) { alert("Error finishing credit."); }
+    }
+</script>
+{% endblock %}
+
+

@@ -1,4 +1,4 @@
-
+﻿
 import os
 
 base_path = r'd:\Homewoode small factory\templates\inventory'

@@ -1,261 +1,1131 @@
-{% extends "base.html" %} <!-- TEST -->
+{% extends "base.html" %}
 
-{% block title %}Maple Pro - Stock Return{% endblock %}
+
+
+
+
+{% block title %}Stock Return Control | Jai Agency{% endblock %}
+
+
+
+
+
+{% block nav_links %}
+
+
+<a href="/inventory">Dashboard</a>
+
+
+<a href="/inventory/live-stock">Live</a>
+
+
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+
+
+<a href="/inventory/products">Product Master</a>
+
+
+<a href="/inventory/suppliers">Suppliers</a>
+
+
+<a href="/inventory/stock-return" class="active">Return Stock</a>
+
+
+{% endblock %}
+
+
+
+
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-boxes"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory">Dashboard</a>
-        <a href="/inventory/products">Product Master</a>
-        <a href="/inventory/live-stock">Live</a>
-        <a href="/inventory/suppliers">Suppliers</a>
-        <a href="/inventory/stock-return" class="active">Stock Return</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.0
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
 
-<style>
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
 
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        background: white;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        border-radius: 8px;
-        padding: 8px 0;
-        top: 100%;
-        text-align: left;
-    }
+<div class="dashboard-wrapper">
 
-    .dropdown-menu a {
-        color: var(--text-main) !important;
-        padding: 10px 16px !important;
-        text-decoration: none;
-        display: block !important;
-        font-size: 0.85rem !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-    }
 
-    .dropdown-menu a:hover {
-        background: var(--bg-main) !important;
-        color: var(--primary) !important;
-    }
+    <!-- Hero Section -->
 
-    .dropdown:hover .dropdown-menu {
-        display: block;
-    }
-</style>
 
-<div class="dashboard-container fade-in" style="max-width: 1200px;">
-    <div class="section-header">
-        <div>
-            <h1>Stock Return Management</h1>
-            <p style="color: var(--text-muted);">Process returns to vendors, damaged goods, or expired stock.</p>
+    <div class="dash-hero">
+
+
+        <div class="hero-main">
+
+
+            <h1>Stock Return Control</h1>
+
+
+            <p>Process returns for damaged, expired, or vendor replacement stock.</p>
+
+
         </div>
+
+
+        <div class="hero-actions">
+
+
+            <div class="badge-status">
+
+
+                <span class="status-pulse"></span>
+
+
+                SYSTEM ONLINE
+
+
+            </div>
+
+
+        </div>
+
+
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+
+
+
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 3rem; align-items: start;">
+
 
         <!-- Return Form -->
-        <div class="glass-panel">
-            <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-weight: 700;">
-                <i class="fas fa-undo-alt" style="color: var(--warning); margin-right: 8px;"></i> Process Return
+
+
+        <div class="neural-panel" style="padding: 2.5rem; position: sticky; top: 2rem;">
+
+
+            <h3 style="margin: 0 0 2.5rem; font-size: 0.8rem; font-weight: 850; letter-spacing: 2px; text-transform: uppercase; color: white; display: flex; align-items: center; gap: 15px;">
+
+
+                <i class="fas fa-undo-alt" style="color: var(--dash-primary);"></i> NEW RETURN
+
+
             </h3>
 
-            <div class="form-group">
-                <label class="form-label">Search Product</label>
-                <div style="position: relative;">
-                    <input type="text" id="product-search" class="input-dark" placeholder="Name or Code..."
-                        onkeyup="searchProduct()">
-                    <div id="search-results" class="dropdown-menu"
-                        style="width: 100%; max-height: 200px; overflow-y: auto;"></div>
+
+
+
+
+            <div class="f-group">
+
+
+                <label>SEARCH ITEM</label>
+
+
+                <div class="search-container">
+
+
+                    <input type="text" id="product-search" placeholder="Enter SKU or name..." onkeyup="searchProduct()" autocomplete="off">
+
+
+                    <div id="search-results" class="neural-dropdown"></div>
+
+
                 </div>
+
+
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Product Details</label>
-                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
-                    <input type="text" id="selected-product-name" class="input-dark" disabled
-                        style="background: rgba(0,0,0,0.2); flex: 1;" placeholder="Product Name">
-                    <input type="text" id="selected-product-unit" class="input-dark" disabled
-                        style="background: rgba(0,0,0,0.2); width: 80px; text-align: center;" placeholder="Unit">
+
+
+
+
+            <div class="f-group">
+
+
+                <label>SELECTED ITEM</label>
+
+
+                <div style="display: flex; gap: 1rem;">
+
+
+                    <input type="text" id="selected-product-name" disabled class="neural-input locked" placeholder="Product Name" style="flex: 1;">
+
+
+                    <input type="text" id="selected-product-unit" disabled class="neural-input locked" placeholder="UNIT" style="width: 80px; text-align: center;">
+
+
                 </div>
+
+
                 <input type="hidden" id="selected-product-code">
+
+
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Select Lot (Optional)</label>
-                <select id="batch-select" class="input-dark">
-                    <option value="">-- Auto (FIFO) --</option>
+
+
+
+
+            <div class="f-group">
+
+
+                <label>SELECT BATCH (OPTIONAL)</label>
+
+
+                <select id="batch-select">
+
+
+                    <option value="">-- Auto-Select (FIFO) --</option>
+
+
                 </select>
+
+
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div class="form-group">
-                    <label class="form-label">Return Qty</label>
-                    <input type="number" id="return-qty" class="input-dark" step="0.001" placeholder="0.00">
+
+
+
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+
+
+                <div class="f-group">
+
+
+                    <label>RETURN QTY</label>
+
+
+                    <input type="number" id="return-qty" step="0.001" placeholder="0.000" class="large-numeric">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Reason</label>
-                    <select id="return-reason" class="input-dark">
-                        <option value="DAMAGED">Damaged / Spoilt</option>
+
+
+                <div class="f-group">
+
+
+                    <label>REASON</label>
+
+
+                    <select id="return-reason">
+
+
+                        <option value="DAMAGED">Damaged Item</option>
+
+
                         <option value="EXPIRED">Expired</option>
-                        <option value="VENDOR_RETURN">Return to Vendor</option>
+
+
+                        <option value="VENDOR_RETURN">Vendor Return</option>
+
+
                         <option value="OTHER">Other</option>
+
+
                     </select>
+
+
                 </div>
+
+
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Notes</label>
-                <textarea id="return-notes" class="input-dark" rows="3" placeholder="Additional details..."></textarea>
+
+
+
+
+            <div class="f-group">
+
+
+                <label>NOTES</label>
+
+
+                <textarea id="return-notes" rows="3" placeholder="Additional details..."></textarea>
+
+
             </div>
 
-            <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="submitReturn()">
-                CONFIRM RETURN
+
+
+
+
+            <button class="btn-neural primary" style="width: 100%; margin-top: 1rem; justify-content: center; height: 60px; font-size: 0.8rem; background: var(--dash-primary); color: white;" onclick="submitReturn()">
+
+
+                SUBMIT RETURN
+
+
             </button>
+
+
         </div>
 
-        <!-- Recent Returns Log -->
-        <div class="glass-panel">
-            <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-weight: 700;">
-                <i class="fas fa-history" style="color: var(--primary); margin-right: 8px;"></i> Recent Returns
-            </h3>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr
-                            style="border-bottom: 1px solid var(--glass-border); text-align: left; color: var(--text-muted); font-size: 0.8rem;">
-                            <th style="padding: 10px;">Date</th>
-                            <th style="padding: 10px;">Product</th>
-                            <th style="padding: 10px;">Type</th>
-                            <th style="padding: 10px; text-align: right;">Qty</th>
-                            <th style="padding: 10px; text-align: right;">Refund Value</th>
-                        </tr>
-                    </thead>
-                    <tbody id="returns-table-body">
-                        {% for log in logs %}
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <td style="padding: 12px 10px; font-size: 0.85rem;">{{ log.date }}</td>
-                            <td style="padding: 12px 10px;">
-                                <div style="font-weight: 600;">{{ log.product_name }}</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ log.product_code }}</div>
-                            </td>
-                            <td style="padding: 12px 10px;"><span class="badge"
-                                    style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">{{ log.type
-                                    }}</span></td>
-                            <td style="padding: 12px 10px; text-align: right; font-weight: 700;">{{ log.qty }}</td>
-                            <td style="padding: 12px 10px; text-align: right; color: var(--text-muted);">₹{{
-                                "%.2f"|format(log.refund_amount) }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+
+
+
+
+        <!-- History Log -->
+
+
+        <div class="neural-panel" style="padding: 0; overflow: hidden; border-radius: 32px;">
+
+
+            <div style="padding: 2rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01);">
+
+
+                <h3 style="margin: 0; font-size: 0.8rem; font-weight: 850; letter-spacing: 2px; text-transform: uppercase; color: white;">
+
+
+                    <i class="fas fa-history" style="color: var(--dash-primary); margin-right: 15px;"></i> RETURN HISTORY
+
+
+                </h3>
+
+
             </div>
+
+
+            
+
+
+            <div class="neural-table-container" style="border: none; border-radius: 0;">
+
+
+                <table class="neural-table">
+
+
+                    <thead>
+
+
+                        <tr>
+
+
+                            <th style="padding-left: 2.5rem;">DATE</th>
+
+
+                            <th>PRODUCT</th>
+
+
+                            <th>REASON</th>
+
+
+                            <th style="text-align: right;">QTY</th>
+
+
+                            <th style="text-align: right; padding-right: 2.5rem;">AMOUNT</th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+                    <tbody id="returns-table-body">
+
+
+                        {% for log in logs %}
+
+
+                        <tr class="activity-row">
+
+
+                            <td style="padding-left: 2.5rem;">
+
+
+                                <div style="font-weight: 700; color: white; font-family: 'DM Mono'; font-size: 0.8rem;">{{ log.date }}</div>
+
+
+                            </td>
+
+
+                            <td>
+
+
+                                <div style="font-weight: 800; color: white;">{{ log.product_name }}</div>
+
+
+                                <div style="font-size: 0.65rem; color: var(--dash-primary); font-family: 'DM Mono';">ID: #{{ log.product_code }}</div>
+
+
+                            </td>
+
+
+                            <td>
+
+
+                                <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: var(--dash-danger); font-size: 0.6rem; border: 1px solid rgba(239, 68, 68, 0.15);">{{ log.type }}</span>
+
+
+                            </td>
+
+
+                            <td style="text-align: right; font-weight: 950; font-family: 'Outfit'; color: white;">{{ log.qty }}</td>
+
+
+                            <td style="text-align: right; color: var(--text-tertiary); font-weight: 800; padding-right: 2.5rem; font-family: 'Outfit';">&#8377;{{ "%.2f"|format(log.refund_amount) }}</td>
+
+
+                        </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
         </div>
+
+
     </div>
+
+
 </div>
 
+
+
+
+
+<style>
+
+
+    .dashboard-wrapper {
+
+
+        max-width: 1550px;
+
+
+        margin: 0 auto;
+
+
+        padding: 2.5rem;
+
+
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+
+
+    }
+
+
+
+
+
+    @keyframes dashboardEnter {
+
+
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+
+
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+
+    }
+
+
+
+
+
+    .dash-hero {
+
+
+        display: flex;
+
+
+        justify-content: space-between;
+
+
+        align-items: flex-end;
+
+
+        margin-bottom: 3.5rem;
+
+
+        padding-bottom: 2rem;
+
+
+        border-bottom: 1px solid var(--dash-glass-border);
+
+
+    }
+
+
+
+
+
+    .hero-main h1 {
+
+
+        font-size: 3.5rem;
+
+
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+
+
+        color: white;
+
+
+        line-height: 1;
+
+
+        margin-bottom: 0.5rem;
+
+
+        letter-spacing: -0.02em;
+
+
+    }
+
+
+
+
+
+    .hero-main p {
+
+
+        font-size: 0.8rem;
+
+
+        font-weight: 800;
+
+
+        letter-spacing: 0.15em;
+
+
+        color: var(--text-tertiary);
+
+
+        text-transform: uppercase;
+
+
+    }
+
+
+
+
+
+    .neural-panel {
+
+
+        background: var(--dash-card-bg);
+
+
+        border: 1px solid var(--dash-glass-border);
+
+
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
+
+
+        border-radius: 32px;
+
+
+    }
+
+
+
+
+
+    .f-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2rem; }
+
+
+    .f-group label { font-size: 0.65rem; font-weight: 850; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 2px; }
+
+
+
+
+
+    .search-container { position: relative; }
+
+
+    
+
+
+    input, select, textarea {
+
+
+        background: rgba(255,255,255,0.03);
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        padding: 16px 20px;
+
+
+        border-radius: 14px;
+
+
+        color: white;
+
+
+        font-weight: 600;
+
+
+        outline: none;
+
+
+        transition: all 0.3s ease;
+
+
+        width: 100%;
+
+
+        font-family: inherit;
+
+
+    }
+
+
+    
+
+
+    select option {
+
+
+        background: #0f172a;
+
+
+        color: white;
+
+
+    }
+
+
+
+
+
+    input:focus, select:focus, textarea:focus { border-color: var(--dash-primary); background: rgba(255,255,255,0.06); }
+
+
+    .locked { background: rgba(255,255,255,0.01) !important; color: var(--dash-primary) !important; font-weight: 800; }
+
+
+    .large-numeric { font-size: 1.5rem; font-family: 'Outfit'; font-weight: 900; }
+
+
+
+
+
+    .neural-dropdown {
+
+
+        position: absolute;
+
+
+        top: 100%;
+
+
+        left: 0;
+
+
+        right: 0;
+
+
+        background: #0d1122;
+
+
+        border: 1px solid var(--dash-glass-border);
+
+
+        border-radius: 14px;
+
+
+        margin-top: 10px;
+
+
+        z-index: 100;
+
+
+        max-height: 300px;
+
+
+        overflow-y: auto;
+
+
+        display: none;
+
+
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+
+
+    }
+
+
+
+
+
+    .dropdown-item {
+
+
+        padding: 15px 20px;
+
+
+        display: flex;
+
+
+        justify-content: space-between;
+
+
+        align-items: center;
+
+
+        cursor: pointer;
+
+
+        transition: all 0.2s;
+
+
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+
+
+    }
+
+
+
+
+
+    .dropdown-item:hover { background: rgba(255,255,255,0.05); }
+
+
+
+
+
+    .btn-neural {
+
+
+        background: rgba(255,255,255,0.05);
+
+
+        color: white;
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        padding: 16px 28px;
+
+
+        border-radius: 16px;
+
+
+        font-size: 0.75rem;
+
+
+        font-weight: 800;
+
+
+        letter-spacing: 0.1em;
+
+
+        cursor: pointer;
+
+
+        transition: all 0.3s ease;
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+        gap: 12px;
+
+
+        text-decoration: none;
+
+
+    }
+
+
+
+
+
+    .btn-neural:hover { background: white; color: var(--navy-900); transform: translateY(-2px); }
+
+
+
+
+
+    .badge-status {
+
+
+        background: rgba(34, 197, 94, 0.1);
+
+
+        color: var(--dash-success);
+
+
+        padding: 10px 20px;
+
+
+        border-radius: 50px;
+
+
+        font-size: 0.65rem;
+
+
+        font-weight: 900;
+
+
+        letter-spacing: 1px;
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+        gap: 10px;
+
+
+        border: 1px solid rgba(34, 197, 94, 0.2);
+
+
+    }
+
+
+
+
+
+    .status-pulse {
+
+
+        width: 8px;
+
+
+        height: 8px;
+
+
+        background: var(--dash-success);
+
+
+        border-radius: 50%;
+
+
+        box-shadow: 0 0 10px var(--dash-success);
+
+
+        animation: statusPulse 2s infinite;
+
+
+    }
+
+
+
+
+
+    @keyframes statusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+
+</style>
+
+
+
+
+
 <script>
+
+
     const inventory = JSON.parse('{{ inventory | tojson | safe }}');
 
+
+
+
+
     function searchProduct() {
+
+
         const input = document.getElementById('product-search').value.toUpperCase();
+
+
         const results = document.getElementById('search-results');
+
+
         results.innerHTML = '';
-        if (input.length < 1) return;
+
+
+        
+
+
+        if (input.length < 1) {
+
+
+            results.style.display = 'none';
+
+
+            return;
+
+
+        }
+
+
+
+
 
         const matches = inventory.filter(p => p.name.toUpperCase().includes(input) || p.code.toUpperCase().includes(input)).slice(0, 8);
 
+
+
+
+
         matches.forEach(p => {
+
+
             const div = document.createElement('div');
-            div.innerHTML = `<a href="#" onclick="selectProduct('${p.code}')">${p.name} <span style="float: right; color: var(--text-muted);">#${p.code}</span></a>`;
+
+
+            div.className = 'dropdown-item';
+
+
+            div.onclick = () => selectProduct(p.code);
+
+
+            div.innerHTML = `
+
+
+                <div style="display: flex; flex-direction: column;">
+
+
+                    <span style="font-weight: 700; color: white; font-size: 0.9rem;">${p.name}</span>
+
+
+                    <span style="font-size: 0.65rem; color: var(--text-tertiary); font-family: 'DM Mono';">QTY: ${p.stock} ${p.unit}</span>
+
+
+                </div>
+
+
+                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--dash-primary); font-family: 'DM Mono'; font-size: 0.6rem;">#${p.code}</span>
+
+
+            `;
+
+
             results.appendChild(div);
+
+
         });
+
+
         results.style.display = matches.length ? 'block' : 'none';
+
+
     }
+
+
+
+
 
     function selectProduct(code) {
+
+
         const product = inventory.find(p => p.code === code);
+
+
         if (product) {
+
+
             document.getElementById('selected-product-name').value = product.name;
+
+
             document.getElementById('selected-product-unit').value = product.unit || 'Nos';
+
+
             document.getElementById('selected-product-code').value = product.code;
+
+
             document.getElementById('product-search').value = '';
+
+
             document.getElementById('search-results').style.display = 'none';
 
-            // Populate batches
+
+
+
+
             const batchSelect = document.getElementById('batch-select');
-            batchSelect.innerHTML = '<option value="">-- Auto (FIFO) --</option>';
+
+
+            batchSelect.innerHTML = '<option value="">-- AUTO_ALLOCATE (FIFO) --</option>';
+
+
             if (product.batches && product.batches.length) {
+
+
                 product.batches.forEach(b => {
+
+
                     const option = document.createElement('option');
+
+
                     option.value = b.batch_id;
-                    option.text = `#${String(b.id).padStart(3, '0')} (Exp: ${b.expiry || 'N/A'}) - Qty: ${b.qty}`;
+
+
+                    option.text = `#${String(b.id || '???').padStart(3, '0')} (Exp: ${b.expiry || 'N/A'}) - Qty: ${b.qty}`;
+
+
                     batchSelect.appendChild(option);
+
+
                 });
+
+
             }
+
+
         }
+
+
     }
+
+
+
+
 
     async function submitReturn() {
+
+
+        const btn = document.querySelector('.btn-neural.primary');
+
+
         const code = document.getElementById('selected-product-code').value;
+
+
         const qty = parseFloat(document.getElementById('return-qty').value);
+
+
         const reason = document.getElementById('return-reason').value;
+
+
         const notes = document.getElementById('return-notes').value;
+
+
         const batchId = document.getElementById('batch-select').value;
 
-        if (!code) return alert("Please select a product.");
-        if (!qty || qty <= 0) return alert("Please enter a valid quantity.");
+
+
+
+
+        if (!code) return alert("REQUIRED_ERROR: Target resource unselected.");
+
+
+        if (!qty || qty <= 0) return alert("VAL_ERROR: Invalid quantum specified.");
+
+
+
+
+
+        btn.disabled = true;
+
+
+        btn.innerText = 'PROCESSING...';
+
+
+
+
 
         const payload = {
+
+
             product_code: code,
+
+
             qty: qty,
+
+
             reason: reason,
+
+
             notes: notes,
+
+
             batch_id: batchId
+
+
         };
 
+
+
+
+
         try {
+
+
             const res = await fetch('/api/inventory/return-stock', {
+
+
                 method: 'POST',
+
+
                 headers: { 'Content-Type': 'application/json' },
+
+
                 body: JSON.stringify(payload)
+
+
             });
-            const data = await res.json();
-            if (data.success) {
-                alert('Return processed successfully.');
+
+
+            if ((await res.json()).success) {
+
+
                 location.reload();
+
+
             } else {
-                alert('Error: ' + data.message);
+
+
+                alert('TRANS_FAILURE: Operation aborted by server.');
+
+
+                btn.disabled = false;
+
+
+                btn.innerText = 'SUBMIT RETURN';
+
+
             }
+
+
         } catch (e) {
-            alert('System error.');
+
+
+            alert('SYSTEM_VEX_ERROR: Verification failed.');
+
+
+            btn.disabled = false;
+
+
+            btn.innerText = 'SUBMIT RETURN';
+
+
         }
+
+
     }
 
-    // Close dropdown on click outside
-    document.addEventListener('click', function (e) {
-        if (!e.target.closest('#product-search')) {
+
+
+
+
+    document.addEventListener('click', (e) => {
+
+
+        if (!e.target.closest('.search-container')) {
+
+
             document.getElementById('search-results').style.display = 'none';
+
+
         }
+
+
     });
+
+
 </script>
+
+
 {% endblock %}
+
+

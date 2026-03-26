@@ -1,344 +1,406 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
-{% block title %}Maple Pro - Secure Access{% endblock %}
+{% block title %}Secure Entry | Jai Agency{% endblock %}
 
 {% block content %}
 <style>
-    :root {
-        --login-primary: #5c53ff;
-        --login-glass: rgba(255, 255, 255, 0.85);
-        --login-border: rgba(255, 255, 255, 0.2);
-    }
-
-    body {
-        margin: 0;
-        background: radial-gradient(circle at 10% 20%, rgba(92, 83, 255, 0.05) 0%, transparent 40%),
-            radial-gradient(circle at 90% 80%, rgba(219, 39, 119, 0.05) 0%, transparent 40%),
-            #f8fafc;
-        min-height: 100vh;
-    }
-
-    .login-wrapper {
-        min-height: 100vh;
+    /* Hide the base header, navbar, and global footer on login page to maintain focus */
+    /* Hide the base header, navbar, and global footer on login page to maintain focus */
+    .print-only-header, .navbar, .site-footer { display: none !important; }
+    
+    .login-container {
+        height: 100vh;
+        width: 100vw;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
-        perspective: 1000px;
+        perspective: 2000px;
+        position: relative;
+        z-index: 10;
     }
 
-    .login-glass-card {
-        background: var(--login-glass);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid var(--login-border);
+    .login-card {
+        background: white;
         border-radius: 32px;
-        padding: 3.5rem;
+        padding: 2.5rem;
         width: 100%;
-        max-width: 450px;
-        box-shadow: 0 50px 100px -20px rgba(92, 83, 255, 0.15),
-            0 30px 60px -30px rgba(0, 0, 0, 0.3),
-            inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+        max-width: 440px;
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
         transform-style: preserve-3d;
-        animation: cardAppear 1s var(--ease-out);
+        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes cardAppear {
-        0% {
-            opacity: 0;
-            transform: translateY(30px) rotateX(-5deg);
-        }
-
-        100% {
-            opacity: 1;
-            transform: translateY(0) rotateX(0);
-        }
+        from { opacity: 0; transform: translateY(40px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .brand-section {
-        text-align: center;
-        margin-bottom: 3rem;
-    }
+    .login-branding { margin-bottom: 2rem; }
 
-    .brand-icon {
+    .login-logo-pnl {
         width: 72px;
         height: 72px;
-        background: linear-gradient(135deg, var(--login-primary), #818cf8);
-        border-radius: 22px;
-        display: inline-flex;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 2rem;
-        color: white;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 15px 30px rgba(92, 83, 255, 0.3);
-        transform: rotate(-5deg);
-        transition: transform 0.5s var(--ease-out);
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.05);
     }
 
-    .login-glass-card:hover .brand-icon {
-        transform: rotate(0) scale(1.05);
-    }
+    .login-logo-pnl img { width: 42px; height: 42px; object-fit: contain; }
 
-    .brand-title {
-        font-size: 2.2rem;
+    .login-title {
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 2.25rem;
         font-weight: 800;
-        color: var(--text-main);
-        letter-spacing: -1.5px;
-        margin-bottom: 0.25rem;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+        line-height: 1;
     }
 
-    .brand-subtitle {
-        color: var(--text-muted);
-        font-size: 0.9rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-        opacity: 0.7;
+    .login-subtitle {
+        color: #64748b;
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
     }
 
-    .form-group-custom {
-        margin-bottom: 1.5rem;
-        position: relative;
-    }
+    .form-control-group { margin-bottom: 1.5rem; text-align: left; }
 
-    .input-icon {
+    .input-wrapper { position: relative; }
+    .input-wrapper i {
         position: absolute;
-        left: 18px;
+        left: 20px;
         top: 50%;
         transform: translateY(-50%);
-        color: var(--text-muted);
-        font-size: 1.1rem;
-        transition: color 0.3s ease;
-        pointer-events: none;
+        color: #94a3b8;
+        font-size: 1rem;
     }
 
-    .input-field {
+    .form-input {
         width: 100%;
-        background: rgba(255, 255, 255, 0.6);
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        padding: 1.2rem 1.2rem 1.2rem 3.5rem;
-        border-radius: 18px;
+        height: 52px;
+        padding-left: 56px !important;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        font-family: 'Manrope', sans-serif;
         font-size: 1rem;
-        font-weight: 500;
-        color: var(--text-main);
-        transition: all 0.3s var(--ease-out);
+        font-weight: 600;
+        color: #0f172a;
+        transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+        background: white;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         outline: none;
     }
 
-    .input-field:focus {
-        background: white;
-        border-color: var(--login-primary);
-        box-shadow: 0 10px 25px rgba(92, 83, 255, 0.1);
-    }
-
-    .input-field:focus+.input-icon {
-        color: var(--login-primary);
-    }
-
-    .login-submit-btn {
-        width: 100%;
-        padding: 1.2rem;
-        background: linear-gradient(135deg, var(--login-primary), #4f46e5);
+    .btn-authenticate {
+        background: #1e293b;
         color: white;
+        width: 100%;
+        height: 52px;
+        border-radius: 16px;
         border: none;
-        border-radius: 18px;
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 0.95rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
         cursor: pointer;
-        transition: all 0.4s var(--ease-out);
-        box-shadow: 0 10px 25px rgba(92, 83, 255, 0.25);
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 12px;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+        box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.4);
+    }
+
+    .btn-authenticate:hover {
+        background: #0f172a;
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px -5px rgba(15, 23, 42, 0.6);
+    }
+
+    .login-footer {
         margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #f1f5f9;
     }
 
-    .login-submit-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 15px 35px rgba(92, 83, 255, 0.35);
-        filter: brightness(1.1);
-    }
-
-    .error-alert {
-        background: rgba(220, 38, 38, 0.1);
-        border: 1px solid rgba(220, 38, 38, 0.2);
-        color: #dc2626;
-        padding: 1rem;
-        border-radius: 15px;
-        margin-bottom: 2rem;
-        font-size: 0.85rem;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
-    }
-
-    @keyframes shake {
-
-        10%,
-        90% {
-            transform: translate3d(-1px, 0, 0);
-        }
-
-        20%,
-        80% {
-            transform: translate3d(2px, 0, 0);
-        }
-
-        30%,
-        50%,
-        70% {
-            transform: translate3d(-4px, 0, 0);
-        }
-
-        40%,
-        60% {
-            transform: translate3d(4px, 0, 0);
-        }
-    }
-
-    .stats-card-mini {
-        margin-top: 3rem;
-        padding: 1.5rem;
-        background: rgba(0, 0, 0, 0.02);
-        border-radius: 24px;
-        border: 1px solid rgba(0, 0, 0, 0.03);
-    }
-
-    .live-indicator {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
+    .login-footer p {
         font-size: 0.7rem;
         font-weight: 800;
-        color: var(--success);
-        letter-spacing: 1px;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 6px;
     }
 
-    .pulse-dot {
-        width: 6px;
-        height: 6px;
-        background: var(--success);
-        border-radius: 50%;
-        animation: pulseAnim 1.5s infinite;
+    .login-footer p {
+        font-size: 0.65rem;
+        font-weight: 800;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        opacity: 0.6;
     }
 
-    @keyframes pulseAnim {
-        0% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-        }
+    .auth-mgmt-link {
+        display: block;
+        margin-top: 1rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-tertiary);
+        text-decoration: none;
+        letter-spacing: 0.1em;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
 
-        70% {
-            transform: scale(1);
-            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
-        }
+    .auth-mgmt-link:hover {
+        color: var(--navy-900);
+        opacity: 1;
+    }
 
-        100% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-        }
+    /* Modal Styling for Login Page */
+    .auth-modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(7, 10, 25, 0.85);
+        backdrop-filter: blur(15px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .auth-modal {
+        background: white;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 450px;
+        padding: 3rem;
+        box-shadow: 0 40px 100px rgba(0,0,0,0.3);
+        animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        text-align: left;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .modal-hdr {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .modal-hdr h2 {
+        font-family: 'Outfit';
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--navy-900);
+        letter-spacing: -0.01em;
+    }
+
+    .close-auth-modal {
+        background: none;
+        border: none;
+        font-size: 1.8rem;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        line-height: 1;
+    }
+
+    .auth-form-row { margin-bottom: 1.5rem; }
+    .auth-form-row label {
+        display: block;
+        font-size: 0.65rem;
+        font-weight: 850;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 0.6rem;
+    }
+
+    .auth-select, .auth-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border-light);
+        background: var(--surface-light);
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--navy-900);
+        outline: none;
+        transition: all 0.2s;
+    }
+
+    .auth-select:focus, .auth-input:focus {
+        border-color: var(--navy-900);
+        box-shadow: 0 0 0 4px rgba(0,0,0,0.03);
     }
 </style>
 
-<div class="login-wrapper"> 
-    <div class="login-glass-card">
-        <div class="brand-section">
-            <div class="brand-icon">
-                <i class="fas fa-layer-group"></i>
+<div class="login-container">
+    <div class="login-card" id="loginCard">
+        <div class="login-branding">
+            <div class="login-logo-pnl" style="background: #ffffff;">
+                <img src="{{ url_for('static', filename='css/images/logo.ico') }}" alt="Maple Pro Logo">
             </div>
-            <h1 class="brand-title">KOKKALATTY TEEA TRADERS</h1>
-            <p class="brand-subtitle">Enterprise Resource Planning</p>
+            <h1 class="login-title">Login</h1>
+            <p class="login-subtitle">Sales Management System</p>
         </div>
 
         {% if error %}
-        <div class="error-alert">
-            <i class="fas fa-exclamation-triangle"></i>
-            Invalid credentials. Please try again.
+        <div class="error-toast">
+            <i class="fas fa-shield-virus"></i>
+            <span>Identification failed. Access is restricted.</span>
         </div>
         {% endif %}
 
         <form action="/auth" method="POST">
-            <div class="form-group-custom">
-                <i class="fas fa-user-shield input-icon"></i>
-                <input type="text" name="username" class="input-field" placeholder="Username" required
-                    autocomplete="username">
+            <div class="form-control-group">
+                <div class="input-wrapper">
+                    <input type="text" name="username" class="form-input" placeholder="Username" required autocomplete="username">
+                    <i class="fas fa-user-shield"></i>
+                </div>
             </div>
 
-            <div class="form-group-custom">
-                <i class="fas fa-key input-icon"></i>
-                <input type="password" name="password" class="input-field" placeholder="Password" required
-                    autocomplete="current-password">
+            <div class="form-control-group">
+                <div class="input-wrapper">
+                    <input type="password" name="password" class="form-input" placeholder="Password" required autocomplete="current-password">
+                    <i class="fas fa-key"></i>
+                </div>
             </div>
 
-            <button type="submit" class="login-submit-btn">
-                <span>Secure Login</span>
-                <i class="fas fa-arrow-right"></i>
+            <button type="submit" class="btn-authenticate">
+                <span>AUTHENTICATE</span>
+                <i class="fas fa-chevron-right" style="font-size: 0.75rem; opacity: 0.7;"></i>
             </button>
         </form>
 
-        <div style="margin-top: 3rem; text-align: center; opacity: 0.4;">
-            <p style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted);">
-                VERSION 8.0 • ENCRYPTED SESSION
-            </p>
+        <div class="login-footer">
+            <p>Â© 2026 Managed by Maple Pro</p>
+            <p>Protocol V9.2 â€¢ End-to-End Encrypted</p>
+            <a class="auth-mgmt-link" onclick="openAuthModal()">
+                <i class="fas fa-key-skeleton" style="margin-right: 6px;"></i> MANAGE_CREDENTIALS
+            </a>
         </div>
+    </div>
+</div>
+
+<!-- Auth Management Modal -->
+<div class="auth-modal-overlay" id="authModal">
+    <div class="auth-modal">
+        <div class="modal-hdr">
+            <h2>Security Configuration</h2>
+            <button class="close-auth-modal" onclick="closeAuthModal()">&times;</button>
+        </div>
+
+        <div class="auth-form-row">
+            <label>TARGET_AUTHORIZATION_ROLE</label>
+            <select id="update_role" class="auth-select">
+                <option value="sales">Sales Executive</option>
+                <option value="inventory">Inventory Manager</option>
+            </select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="auth-form-row" style="margin-bottom: 0;">
+                <label>CURRENT_USERNAME</label>
+                <input type="text" id="old_user" class="auth-input" placeholder="Current user">
+            </div>
+            <div class="auth-form-row" style="margin-bottom: 0;">
+                <label>CURRENT_PASSWORD</label>
+                <input type="password" id="old_pass" class="auth-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+            </div>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.02); height: 1px; margin: 2rem 0;"></div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+            <div class="auth-form-row" style="margin-bottom: 0;">
+                <label>NEW_IDENTITY</label>
+                <input type="text" id="new_user" class="auth-input" placeholder="New username">
+            </div>
+            <div class="auth-form-row" style="margin-bottom: 0;">
+                <label>NEW_ACCESS_KEY</label>
+                <input type="password" id="new_pass" class="auth-input" placeholder="New password">
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-lg" style="width: 100%; height: 52px;" onclick="commitAuthUpdate()">
+            APPLY_SECURITY_OVERRIDE
+        </button>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <script>
-    var options = {
-        series: [{
-            name: 'Transactions',
-            data: [{{ login_stats.yesterday }}, {{ login_stats.today }}]
-        }],
-    chart: {
-        type: 'area',
-            height: 60,
-                sparkline: { enabled: true },
-        animations: { enabled: true, easing: 'easeinout', speed: 1000 }
-    },
-    stroke: { curve: 'smooth', width: 3 },
-    fill: {
-        type: 'gradient',
-            gradient: {
-            shadeIntensity: 1,
-                opacityFrom: 0.4,
-                    opacityTo: 0.1,
-                        colorStops: [
-                            { offset: 0, color: '#10b981', opacity: 0.4 },
-                            { offset: 100, color: '#10b981', opacity: 0 }
-                        ]
-        }
-    },
-    colors: ['#10b981'],
-        tooltip: {
-        theme: 'dark',
-            fixed: { enabled: false },
-        x: { show: false },
-        y: { title: { formatter: function () { return 'Orders:'; } } },
-        marker: { show: false }
-    }
-    };
-
-    var chart = new ApexCharts(document.querySelector("#login-chart"), options);
-    chart.render();
-
-    // Parallax effect on mouse move
-    const card = document.querySelector('.login-glass-card');
+    const card = document.getElementById('loginCard');
+    
     document.addEventListener('mousemove', (e) => {
-        const xAxis = (window.innerWidth / 2 - e.pageX) / 50;
-        const yAxis = (window.innerHeight / 2 - e.pageY) / 50;
+        const xAxis = (window.innerWidth / 2 - e.pageX) / 45;
+        const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
         card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
     });
 
     document.addEventListener('mouseleave', () => {
+        card.style.transition = 'transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
         card.style.transform = `rotateY(0deg) rotateX(0deg)`;
-        card.style.transition = 'all 0.5s ease';
+        
+        setTimeout(() => {
+            card.style.transition = 'none';
+        }, 600);
     });
+
+    const authModal = document.getElementById('authModal');
+    function openAuthModal() { authModal.style.display = 'flex'; }
+    function closeAuthModal() { authModal.style.display = 'none'; }
+
+    async function commitAuthUpdate() {
+        const payload = {
+            role: document.getElementById('update_role').value,
+            old_username: document.getElementById('old_user').value,
+            old_password: document.getElementById('old_pass').value,
+            new_username: document.getElementById('new_user').value,
+            new_password: document.getElementById('new_pass').value
+        };
+
+        if (Object.values(payload).some(v => !v)) {
+            alert("ALL_FIELDS_REQUIRED: Verification failed.");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/auth/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("Security credentials updated successfully.");
+                location.reload();
+            } else {
+                alert("ACCESS_DENIED: " + data.message);
+            }
+        } catch (e) {
+            alert("SYSTEM_SYNC_ERROR: Neural handshake failed.");
+        }
+    }
 </script>
 {% endblock %}

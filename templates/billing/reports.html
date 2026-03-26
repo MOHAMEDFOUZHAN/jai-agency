@@ -1,29 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Final Report{% endblock %}
+{% block title %}Jai Agency - Final Report{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/expenses">Expenses</a>
-        <a href="/billing/reports" class="active">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
-            V3.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
 
-<div class="dashboard-container fade-in">
+
+<div class="dashboard-container fade-in report-shell thermal-report">
     <div class="section-header">
         <div>
             <h1>Daily Sales Report</h1>
@@ -38,10 +20,16 @@
                 <button class="btn btn-primary" style="padding: 5px 12px; font-size: 0.8rem;"
                     onclick="previewBill()">Preview</button>
             </div>
-            <button class="btn btn-primary" onclick="window.print()">
+            <button class="btn btn-primary no-print" onclick="window.print()">
                 <i class="fas fa-print"></i> Print Records
             </button>
         </div>
+    </div>
+
+    <div class="print-report-header print-only" style="display: none; text-align: center; border-bottom: 2px solid #000; margin-bottom: 5mm; padding-bottom: 3mm;">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 10pt; font-weight: bold;">DAILY SALES REPORT (SESSION)</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
     </div>
 
     <div class="table-container">
@@ -58,34 +46,33 @@
                 </tr>
             </thead>
             <tbody>
-                {% for sale in sales|reverse %}
+                {% for sale in sales %}
                 {% set row_status = sale.status or 'ACTIVE' %}
                 <tr
                     class="{% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %}">
-                    <td class="print-date" style="color: var(--text-muted); font-size: 0.9rem;">{{ sale.date.split('
+                    <td class="print-date" style="color: var(--navy-900); font-size: 0.9rem; font-weight: 500;">{{ sale.date.split('
                         ')[0] }}</td>
-                    <td class="print-time" style="color: var(--text-muted); font-size: 0.9rem;">{{ sale.date.split('
+                    <td class="print-time" style="color: var(--text-secondary); font-size: 0.9rem;">{{ sale.date.split('
                         ')[1] }}</td>
                     <td class="print-bill-id">
                         <code
-                            style="font-weight: 700; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 2px 8px; border-radius: 4px;">#{{ sale.id }}</code>
-                        {% endif %}
+                            style="font-weight: 700; color: var(--navy-900); background: var(--surface-light); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-light);">#{{ sale.id }}</code>
                     </td>
                     <td style="padding: 1rem 0;">
-                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
                             {% for item in sale.details %}
                             <div
-                                style="display: grid; grid-template-columns: 1fr 60px; align-items: center; padding: 4px 12px; background: rgba(0,0,0,0.02); border-radius: 6px; border-left: 3px solid var(--primary);">
+                                style="display: grid; grid-template-columns: 1fr 80px; align-items: center; padding: 6px 12px; background: var(--surface-light); border-radius: 8px; border-left: 4px solid var(--navy-900);">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="font-weight: 700; color: var(--text-main); font-size: 0.85rem;">{{
+                                    <span style="font-weight: 700; color: var(--navy-900); font-size: 0.85rem;">{{
                                         item.name }}</span>
                                     <span
-                                        style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; background: rgba(0,0,0,0.05); padding: 1px 6px; border-radius: 10px;">{{
+                                        style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; background: var(--white); padding: 2px 8px; border-radius: 10px; border: 1px solid var(--border-light);">{{
                                         item.category }}</span>
                                 </div>
                                 <div
-                                    style="text-align: right; font-weight: 800; color: var(--primary); font-size: 0.85rem;">
-                                    qty: {{ item.qty }}
+                                    style="text-align: right; font-weight: 800; color: var(--navy-900); font-size: 0.85rem;">
+                                    x{{ item.qty }}
                                 </div>
                             </div>
                             {% endfor %}
@@ -95,24 +82,24 @@
                         <div style="display: flex; align-items: center; gap: 0.75rem;">
                             {% if sale.payment_method == 'UPI' %}
                             <div
-                                style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent);">
+                                style="width: 10px; height: 10px; border-radius: 50%; background: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue);">
                             </div>
-                            <span style="font-weight: 600; color: var(--text-main);">UPI / QR</span>
+                            <span style="font-weight: 700; color: var(--navy-900);">UPI / QR</span>
                             {% elif sale.payment_method == 'CARD' %}
                             <div
-                                style="width: 10px; height: 10px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px var(--primary);">
+                                style="width: 10px; height: 10px; border-radius: 50%; background: var(--navy-900); box-shadow: 0 0 8px var(--navy-900);">
                             </div>
-                            <span style="font-weight: 600; color: var(--text-main);">BANK CARD</span>
+                            <span style="font-weight: 700; color: var(--navy-900);">BANK CARD</span>
                             {% else %}
                             <div
                                 style="width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success);">
                             </div>
-                            <span style="font-weight: 600; color: var(--text-main);">CASH FLOW</span>
+                            <span style="font-weight: 700; color: var(--navy-900);">CASH FLOW</span>
                             {% endif %}
                         </div>
                     </td>
-                    <td style="font-weight: 800; text-align: right; font-size: 1.1rem; color: var(--text-main);">
-                        ₹{{ "%.2f"|format(sale.total) }}
+                    <td style="font-weight: 900; text-align: right; font-size: 1.15rem; color: var(--navy-900);">
+                        ?{{ "%.2f"|format(sale.total) }}
                     </td>
                 </tr>
                 {% else %}
@@ -129,13 +116,13 @@
             {% set active_sales = sales | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto',
             'RETURNED') | list %}
             <tfoot>
-                <tr style="background: rgba(var(--primary-rgb), 0.05); border-top: 2px solid var(--glass-border);">
-                    <td colspan="4"
-                        style="padding: 1.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 1rem;">
+                <tr style="background: var(--surface-light) !important; border-top: 2px solid var(--navy-900);">
+                    <td colspan="5"
+                        style="padding: 1.5rem; text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1rem;">
                         SESSION TOTAL REVENUE
                     </td>
                     <td
-                        style="text-align: right; font-weight: 800; color: var(--primary); font-size: 1.25rem; padding: 1.5rem; text-shadow: 0 0 10px rgba(99, 102, 241, 0.2);">
+                        style="text-align: right; font-weight: 950; color: var(--navy-900); font-size: 1.35rem; padding: 1.5rem; letter-spacing: -0.02em;">
                         ₹{{ "%.2f"|format(active_sales | sum(attribute='total')) }}
                     </td>
                 </tr>
@@ -151,37 +138,19 @@
         <div
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
             <h2>Bill Preview</h2>
-            <button class="btn btn-danger" onclick="closePreview()"
-                style="border-radius: 50%; width: 32px; height: 32px; padding: 0;">&times;</button>
+            <button class="close-btn" onclick="closePreview()">&times;</button>
         </div>
         <div id="previewContent"></div>
-        <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-            <button class="btn btn-primary" onclick="closePreview()">Close</button>
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+            <button class="btn btn-outline" onclick="closePreview()">Close</button>
+            <button class="btn btn-primary" id="modalPrintBtn">
+                <i class="fas fa-print"></i> Print Bill
+            </button>
         </div>
     </div>
 </div>
 
 <style>
-    .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-
-    .modal-content {
-        background: white !important;
-        padding: 2rem;
-        border-radius: 12px;
-    }
-
     .cancelled-row {
         opacity: 0.4;
         filter: grayscale(0.5);
@@ -217,7 +186,8 @@
             display: table-cell !important;
         }
 
-        .print-date-header {
+        .print-date-header,
+        .print-report-header {
             display: block !important;
             text-align: center !important;
             font-size: 10pt !important;
@@ -225,12 +195,12 @@
         }
 
         @page {
-            size: 80mm auto;
-            margin: 0;
+            size: A5;
+            margin: 5mm;
         }
 
         .dashboard-container {
-            width: 80mm !important;
+            width: 140mm !important;
             padding: 2mm !important;
         }
 
@@ -271,7 +241,7 @@
             let itemsHtml = bill.details.map(item => `
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #eee;">
                 <span>${item.name} x ${item.qty}</span>
-                <span>₹${(item.price * item.qty).toFixed(2)}</span>
+                <span>?${(item.price * item.qty).toFixed(2)}</span>
             </div>
         `).join('');
 
@@ -286,9 +256,12 @@
                 ${itemsHtml}
             </div>
             <div style="text-align: right; margin-top: 1rem; font-size: 1.2rem; font-weight: 800;">
-                Total: ₹${bill.total.toFixed(2)}
+                Total: ?${bill.total.toFixed(2)}
             </div>
         `;
+            document.getElementById('modalPrintBtn').onclick = () => {
+                window.location.href = `/billing/print-receipt/${bill.id}`;
+            };
             document.getElementById('previewModal').style.display = 'flex';
         } else {
             alert('Bill not found');
@@ -300,3 +273,5 @@
     }
 </script>
 {% endblock %}
+
+

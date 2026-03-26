@@ -1,233 +1,630 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Wholesale Logs{% endblock %}
+
+
+
+
+{% block title %}Wholesale Logs | Jai Agency{% endblock %}
+
+
+
+
+
+{% block nav_links %}
+
+
+<a href="/inventory">Dashboard</a>
+
+
+<a href="/inventory/live-stock">Live</a>
+
+
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+
+
+<a href="/inventory/products">Product Master</a>
+
+
+<a href="/inventory/suppliers">Suppliers</a>
+
+
+{% endblock %}
+
+
+
+
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-boxes"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory">Dashboard</a>
-        <div class="dropdown">
-            <a href="#" class="dropdown-toggle active">Invoice <i class="fas fa-chevron-down"
-                    style="font-size: 0.7rem;"></i></a>
-            <div class="dropdown-menu">
-                <a href="/inventory/stock-list">Stock Ledger</a>
-            </div>
+
+
+<div class="dashboard-wrapper">
+
+
+    <!-- Hero Section -->
+
+
+    <div class="dash-hero">
+
+
+        <div class="hero-main">
+
+
+            <h1>Wholesale Procurement</h1>
+
+
+            <p>Monitoring arrival logs and loose inventory replenishment.</p>
+
+
         </div>
-        <a href="/inventory/products">Product Master</a>
-        <a href="/inventory/live-stock">Live</a>
-        <a href="/inventory/suppliers">Suppliers</a>
-        <a href="/inventory/stock-return">Stock Return</a>
-        <a href="/inventory/payments">Payments</a>
+
+
+        <div class="hero-actions">
+
+
+            <button onclick="window.print()" class="btn-neural">
+
+
+                <i class="fas fa-print"></i> PRINT
+
+
+            </button>
+
+
+            <a href="/inventory/wholesale/new" class="btn-neural primary" style="background: var(--dash-primary); color: white;">
+
+
+                <i class="fas fa-plus"></i> ENTRY
+
+
+            </a>
+
+
+        </div>
+
+
     </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.0
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
+
+
+
+
+
+    <!-- Data Panel -->
+
+
+    <div class="neural-panel" style="padding: 0; overflow: hidden; border-radius: 32px;">
+
+
+        <div style="padding: 2rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01);">
+
+
+            <h3 style="margin: 0; font-size: 0.8rem; font-weight: 850; letter-spacing: 2px; text-transform: uppercase; color: white;">
+
+
+                <i class="fas fa-history" style="color: var(--dash-primary); margin-right: 15px;"></i> PURCHASE LIST
+
+
+            </h3>
+
+
+            <div class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--dash-primary);">{{ storage|length }} ENTRIES</div>
+
+
+        </div>
+
+
+
+
+
+        <div class="neural-table-container" style="border: none; border-radius: 0;">
+
+
+            <table class="neural-table">
+
+
+                <thead>
+
+
+                    <tr>
+
+
+                        <th style="padding-left: 2.5rem;">DATE</th>
+
+
+                        <th>PURCHASE ID</th>
+
+
+                        <th>INVOICE NO.</th>
+
+
+                        <th>ITEMS</th>
+
+
+                        <th style="text-align: center;">QTY</th>
+
+
+                        <th style="text-align: right;">TOTAL AMOUNT</th>
+
+
+                        <th style="text-align: center; padding-right: 2.5rem;">ACTIONS</th>
+
+
+                    </tr>
+
+
+                </thead>
+
+
+                <tbody>
+
+
+                    {% for g in storage %}
+
+
+                    <tr class="activity-row">
+
+
+                        <td style="padding-left: 2.5rem;">
+
+
+                            <div style="font-weight: 700; color: white; font-family: 'DM Mono'; font-size: 0.8rem;">{{ g.date }}</div>
+
+
+                            <div style="font-size: 0.7rem; color: var(--text-tertiary); font-weight: 800;">{{ g.time }}</div>
+
+
+                        </td>
+
+
+                        <td>
+
+
+                            <div style="font-family: 'DM Mono'; font-weight: 700; color: var(--dash-primary);">PROC_{{ g.purchase_id }}</div>
+
+
+                        </td>
+
+
+                        <td>
+
+
+                            <div style="font-weight: 800; color: white; font-size: 0.9rem;">{{ g.invoice_no }}</div>
+
+
+                            <div style="font-size: 0.7rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px;">{{ g.supplier }}</div>
+
+
+                        </td>
+
+
+                        <td style="max-width: 250px;">
+
+
+                            <div style="font-size: 0.75rem; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'DM Mono';">{{ g.material_codes }}</div>
+
+
+                        </td>
+
+
+                        <td style="text-align: center; font-weight: 950; font-family: 'Outfit'; color: white;">{{ g.no_of_items }}</td>
+
+
+                        <td style="text-align: right;">
+
+
+                            <div style="font-size: 1.15rem; font-weight: 950; color: white; font-family: 'Outfit';">
+
+
+                                ?{{ "{:,.2f}".format(g.final_total) }}
+
+
+                            </div>
+
+
+                            <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: 'DM Mono';">TAX: ?{{ "{:,.2f}".format(g.total_gst + g.total_igst) }}</div>
+
+
+                        </td>
+
+
+                        <td style="text-align: center; padding-right: 2.5rem;">
+
+
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+
+
+                                <button class="action-btn-small" onclick="editPurchase('{{ g.purchase_id }}')" title="Edit Shipment">
+
+
+                                    <i class="fas fa-external-link-alt"></i>
+
+
+                                </button>
+
+
+                                <button class="action-btn-small danger" onclick="deletePurchase('{{ g.purchase_id }}')" title="Purge Record">
+
+
+                                    <i class="fas fa-trash-alt"></i>
+
+
+                                </button>
+
+
+                            </div>
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% else %}
+
+
+                    <tr>
+
+
+                        <td colspan="7" style="text-align: center; padding: 10rem; color: var(--text-tertiary);">
+
+
+                            <i class="fas fa-dolly" style="font-size: 4rem; opacity: 0.1; display: block; margin-bottom: 2rem;"></i>
+
+
+                            NO PURCHASE RECORDS FOUND
+
+
+                        </td>
+
+
+                    </tr>
+
+
+                    {% endfor %}
+
+
+                </tbody>
+
+
+            </table>
+
+
+        </div>
+
+
     </div>
-</nav>
+
+
+</div>
+
+
+
+
 
 <style>
-    .dropdown {
-        position: relative;
-        display: inline-block;
+
+
+    .dashboard-wrapper {
+
+
+        max-width: 1550px;
+
+
+        margin: 0 auto;
+
+
+        padding: 2.5rem;
+
+
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+
+
     }
 
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        background: white;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        border-radius: 8px;
-        padding: 8px 0;
-        top: 100%;
-        text-align: left;
+
+
+
+
+    @keyframes dashboardEnter {
+
+
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+
+
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+
     }
 
-    .dropdown-menu a {
-        color: var(--text-main) !important;
-        padding: 10px 16px !important;
+
+
+
+
+    .dash-hero {
+
+
+        display: flex;
+
+
+        justify-content: space-between;
+
+
+        align-items: flex-end;
+
+
+        margin-bottom: 3.5rem;
+
+
+        padding-bottom: 2rem;
+
+
+        border-bottom: 1px solid var(--dash-glass-border);
+
+
+    }
+
+
+
+
+
+    .hero-main h1 {
+
+
+        font-size: 3.5rem;
+
+
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+
+
+        color: white;
+
+
+        line-height: 1;
+
+
+        margin-bottom: 0.5rem;
+
+
+        letter-spacing: -0.02em;
+
+
+    }
+
+
+
+
+
+    .hero-main p {
+
+
+        font-size: 0.8rem;
+
+
+        font-weight: 800;
+
+
+        letter-spacing: 0.15em;
+
+
+        color: var(--text-tertiary);
+
+
+        text-transform: uppercase;
+
+
+    }
+
+
+
+
+
+    .neural-panel {
+
+
+        background: var(--dash-card-bg);
+
+
+        border: 1px solid var(--dash-glass-border);
+
+
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
+
+
+    }
+
+
+
+
+
+    .btn-neural {
+
+
+        background: rgba(255,255,255,0.05);
+
+
+        color: white;
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        padding: 14px 28px;
+
+
+        border-radius: 16px;
+
+
+        font-size: 0.75rem;
+
+
+        font-weight: 800;
+
+
+        letter-spacing: 0.05em;
+
+
+        cursor: pointer;
+
+
+        transition: all 0.3s ease;
+
+
+        display: inline-flex;
+
+
+        align-items: center;
+
+
+        gap: 12px;
+
+
         text-decoration: none;
-        display: block !important;
-        font-size: 0.85rem !important;
-        border-radius: 0 !important;
-        background: transparent !important;
+
+
     }
 
-    .dropdown-menu a:hover {
-        background: var(--bg-main) !important;
-        color: var(--primary) !important;
+
+
+
+
+    .btn-neural:hover { background: white; color: var(--navy-900); transform: translateY(-2px); }
+
+
+
+
+
+    .action-btn-small {
+
+
+        width: 36px;
+
+
+        height: 36px;
+
+
+        border-radius: 10px;
+
+
+        background: rgba(255,255,255,0.05);
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        color: var(--text-tertiary);
+
+
+        cursor: pointer;
+
+
+        transition: all 0.2s;
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+        justify-content: center;
+
+
+        font-size: 0.8rem;
+
+
     }
 
-    .dropdown:hover .dropdown-menu {
-        display: block;
-    }
+
+
+
+
+    .action-btn-small:hover { background: var(--dash-primary); color: white; border-color: var(--dash-primary); }
+
+
+    .action-btn-small.danger:hover { background: var(--dash-danger); border-color: var(--dash-danger); }
+
+
+
+
 
     @media print {
 
-        .navbar,
-        .btn,
-        .nav-links,
-        .section-header div:last-child,
-        th:last-child,
-        td:last-child {
-            display: none !important;
-        }
 
-        .dashboard-container {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+        .navbar, .btn-neural, .hero-actions, .action-btn-small { display: none !important; }
 
-        .glass-panel {
-            border: none !important;
-        }
+
+        body { background: white !important; color: black !important; }
+
+
+        .dashboard-wrapper { padding: 0 !important; max-width: 100% !important; }
+
+
+        .neural-panel { border: 1px solid #ddd !important; background: white !important; box-shadow: none !important; color: black !important; }
+
+
+        .neural-table th { border-bottom: 2px solid black !important; color: black !important; }
+
+
+        .neural-table td { border-bottom: 1px solid #eee !important; color: black !important; }
+
+
+        h1, h2, h3, p, div, span { color: black !important; }
+
+
     }
+
+
 </style>
 
-<div class="dashboard-container fade-in" style="max-width: 1400px;">
-    <div class="section-header">
-        <div>
-            <h1>Wholesale Procurement</h1>
-            <p style="color: var(--text-muted);">Monitor arrival logs and manage your loose item inventory.</p>
-        </div>
-        <div style="display: flex; gap: 0.75rem;">
-            <button onclick="window.print()" class="btn btn-outline">
-                <i class="fas fa-print"></i> PRINT LEDGER
-            </button>
-            <a href="/inventory/wholesale/new" class="btn btn-primary">
-                <i class="fas fa-plus"></i> ADD INVOICE
-            </a>
-        </div>
-    </div>
 
-    <!-- Arrival Audit Trail Table -->
-    <div class="glass-panel" style="padding: 0; overflow: hidden; border: 1px solid var(--glass-border);">
-        <div
-            style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03);">
-            <h2
-                style="font-size: 1.1rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px; margin: 0;">
-                <i class="fas fa-history" style="color: var(--primary); margin-right: 10px;"></i> Arrival Audit Trail
-            </h2>
-            <span class="badge" style="background: var(--primary-glow); color: var(--primary);">{{ storage|length }}
-                Entries Recorded</span>
-        </div>
 
-        <div class="table-container" style="overflow-x: auto; margin: 0;">
-            <table style="width: 100%; table-layout: auto; font-size: 0.85rem;">
-                <thead>
-                    <tr style="background: rgba(8, 6, 54, 0.705); color: white;">
-                        <th style="color: white;">Date</th>
-                        <th style="color: white;">Purchase ID</th>
-                        <th style="color: white;">Invoice No</th>
-                        <th style="color: white;">Material Codes</th>
-                        <th style="color: white; text-align: center;">No. of Items</th>
-                        <th style="color: white; text-align: right;">Total (Excl. Tax)</th>
-                        <th style="color: white; text-align: right;">Total GST</th>
-                        <th style="color: white; text-align: right;">Total IGST</th>
-                        <th style="color: white; text-align: right;">Final Total</th>
-                        <th style="color: white; text-align: center;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for g in storage %}
-                    <tr class="fade-in">
-                        <td>
-                            <div style="font-weight: 700; color: var(--text-main);">{{ g.date }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ g.time }}</div>
-                        </td>
-                        <td>
-                            <div style="font-family: monospace; font-weight: 700; color: var(--primary);">{{
-                                g.purchase_id }}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 600;">{{ g.invoice_no }}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted);">{{ g.supplier }}</div>
-                        </td>
-                        <td style="max-width: 250px;">
-                            <div style="font-size: 0.8rem; color: var(--text-main); word-wrap: break-word;">{{
-                                g.material_codes }}</div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div style="font-weight: 800; color: var(--text-main);">{{ g.no_of_items }}</div>
-                        </td>
-                        <td style="text-align: right; font-weight: 600;">
-                            ₹{{ "{:,.2f}".format(g.total_excl_tax) }}
-                        </td>
-                        <td style="text-align: right; color: var(--text-muted);">
-                            ₹{{ "{:,.2f}".format(g.total_gst) }}
-                        </td>
-                        <td style="text-align: right; color: var(--text-muted);">
-                            ₹{{ "{:,.2f}".format(g.total_igst) }}
-                        </td>
-                        <td style="text-align: right;">
-                            <div style="font-size: 1rem; font-weight: 800; color: var(--success);">
-                                ₹{{ "{:,.2f}".format(g.final_total) }}
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <button class="btn btn-outline"
-                                    style="padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.75rem;"
-                                    onclick="editPurchase('{{ g.purchase_id }}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-danger"
-                                    style="padding: 0.4rem 0.8rem; border-radius: var(--radius-sm); font-size: 0.75rem;"
-                                    onclick="deletePurchase('{{ g.purchase_id }}')">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 4rem; color: var(--text-muted);">
-                            <i class="fas fa-inbox"
-                                style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.5;"></i>
-                            No wholesale entries recorded yet. Click 'ADD INVOICE' to start.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
+
 
 <script>
-    function editPurchase(purchaseId) {
-        // For now, we will redirect to a placeholder or reuse stock-entry if possible.
-        // Since editing a complex stock entry is involved, we will simply redirect to the form
-        // passing the ID as a query param if we were to implement full editing.
-        // For this step, I will add the function that alerts "Coming Soon" or redirects.
 
-        // window.location.href = '/inventory/wholesale/edit/' + purchaseId;
-        alert("Edit functionality for " + purchaseId + " is coming next! (Requires data population)");
+
+    function editPurchase(purchaseId) {
+
+
+        // Future route for editing existing shipments
+
+
+        window.location.href = `/inventory/wholesale/edit/${purchaseId}`;
+
+
     }
+
+
+
+
 
     async function deletePurchase(purchaseId) {
-        if (!confirm(`Are you sure you want to remove this entire purchase/invoice (${purchaseId})?`)) return;
+
+
+        if (!confirm(`Delete invoice PROC_${purchaseId}? This cannot be undone.`)) return;
+
 
         try {
+
+
             const res = await fetch('/api/purchase/delete/' + purchaseId, { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-                location.reload();
-            } else {
-                alert("Fail: " + data.message);
-            }
-        } catch (e) {
-            alert("Action failed");
-        }
+
+
+            if ((await res.json()).success) location.reload();
+
+
+            else alert("Transaction failure: Core rejection.");
+
+
+        } catch (e) { alert("Network sync error: Verification failed."); }
+
+
     }
+
+
 </script>
+
+
 {% endblock %}
+
+

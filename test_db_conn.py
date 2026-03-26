@@ -1,4 +1,4 @@
-import sqlite3
+﻿import sqlite3
 import os
 print("Importing app parts...")
 from app import get_db_path, DB_FILE

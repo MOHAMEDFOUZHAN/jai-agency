@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeRush | Online Practice Platform</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
+    <style>
+        :root {
+            --bg: #07111f;
+            --bg-soft: #0d1b2f;
+            --panel: rgba(10, 22, 39, 0.84);
+            --panel-strong: rgba(13, 28, 49, 0.95);
+            --line: rgba(159, 190, 255, 0.16);
+            --text: #edf4ff;
+            --muted: #9fb0ca;
+            --accent: #4ade80;
+            --accent-2: #38bdf8;
+            --accent-3: #f59e0b;
+            --danger: #fb7185;
+            --shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Manrope', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.2), transparent 30%),
+                radial-gradient(circle at top right, rgba(74, 222, 128, 0.18), transparent 28%),
+                linear-gradient(135deg, #040b15 0%, #07111f 45%, #0c1830 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .page-shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 28px 0 56px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-mark {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--accent-2), var(--accent));
+            display: grid;
+            place-items: center;
+            color: #04101e;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+            box-shadow: var(--shadow);
+        }
+
+        .brand h1,
+        .brand p {
+            margin: 0;
+        }
+
+        .brand h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: -0.03em;
+        }
+
+        .brand p {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .status-pill {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .hero-panel,
+        .card,
+        .editor-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+        }
+
+        .hero-panel {
+            padding: 34px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-panel::after {
+            content: "";
+            position: absolute;
+            inset: auto -120px -140px auto;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.25), transparent 70%);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(74, 222, 128, 0.12);
+            border: 1px solid rgba(74, 222, 128, 0.22);
+            color: #d8ffe7;
+            font-size: 0.82rem;
+            margin-bottom: 18px;
+        }
+
+        .hero-panel h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: clamp(2.2rem, 4vw, 4.4rem);
+            line-height: 0.96;
+            letter-spacing: -0.05em;
+            margin: 0 0 18px;
+            max-width: 640px;
+        }
+
+        .hero-panel p {
+            max-width: 560px;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.7;
+            margin: 0 0 24px;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-weight: 800;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), #a3e635);
+            color: #072213;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid var(--line);
+        }
+
+        .stats-grid,
+        .features-grid,
+        .tracks-grid,
+        .bottom-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .stat-box,
+        .feature-box,
+        .track-box,
+        .problem-card {
+            border-radius: 22px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 18px;
+        }
+
+        .stat-box small,
+        .feature-box small,
+        .track-box small,
+        .problem-meta,
+        .muted {
+            color: var(--muted);
+        }
+
+        .stat-box strong {
+            display: block;
+            font-size: 1.9rem;
+            margin-top: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .editor-card {
+            padding: 24px;
+            background: var(--panel-strong);
+        }
+
+        .editor-header,
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .section-title,
+        .editor-title {
+            margin: 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.15rem;
+        }
+
+        .editor-surface {
+            border-radius: 24px;
+            overflow: hidden;
+            border: 1px solid rgba(110, 145, 214, 0.18);
+            background: #03101d;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border-bottom: 1px solid rgba(110, 145, 214, 0.15);
+        }
+
+        .code-block {
+            margin: 0;
+            padding: 18px;
+            min-height: 270px;
+            color: #d7e7ff;
+            font-family: Consolas, monospace;
+            line-height: 1.75;
+            white-space: pre-wrap;
+        }
+
+        .output-box {
+            margin-top: 16px;
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(74, 222, 128, 0.08);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+        }
+
+        .section {
+            margin-top: 24px;
+        }
+
+        .features-grid,
+        .tracks-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .bottom-grid {
+            grid-template-columns: 1.05fr 0.95fr;
+            align-items: start;
+        }
+
+        .problem-list {
+            display: grid;
+            gap: 14px;
+        }
+
+        .problem-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .problem-card h4,
+        .feature-box h4,
+        .track-box h4 {
+            margin: 0 0 8px;
+            font-size: 1rem;
+        }
+
+        .tag-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .tag {
+            padding: 7px 10px;
+            border-radius: 999px;
+            background: rgba(56, 189, 248, 0.12);
+            color: #c8eeff;
+            font-size: 0.77rem;
+        }
+
+        .difficulty {
+            min-width: 88px;
+            text-align: center;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-weight: 800;
+            font-size: 0.82rem;
+        }
+
+        .difficulty.easy { background: rgba(74, 222, 128, 0.12); color: #d8ffe7; }
+        .difficulty.medium { background: rgba(245, 158, 11, 0.13); color: #ffe6b0; }
+        .difficulty.hard { background: rgba(251, 113, 133, 0.13); color: #ffd5dd; }
+
+        .progress-card {
+            padding: 24px;
+        }
+
+        .progress-ring {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            margin: 16px auto 20px;
+            display: grid;
+            place-items: center;
+            background: conic-gradient(var(--accent-2) 0deg 248deg, rgba(255, 255, 255, 0.06) 248deg 360deg);
+        }
+
+        .progress-ring::before {
+            content: "";
+            width: 126px;
+            height: 126px;
+            border-radius: 50%;
+            background: #081221;
+            border: 1px solid var(--line);
+            position: absolute;
+        }
+
+        .progress-content {
+            position: relative;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .progress-content strong {
+            display: block;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+        }
+
+        .mini-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .mini-box {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--line);
+        }
+
+        .mini-box strong {
+            display: block;
+            margin-top: 8px;
+            font-size: 1.4rem;
+        }
+
+        @media (max-width: 980px) {
+            .hero,
+            .bottom-grid,
+            .features-grid,
+            .tracks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .page-shell {
+                width: min(100% - 20px, 1180px);
+                padding-top: 18px;
+            }
+
+            .topbar,
+            .problem-card,
+            .editor-toolbar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .hero-panel,
+            .editor-card,
+            .progress-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script>
+        window.PRACTICE_DATA = {{ practice_data|tojson }};
+    </script>
+    <script crossorigin src="{{ url_for('static', filename='lib/react.development.js') }}"></script>
+    <script crossorigin src="{{ url_for('static', filename='lib/react-dom.development.js') }}"></script>
+    <script>
+        const e = React.createElement;
+
+        function DifficultyBadge(props) {
+            const level = props.level.toLowerCase();
+            return e('div', { className: 'difficulty ' + level }, props.level);
+        }
+
+        function StatCard(props) {
+            return e('div', { className: 'stat-box' }, [
+                e('small', { key: 'label' }, props.label),
+                e('strong', { key: 'value' }, props.value)
+            ]);
+        }
+
+        function FeatureCard(props) {
+            return e('div', { className: 'feature-box' }, [
+                e('h4', { key: 'title' }, props.title),
+                e('small', { key: 'desc' }, props.description)
+            ]);
+        }
+
+        function TrackCard(props) {
+            return e('div', { className: 'track-box' }, [
+                e('small', { key: 'level' }, props.level + ' â€¢ ' + props.lessons + ' lessons'),
+                e('h4', { key: 'title' }, props.title),
+                e('small', { key: 'desc' }, props.description)
+            ]);
+        }
+
+        function ProblemCard(props) {
+            return e('div', { className: 'problem-card' }, [
+                e('div', { key: 'left' }, [
+                    e('div', { className: 'problem-meta', key: 'meta' }, props.solved + '+ students solved'),
+                    e('h4', { key: 'title' }, props.title),
+                    e('div', { className: 'tag-row', key: 'tags' },
+                        props.tags.map(function(tag) {
+                            return e('span', { className: 'tag', key: tag }, tag);
+                        })
+                    )
+                ]),
+                e(DifficultyBadge, { key: 'difficulty', level: props.difficulty })
+            ]);
+        }
+
+        function App() {
+            const [data, setData] = React.useState(window.PRACTICE_DATA);
+
+            React.useEffect(function() {
+                fetch('/api/practice-data')
+                    .then(function(response) { return response.json(); })
+                    .then(function(result) { setData(result); })
+                    .catch(function() {
+                        setData(window.PRACTICE_DATA);
+                    });
+            }, []);
+
+            return e('div', { className: 'page-shell' }, [
+                e('header', { className: 'topbar', key: 'topbar' }, [
+                    e('div', { className: 'brand', key: 'brand' }, [
+                        e('div', { className: 'brand-mark', key: 'mark' }, '</>'),
+                        e('div', { key: 'copy' }, [
+                            e('h1', { key: 'h1' }, 'CodeRush'),
+                            e('p', { key: 'p' }, 'React + Flask online coding practice platform')
+                        ])
+                    ]),
+                    e('div', { className: 'status-pill', key: 'pill' }, 'Submission-ready UI concept')
+                ]),
+
+                e('section', { className: 'hero', key: 'hero' }, [
+                    e('div', { className: 'hero-panel', key: 'left' }, [
+                        e('div', { className: 'eyebrow', key: 'eyebrow' }, 'Placement preparation for students'),
+                        e('h2', { key: 'title' }, 'Practice coding problems, track progress, and prepare for interviews in one place.'),
+                        e('p', { key: 'desc' }, 'This project showcases an online coding practice platform built with Flask on the backend and a React-powered interface on the frontend. It highlights problem solving, topic-based learning, analytics, and mock coding sessions.'),
+                        e('div', { className: 'hero-actions', key: 'actions' }, [
+                            e('button', { className: 'btn btn-primary', key: 'start', type: 'button' }, 'Start Practice'),
+                            e('button', { className: 'btn btn-secondary', key: 'demo', type: 'button' }, 'View Dashboard')
+                        ]),
+                        e('div', { className: 'stats-grid', key: 'stats' },
+                            data.hero_stats.map(function(item) {
+                                return e(StatCard, { key: item.label, label: item.label, value: item.value });
+                            })
+                        )
+                    ]),
+
+                    e('div', { className: 'editor-card', key: 'right' }, [
+                        e('div', { className: 'editor-header', key: 'header' }, [
+                            e('h3', { className: 'editor-title', key: 'title' }, 'Live Practice Preview'),
+                            e('span', { className: 'muted', key: 'muted' }, 'Python challenge')
+                        ]),
+                        e('div', { className: 'editor-surface', key: 'surface' }, [
+                            e('div', { className: 'editor-toolbar', key: 'toolbar' }, [
+                                e('span', { key: 'file' }, 'solution.py'),
+                                e('span', { className: 'muted', key: 'state' }, 'Runtime: 0.21s')
+                            ]),
+                            e('pre', { className: 'code-block', key: 'code' }, "def two_sum(nums, target):\n    seen = {}\n    for index, value in enumerate(nums):\n        need = target - value\n        if need in seen:\n            return [seen[need], index]\n        seen[value] = index\n\nprint(two_sum([2, 7, 11, 15], 9))"),
+                        ]),
+                        e('div', { className: 'output-box', key: 'output' }, [
+                            e('strong', { key: 'label' }, 'Output'),
+                            e('div', { className: 'muted', key: 'text' }, '[0, 1]  â€¢  Accepted on all test cases')
+                        ])
+                    ])
+                ]),
+
+                e('section', { className: 'section', key: 'features-section' }, [
+                    e('div', { className: 'section-header', key: 'header' }, [
+                        e('h3', { className: 'section-title', key: 'title' }, 'Platform Highlights'),
+                        e('span', { className: 'muted', key: 'caption' }, 'Student-friendly and interview-focused')
+                    ]),
+                    e('div', { className: 'features-grid', key: 'grid' },
+                        data.features.map(function(feature) {
+                            return e(FeatureCard, {
+                                key: feature.title,
+                                title: feature.title,
+                                description: feature.description
+                            });
+                        })
+                    )
+                ]),
+
+                e('section', { className: 'section', key: 'tracks-section' }, [
+                    e('div', { className: 'section-header', key: 'header' }, [
+                        e('h3', { className: 'section-title', key: 'title' }, 'Learning Tracks'),
+                        e('span', { className: 'muted', key: 'caption' }, 'Structured roadmap for every level')
+                    ]),
+                    e('div', { className: 'tracks-grid', key: 'grid' },
+                        data.tracks.map(function(track) {
+                            return e(TrackCard, {
+                                key: track.title,
+                                title: track.title,
+                                description: track.description,
+                                level: track.level,
+                                lessons: track.lessons
+                            });
+                        })
+                    )
+                ]),
+
+                e('section', { className: 'section bottom-grid', key: 'bottom' }, [
+                    e('div', { className: 'card progress-card', key: 'progress' }, [
+                        e('div', { className: 'section-header', key: 'header' }, [
+                            e('h3', { className: 'section-title', key: 'title' }, 'Weekly Progress'),
+                            e('span', { className: 'muted', key: 'caption' }, 'Performance analytics')
+                        ]),
+                        e('div', { className: 'progress-ring', key: 'ring' }, [
+                            e('div', { className: 'progress-content', key: 'content' }, [
+                                e('strong', { key: 'score' }, '69%'),
+                                e('span', { className: 'muted', key: 'label' }, 'completion')
+                            ])
+                        ]),
+                        e('div', { className: 'mini-metrics', key: 'metrics' }, [
+                            e('div', { className: 'mini-box', key: 'm1' }, [
+                                e('small', { key: 'label' }, 'Solved Today'),
+                                e('strong', { key: 'value' }, '12')
+                            ]),
+                            e('div', { className: 'mini-box', key: 'm2' }, [
+                                e('small', { key: 'label' }, 'Current Streak'),
+                                e('strong', { key: 'value' }, '7 days')
+                            ]),
+                            e('div', { className: 'mini-box', key: 'm3' }, [
+                                e('small', { key: 'label' }, 'Mock Rank'),
+                                e('strong', { key: 'value' }, '#14')
+                            ]),
+                            e('div', { className: 'mini-box', key: 'm4' }, [
+                                e('small', { key: 'label' }, 'Accuracy'),
+                                e('strong', { key: 'value' }, '91%')
+                            ])
+                        ])
+                    ]),
+
+                    e('div', { className: 'card progress-card', key: 'problems' }, [
+                        e('div', { className: 'section-header', key: 'header' }, [
+                            e('h3', { className: 'section-title', key: 'title' }, 'Popular Problems'),
+                            e('span', { className: 'muted', key: 'caption' }, 'Practice set preview')
+                        ]),
+                        e('div', { className: 'problem-list', key: 'list' },
+                            data.problems.map(function(problem) {
+                                return e(ProblemCard, {
+                                    key: problem.title,
+                                    title: problem.title,
+                                    difficulty: problem.difficulty,
+                                    tags: problem.tags,
+                                    solved: problem.solved
+                                });
+                            })
+                        )
+                    ])
+                ])
+            ]);
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(e(App));
+    </script>
+</body>
+</html>

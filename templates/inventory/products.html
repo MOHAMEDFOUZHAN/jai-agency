@@ -1,703 +1,1831 @@
-{% extends "base.html" %} <!-- TEST -->
+{% extends "base.html" %}
 
-{% block title %}Kokkalatty Trades - Product Master{% endblock %}
+
+
+
+
+{% block title %}Product Master | Jai Agency{% endblock %}
+
+
+
+
+
+{% block nav_links %}
+
+
+<a href="/inventory">Dashboard</a>
+
+
+<a href="/inventory/live-stock">Live</a>
+
+
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+
+
+<a href="/inventory/products" class="active">Product Master</a>
+
+
+<a href="/inventory/suppliers">Suppliers</a>
+
+
+<a href="/inventory/stock-return">Return Stock</a>
+
+
+{% endblock %}
+
+
+
+
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-warehouse"></i>
-        <span>Kokkalatty Trades</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory" {% if page=='dashboard' %}class="active" {% endif %}>Dashboard</a>
-        <a href="/inventory/live-stock" {% if page=='live_stock' %}class="active" {% endif %}>Live</a>
-        <a href="/inventory/storage" {% if page=='storage' %}class="active" {% endif %}>Storage</a>
-        <a href="/inventory/products" {% if page=='products' %}class="active" {% endif %}>Product Master</a>
-        <a href="/inventory/suppliers" {% if page=='suppliers' %}class="active" {% endif %}>Suppliers</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.1
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
 
-<div class="dashboard-container fade-in" style="max-width: 1400px;">
-    <div class="section-header" style="margin-bottom: 3rem;">
-        <div>
-            <h1 style="display: flex; align-items: center; gap: 15px; font-weight: 900; letter-spacing: -1px;">
-                <i class="fas fa-microchip" style="color: var(--primary);"></i>
-                Product Master Console
-            </h1>
-            <p style="color: var(--text-muted);">Configure item properties, pricing structures, and reorder thresholds.
-            </p>
+
+<div class="dashboard-wrapper">
+
+
+    <div class="dash-hero">
+
+
+        <div class="hero-main">
+
+
+            <h1>Product Master</h1>
+
+
+            <p>Manage your products, pricing, and stock alerts.</p>
+
+
         </div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <div class="search-box-premium">
+
+
+        <div class="hero-actions">
+
+
+            <div class="neural-search">
+
+
                 <i class="fas fa-search"></i>
-                <input type="text" id="productSearch" placeholder="Filter by name or SKU..." onkeyup="filterProducts()">
+
+
+                <input type="text" id="productSearch" placeholder="Search Grade..." onkeyup="filterProducts()">
+
+
             </div>
-            <button onclick="window.print()" class="btn btn-outline" style="border-radius: 50px;">
-                <i class="fas fa-print"></i> EXPORT CATALOG
+
+
+            <button onclick="window.print()" class="btn-neural">
+
+
+                <i class="fas fa-print"></i> PRINT
+
+
             </button>
+
+
         </div>
+
+
     </div>
 
-    <div class="glass-panel"
-        style="padding: 0; border: 1px solid var(--glass-border); overflow: hidden; background: white;">
-        <div class="table-container" style="border: none; overflow-x: auto;">
-            <table id="productTable" style="width: 100%; border-collapse: separate; border-spacing: 0;">
+
+
+
+
+    <div class="insight-card" style="padding: 0; overflow: hidden;">
+
+
+        <div class="neural-table-container" style="border: none; border-radius: 0;">
+
+
+            <table class="neural-table product-table" id="productTable">
+
+
                 <thead>
-                    <tr style="background: #1e293b; color: white;">
-                        <th style="width: 50px; padding-left: 20px;"></th>
-                        <th style="color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            SKU Code</th>
-                        <th style="color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Lot ID</th>
-                        <th style="color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Designation</th>
-                        <th style="color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Nomenclature (TA)</th>
-                        <th style="color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Group</th>
-                        <th
-                            style="text-align: center; color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Unit</th>
-                        <th
-                            style="text-align: right; color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Available</th>
-                        <th
-                            style="text-align: center; color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            System</th>
-                        <th
-                            style="text-align: right; color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Costing</th>
-                        <th
-                            style="text-align: right; color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Value Rate</th>
-                        <th
-                            style="text-align: right; padding-right: 20px; color: #cbd5e1; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-                            Control</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in inventory %}
-                    <tr class="product-row" data-code="{{ item.code }}">
-                        <td onclick="toggleLots('{{ item.code }}')" style="cursor: pointer; padding-left: 20px;">
-                            <div class="chevron-btn lot-icon-{{ item.code }}">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                        </td>
-                        <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--primary);">
-                            #{{ item.code }}
-                        </td>
-                        <td>
-                            {% if item.batches and item.batches|length > 0 %}
-                            <div style="font-family: monospace; color: var(--text-main); font-weight: 700;">Lot:{{
-                                "%03d" | format(item.batches[0].id) }}</div>
-                            {% if item.batches|length > 1 %}
-                            <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 600;">+{{ item.batches|length -
-                                1 }} batches</div>
-                            {% endif %}
-                            {% else %}
-                            <span style="color: #cbd5e1;">--</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div style="font-weight: 800; color: var(--text-main); font-size: 0.95rem;">{{ item.name }}
-                            </div>
-                        </td>
-                        <td>
-                            <div style="font-size: 0.85rem; color: #64748b; font-weight: 500;">{{ item.name_ta or '--'
-                                }}</div>
-                        </td>
-                        <td>
-                            <span class="badge"
-                                style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; font-size: 0.7rem; letter-spacing: 0.5px;">{{
-                                item.category }}</span>
-                        </td>
-                        <td style="text-align: center; color: #64748b; font-weight: 600; font-size: 0.8rem;">
-                            {{ item.unit or 'Nos' }}
-                        </td>
-                        <td style="text-align: right;">
-                            <div
-                                style="font-weight: 900; color: {{ '#ef4444' if item.stock < (item.reorder_level or 10) else '#059669' }}; font-size: 1.05rem;">
-                                {{ "%.3f"|format(item.stock) if item.is_loose else item.stock|int }}
-                            </div>
-                        </td>
-                        <td style="text-align: center;">
-                            {% if item.is_loose %}
-                            <span
-                                style="color: #8b5cf6; font-size: 0.65rem; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.2); padding: 2px 8px; border-radius: 50px; font-weight: 800; letter-spacing: 1px;">WHOLESALE</span>
-                            {% else %}
-                            <span
-                                style="color: #64748b; font-size: 0.65rem; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 50px; font-weight: 800; letter-spacing: 1px;">RETAIL</span>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: right; font-weight: 600; color: #64748b; font-size: 0.85rem;">
-                            â‚¹{{ "%.2f"|format(item.last_cost or 0) }}
-                        </td>
-                        <td style="text-align: right;">
-                            <div style="font-weight: 900; color: var(--text-main); font-size: 1.15rem;">
-                                {% if item.is_loose %}
-                                â‚¹{{ "%.4f"|format(item.price_per_gram or item.price/1000) }}<span
-                                    style="font-size: 0.7rem; color: #94a3b8; font-weight: 600;">/g</span>
-                                {% else %}
-                                â‚¹{{ "%.2f"|format(item.price) }}
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td style="text-align: right; padding-right: 20px;">
-                            <button class="action-btn-config"
-                                onclick="openEditModal('{{ item.code }}', '{{ item.name|replace("'", "\\'") }}', '{{ (item.name_ta or "")|replace("'", "\\'") }}', '{{ item.category|replace("'", "\\'") }}', {{ item.price }}, {{ 'true' if item.is_loose else 'false' }}, {{ item.price_per_gram or 0 }}, {{ item.reorder_level or 10 }})">
-                                <i class="fas fa-sliders-h"></i>
-                            </button>
-                        </td>
+
+
+                    <tr>
+
+
+                        <th class="product-col-toggle"></th>
+
+
+                        <th>ITEM_ID</th>
+
+
+                        <th>GRADE / CATEGORY</th>
+
+
+                        <th class="text-center">AVAILABILITY</th>
+
+
+                        <th class="text-center">STOCK_STATUS</th>
+
+
+                        <th class="text-right">TARGET_PRICE</th>
+
+
+                        <th class="product-col-command text-center">COMMAND</th>
+
+
                     </tr>
 
-                    <!-- Sub-row for Lots -->
-                    <tr id="lots-{{ item.code }}" class="lot-row-expanded" style="display: none;">
-                        <td colspan="12" style="background: #f8fafc; padding: 2rem 3rem;">
-                            <div class="expanded-panel">
-                                <div class="expanded-header">
-                                    <h3><i class="fas fa-history"></i> INVENTORY BATCH TELEMETRY</h3>
-                                    <span class="fifo-label">FIFO STATUS: ACTIVE</span>
-                                </div>
-                                <div class="batch-grid">
-                                    <div class="batch-head">BATCH IDENTIFIER</div>
-                                    <div class="batch-head">INGRESS TIMESTAMP</div>
-                                    <div class="batch-head">EXPIRATION TARGET</div>
-                                    <div class="batch-head text-right">UNIT VALUATION</div>
-                                    <div class="batch-head text-right">NET QUANTITY</div>
-                                </div>
-                                {% for batch in item.batches %}
-                                <div class="batch-item">
-                                    <div class="lot-id">#{{ "%03d" | format(batch.id) }}</div>
-                                    <div class="lot-time">{{ batch.entry_time }}</div>
-                                    <div
-                                        class="lot-expiry {{ 'text-danger' if batch.expiry and batch.expiry < today }}">
-                                        {{ batch.expiry or 'NON-EXPIRABLE' }}
-                                    </div>
-                                    <div class="lot-cost text-right">â‚¹{{ "%.2f"|format(batch.cost) }}</div>
-                                    <div class="lot-qty text-right">{{ "%.3f"|format(batch.qty) if item.is_loose else
-                                        batch.qty|int }}</div>
-                                </div>
-                                {% else %}
-                                <div class="empty-batch">No active telemetry found for this asset.</div>
-                                {% endfor %}
+
+                </thead>
+
+
+                <tbody>
+
+
+                    {% for item in inventory %}
+
+
+                    {% set is_low = item.stock < (item.reorder_level or 10) %}
+
+
+                    <tr class="product-row activity-row" data-code="{{ item.code }}">
+
+
+                        <td class="product-toggle-cell" onclick="toggleLots('{{ item.code }}')">
+
+
+                            <div class="chevron-btn lot-icon-{{ item.code }}">
+
+
+                                <i class="fas fa-chevron-right" style="font-size: 0.8rem;"></i>
+
+
                             </div>
+
+
                         </td>
+
+
+                        <td class="product-code-cell">
+
+
+                            <div class="product-code-pill">#{{ item.code }}</div>
+
+
+                        </td>
+
+
+                        <td class="product-grade-cell">
+
+
+                            <div class="product-grade">{{ item.grade or item.name }}</div>
+
+
+                            <div class="product-category">{{ item.category or 'CATEGORY' }}</div>
+
+
+                        </td>
+
+
+                        <td class="product-availability text-center">
+
+
+                            <div class="product-availability-value">
+
+
+                                {{ "%.3f"|format(item.stock) if item.is_loose else item.stock|int }}
+
+
+                            </div>
+
+
+                            <div class="product-availability-unit">{{ item.unit or 'PCS' }}</div>
+
+
+                        </td>
+
+
+                        <td class="text-center">
+
+
+                            {% if is_low %}
+
+
+                            <span class="badge product-status-badge is-low">LOW STOCK</span>
+
+
+                            {% else %}
+
+
+                            <span class="badge product-status-badge is-stable">STABLE</span>
+
+
+                            {% endif %}
+
+
+                        </td>
+
+
+                        <td class="product-p-cell text-right">
+                            <div class="product-p-group">
+                                <span class="p-label-tag">RETAIL</span>
+                                <div class="product-price-main">₹{{ "%.2f"|format(item.price) }}</div>
+                            </div>
+                            <div class="product-p-group" style="margin-top: 5px;">
+                                <span class="p-label-tag wholesale">WHOLESALE</span>
+                                <div class="product-price-main" style="color: #64748b;">₹{{ "%.2f"|format(item.wholesale_price or 0) }}</div>
+                            </div>
+                            <div class="product-price-sub">PURCHASE COST: ₹{{ "%.2f"|format(item.last_cost or 0) }}</div>
+                        </td>
+
+
+                        <td class="product-command-cell text-center">
+
+
+                            <button class="control-btn" title="Configuration"
+
+
+                                data-code="{{ item.code }}"
+
+
+                                data-name="{{ item.name }}" data-name-ta="{{ item.name_ta or '' }}"
+
+
+                                data-price="{{ item.price }}"
+                                data-wholesale="{{ item.wholesale_price or 0 }}"
+
+
+                                data-is-loose="{{ 'true' if item.is_loose else 'false' }}"
+
+
+                                data-price-gram="{{ item.price_per_gram or 0 }}"
+
+
+                                data-last-cost="{{ item.last_cost or 0 }}"
+
+
+                                data-reorder="{{ item.reorder_level or 10 }}" data-gst="{{ item.gst_percent or 0 }}"
+
+
+                                onclick="openEditModal(this)">
+
+
+                                <i class="fas fa-sliders-h"></i>
+
+
+                            </button>
+
+
+                        </td>
+
+
                     </tr>
+
+
+
+
+
+                    <tr id="lots-{{ item.code }}" class="lot-row-expanded" style="display: none;">
+
+
+                        <td colspan="7" class="lot-expanded-cell">
+
+
+                            <div class="lot-card">
+
+
+                                <div class="lot-header">
+
+
+                                    <h3 class="lot-title">
+
+
+                                        <i class="fas fa-layer-group"></i> BATCH DETAILS
+
+
+                                    </h3>
+
+
+                                    <span class="badge badge-soft">FIFO ACTIVE</span>
+
+
+                                </div>
+
+
+
+
+
+                                <div class="lot-table-wrapper">
+
+
+                                    <div class="lot-grid lot-head">
+
+
+                                        <div>BATCH NO</div>
+
+
+                                        <div>ENTRY_TIMESTAMP</div>
+
+
+                                        <div>EXPIRY DATE</div>
+
+
+                                        <div class="text-right">UNIT_COST</div>
+
+
+                                        <div class="text-right">STOCK LEFT</div>
+
+
+                                    </div>
+
+
+                                    {% for batch in item.batches %}
+
+
+                                    <div class="lot-grid lot-item">
+
+
+                                        <div class="lot-batch-id">#{{ batch.batch_no }}</div>
+
+
+                                        <div class="lot-timestamp">{{ batch.entry_time }}</div>
+
+
+                                        <div class="expiry-date lot-expiry {{ 'danger' if batch.expiry and batch.expiry < today else '' }}">
+
+
+                                            {{ batch.expiry or 'INFINITY' }}
+
+
+                                        </div>
+
+
+                                        <div class="lot-cost text-right">₹{{ "%.2f"|format(batch.cost or 0) }}</div>
+
+
+                                        <div class="lot-stock text-right">
+
+
+                                            {{ "%.3f"|format(batch.qty) if item.is_loose else batch.qty|int }}
+
+
+                                        </div>
+
+
+                                    </div>
+
+
+                                    {% else %}
+
+
+                                    <div class="lot-empty-state">NO ACTIVE BATCHES FOUND</div>
+
+
+                                    {% endfor %}
+
+
+                                </div>
+
+
+                            </div>
+
+
+                        </td>
+
+
+                    </tr>
+
+
                     {% endfor %}
+
+
                 </tbody>
+
+
             </table>
+
+
         </div>
+
+
     </div>
+
+
 </div>
 
+
+
+
+
+<style>
+    .neural-search {
+        position: relative;
+        min-width: 320px;
+    }
+
+    .neural-search i {
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--dash-secondary);
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    #productSearch {
+        padding-left: 55px !important;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        width: 100%;
+        font-weight: 700;
+        transition: all 0.3s ease;
+    }
+
+    #productSearch:focus {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: var(--dash-secondary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+
+    .product-table th,
+    .product-table td {
+        vertical-align: middle;
+    }
+
+    .product-table th {
+        white-space: nowrap;
+    }
+
+
+
+
+
+    .product-col-toggle {
+
+
+        width: 72px;
+
+
+        padding-left: 2.5rem !important;
+
+
+    }
+
+
+
+
+
+    .product-col-command {
+
+
+        width: 120px;
+
+
+        padding-right: 2.5rem !important;
+
+
+    }
+
+
+
+
+
+    .product-row td {
+
+
+        padding-top: 1.6rem;
+
+
+        padding-bottom: 1.6rem;
+
+
+    }
+
+
+
+
+
+    .product-toggle-cell {
+
+
+        cursor: pointer;
+
+
+        padding-left: 2.5rem !important;
+
+
+        width: 72px;
+
+
+    }
+
+
+
+
+
+    .product-command-cell {
+
+
+        padding-right: 2.5rem !important;
+
+
+    }
+
+
+
+
+
+    .product-code-pill {
+
+
+        display: inline-flex;
+
+
+        align-items: center;
+
+
+        min-width: 3rem;
+
+
+        justify-content: center;
+
+
+        font-family: 'DM Mono', monospace;
+
+
+        font-weight: 700;
+
+
+        color: var(--dash-secondary);
+
+
+        background: rgba(99, 102, 241, 0.1);
+
+
+        padding: 0.45rem 0.8rem;
+
+
+        border-radius: 10px;
+
+
+    }
+
+
+
+
+
+    .product-grade {
+
+
+        font-weight: 800;
+
+
+        color: white;
+
+
+        font-size: 1.05rem;
+
+
+        line-height: 1.15;
+
+
+        margin-bottom: 0.45rem;
+
+
+    }
+
+
+
+
+
+    .product-category {
+
+
+        font-size: 0.68rem;
+
+
+        color: var(--text-tertiary);
+
+
+        text-transform: uppercase;
+
+
+        letter-spacing: 0.18em;
+
+
+        font-weight: 700;
+
+
+    }
+
+
+
+
+
+    .product-availability-value {
+
+
+        font-weight: 900;
+
+
+        color: white;
+
+
+        font-size: 1.25rem;
+
+
+        font-family: 'Outfit', sans-serif;
+
+
+        line-height: 1;
+
+
+    }
+
+
+
+
+
+    .product-availability-unit {
+
+
+        margin-top: 0.55rem;
+
+
+        font-size: 0.62rem;
+
+
+        color: var(--text-tertiary);
+
+
+        font-weight: 900;
+
+
+        text-transform: uppercase;
+
+
+        letter-spacing: 0.12em;
+
+
+    }
+
+
+
+
+
+    .product-status-badge {
+
+
+        min-width: 92px;
+
+
+        justify-content: center;
+
+
+        font-size: 0.6rem;
+
+
+        font-weight: 900;
+
+
+    }
+
+
+
+
+
+    .product-status-badge.is-low {
+
+
+        background: rgba(239, 68, 68, 0.1);
+
+
+        color: #f87171;
+
+
+        border: 1px solid rgba(239, 68, 68, 0.2);
+
+
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.1);
+
+
+    }
+
+
+
+
+
+    .product-status-badge.is-stable {
+
+
+        background: rgba(16, 185, 129, 0.1);
+
+
+        color: #34d399;
+
+
+        border: 1px solid rgba(16, 185, 129, 0.2);
+
+
+    }
+
+
+
+
+
+    .product-price-cell {
+
+
+        min-width: 180px;
+
+
+    }
+
+
+
+
+
+    .p-label-tag {
+        font-size: 0.55rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--dash-primary);
+        margin-right: 8px;
+        vertical-align: middle;
+    }
+    .p-label-tag.wholesale {
+        background: rgba(148, 163, 184, 0.1);
+        color: #94a3b8;
+    }
+    .product-p-group {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+    }
+    .price-hero-modal.small {
+        padding: 10px 15px;
+        border-radius: 12px;
+    }
+    .product-price-main {
+        font-weight: 950;
+        color: var(--dash-primary);
+        font-size: 1.3rem;
+        font-family: 'Outfit', sans-serif;
+        line-height: 1.05;
+    }
+
+
+
+
+
+
+
+
+    .product-price-unit {
+
+
+        font-size: 0.65rem;
+
+
+        opacity: 0.55;
+
+
+        margin-left: 0.15rem;
+
+
+    }
+
+
+
+
+
+    .product-price-sub {
+
+
+        margin-top: 0.55rem;
+
+
+        font-size: 0.63rem;
+
+
+        color: var(--text-tertiary);
+
+
+        font-weight: 700;
+
+
+        letter-spacing: 0.04em;
+
+
+    }
+
+
+
+
+
+    .lot-expanded-cell {
+
+
+        background: rgba(0,0,0,0.3);
+
+
+        padding: 1.5rem 2.5rem !important;
+
+
+    }
+
+
+
+
+
+    .lot-card {
+
+
+        border: 1px solid rgba(255,255,255,0.05);
+
+
+        border-radius: 24px;
+
+
+        background: rgba(10, 16, 36, 0.45);
+
+
+        padding: 1.7rem 1.8rem;
+
+
+    }
+
+
+
+
+
+    .lot-header {
+
+
+        margin-bottom: 1.4rem;
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+        justify-content: space-between;
+
+
+        gap: 1rem;
+
+
+    }
+
+
+
+
+
+    .lot-title {
+
+
+        margin: 0;
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+        gap: 0.8rem;
+
+
+        font-size: 0.8rem;
+
+
+        font-weight: 900;
+
+
+        color: white;
+
+
+        letter-spacing: 0.22em;
+
+
+    }
+
+
+
+
+
+    .lot-title i {
+
+
+        color: var(--dash-secondary);
+
+
+    }
+
+
+
+
+
+    .lot-table-wrapper {
+
+
+        border: 1px solid rgba(255,255,255,0.05);
+
+
+        border-radius: 20px;
+
+
+        padding: 1.25rem 1.35rem;
+
+
+        background: rgba(255,255,255,0.015);
+
+
+    }
+
+
+
+
+
+    .lot-grid {
+
+
+        display: grid;
+
+
+        grid-template-columns: minmax(140px, 1.1fr) minmax(180px, 1.25fr) minmax(140px, 1fr) minmax(120px, 0.9fr) minmax(120px, 0.9fr);
+
+
+        column-gap: 1.2rem;
+
+
+        align-items: center;
+
+
+    }
+
+
+
+
+
+    .lot-head {
+
+
+        opacity: 0.55;
+
+
+        font-size: 0.66rem;
+
+
+        font-weight: 900;
+
+
+        letter-spacing: 0.12em;
+
+
+        padding-bottom: 0.9rem;
+
+
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+
+
+    }
+
+
+
+
+
+    .lot-item {
+
+
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+
+
+        padding: 1rem 0;
+
+
+        min-height: 64px;
+
+
+    }
+
+
+
+
+
+    .lot-item:last-child {
+
+
+        border-bottom: none;
+
+
+        padding-bottom: 0;
+
+
+    }
+
+
+
+
+
+    .lot-batch-id {
+
+
+        font-family: 'DM Mono', monospace;
+
+
+        font-weight: 700;
+
+
+        color: var(--dash-secondary);
+
+
+    }
+
+
+
+
+
+    .lot-timestamp {
+
+
+        opacity: 0.72;
+
+
+        font-size: 0.82rem;
+
+
+    }
+
+
+
+
+
+    .lot-expiry {
+
+
+        font-size: 0.82rem;
+
+
+        font-weight: 700;
+
+
+    }
+
+
+
+
+
+    .lot-cost {
+
+
+        font-weight: 700;
+
+
+        opacity: 0.82;
+
+
+    }
+
+
+
+
+
+    .lot-stock {
+
+
+        font-weight: 900;
+
+
+        color: var(--dash-success);
+
+
+        font-family: 'Outfit', sans-serif;
+
+
+        font-size: 1.05rem;
+
+
+    }
+
+
+
+
+
+    .lot-empty-state {
+
+
+        text-align: center;
+
+
+        padding: 3rem 1rem 1rem;
+
+
+        color: var(--text-tertiary);
+
+
+        font-weight: 800;
+
+
+        opacity: 0.45;
+
+
+        letter-spacing: 0.12em;
+
+
+        font-size: 0.75rem;
+
+
+    }
+
+
+
+
+
+    .modal {
+
+
+        display: none;
+
+
+        position: fixed;
+
+
+        inset: 0;
+
+
+        z-index: 2000;
+
+
+        background: rgba(7, 10, 25, 0.85);
+
+
+        backdrop-filter: blur(20px);
+
+
+        align-items: center;
+
+
+        justify-content: center;
+
+
+        padding: 2rem;
+
+
+    }
+
+
+
+
+
+    .neural-panel-modal {
+
+
+        background: #0f172a;
+
+
+        border: 1px solid rgba(255, 255, 255, 0.1);
+
+
+        border-radius: 24px;
+
+
+        width: 100%;
+
+
+        max-width: 650px;
+
+
+        padding: 2.5rem;
+
+
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.8);
+
+
+        animation: modalFadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+
+    }
+
+
+
+
+
+    @keyframes modalFadeUp {
+
+
+        from { opacity: 0; transform: translateY(30px); }
+
+
+        to { opacity: 1; transform: translateY(0); }
+
+
+    }
+
+
+
+
+
+    .modal-hdr {
+
+
+        display: flex;
+
+
+        justify-content: space-between;
+
+
+        align-items: center;
+
+
+        margin-bottom: 2.5rem;
+
+
+    }
+
+
+
+
+
+    .modal-hdr h2 { font-family: 'Space Grotesk'; font-size: 1.75rem; color: white; margin: 0; }
+
+
+    .modal-hdr p { font-size: 0.75rem; font-weight: 800; color: var(--dash-secondary); font-family: 'DM Mono'; margin-top: 4px; letter-spacing: 1.5px; }
+
+
+
+
+
+    .f-group-modal { margin-bottom: 1.5rem; }
+
+
+    .f-group-modal label {
+
+
+        display: block;
+
+
+        font-size: 0.65rem;
+
+
+        font-weight: 850;
+
+
+        color: var(--text-tertiary);
+
+
+        text-transform: uppercase;
+
+
+        letter-spacing: 1.5px;
+
+
+        margin-bottom: 0.6rem;
+
+
+    }
+
+
+
+
+
+    .f-input-modal {
+
+
+        width: 100%;
+
+
+        background: rgba(255,255,255,0.03);
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        padding: 14px 18px;
+
+
+        border-radius: 12px;
+
+
+        color: white;
+
+
+        font-weight: 700;
+
+
+        font-size: 1rem;
+
+
+        outline: none;
+
+
+        transition: 0.2s;
+
+
+    }
+
+
+
+
+
+    .f-input-modal:focus { border-color: white; background: rgba(255,255,255,0.06); }
+
+
+
+
+
+    .price-hero-modal {
+
+
+        background: rgba(255,255,255,0.02);
+
+
+        border: 1px solid rgba(255,255,255,0.05);
+
+
+        border-radius: 16px;
+
+
+        padding: 20px;
+
+
+        margin-bottom: 1.5rem;
+
+
+        position: relative;
+
+
+    }
+
+
+
+
+
+    .price-hero-modal span {
+
+
+        position: absolute;
+
+
+        left: 20px;
+
+
+        top: 50%;
+
+
+        transform: translateY(-50%);
+
+
+        font-size: 1.5rem;
+
+
+        font-weight: 950;
+
+
+        color: var(--dash-secondary);
+
+
+    }
+
+
+
+
+
+    .price-hero-modal input {
+
+
+        padding-left: 45px !important;
+
+
+        font-size: 2.5rem !important;
+
+
+        height: 100px !important;
+
+
+        font-family: 'Outfit';
+
+
+        font-weight: 950 !important;
+
+
+        background: transparent;
+
+
+        border: none;
+
+
+        color: white;
+
+
+        width: 100%;
+
+
+        outline: none;
+
+
+    }
+
+
+
+
+
+    .modal-footer-actions {
+
+
+        display: flex;
+
+
+        justify-content: flex-end;
+
+
+        gap: 1rem;
+
+
+        margin-top: 2rem;
+
+
+    }
+
+
+
+
+
+    .btn-modal-action {
+
+
+        padding: 14px 32px;
+
+
+        border-radius: 12px;
+
+
+        font-weight: 900;
+
+
+        font-size: 0.8rem;
+
+
+        text-transform: uppercase;
+
+
+        letter-spacing: 1.5px;
+
+
+        cursor: pointer;
+
+
+        transition: 0.2s;
+
+
+        border: none;
+
+
+        font-family: inherit;
+
+
+    }
+
+
+
+
+
+    .btn-modal-action.cancel { background: rgba(255,255,255,0.05); color: white; }
+
+
+    .btn-modal-action.save { background: white; color: black; }
+
+
+    .btn-modal-action:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+
+
+
+
+    @media (max-width: 1100px) {
+
+
+        .product-table th,
+
+
+        .product-table td {
+
+
+            padding-left: 1rem;
+
+
+            padding-right: 1rem;
+
+
+        }
+
+
+
+
+
+        .product-col-toggle,
+
+
+        .product-toggle-cell {
+
+
+            padding-left: 1rem !important;
+
+
+        }
+
+
+
+
+
+        .product-col-command,
+
+
+        .product-command-cell {
+
+
+            padding-right: 1rem !important;
+
+
+        }
+
+
+
+
+
+        .lot-expanded-cell {
+
+
+            padding: 1rem !important;
+
+
+        }
+
+
+
+
+
+        .lot-grid {
+
+
+            grid-template-columns: 1fr 1.2fr 1fr 0.8fr 0.8fr;
+
+
+            column-gap: 0.8rem;
+
+
+        }
+
+
+    }
+
+
+</style>
+
+
+
+
+
 <!-- Configuration Modal -->
+
+
 <div id="editPriceModal" class="modal">
-    <div class="modal-content"
-        style="max-width: 600px; border-radius: 25px; padding: 0; overflow: hidden; border: none;">
-        <div class="modal-header-premium">
+
+
+    <div class="modal-content neural-panel-modal">
+
+
+        <div class="modal-hdr">
+
+
             <div>
-                <h2 style="margin: 0; font-weight: 900; letter-spacing: -1px;">Asset Configuration</h2>
-                <p id="modal-product-name" style="margin: 5px 0 0; opacity: 0.8; font-weight: 600;"></p>
+
+
+                <h2>Product Settings</h2>
+
+
+                <p id="modal-product-name"></p>
+
+
             </div>
-            <span class="close-btn-p" onclick="closeEditModal()"><i class="fas fa-times"></i></span>
+
+
+            <button onclick="closeEditModal()" style="background:none; border:none; color:var(--text-tertiary); font-size: 2rem; cursor:pointer; line-height: 1;">&times;</button>
+
+
         </div>
 
-        <form id="editPriceForm" onsubmit="event.preventDefault(); updateProductPrice();" style="padding: 2.5rem;">
-            <input type="hidden" id="edit_code">
 
+
+
+
+        <form id="editPriceForm" onsubmit="event.preventDefault(); updateProductPrice();">
+            <input type="hidden" id="edit_code">
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
-                <div class="form-group">
-                    <label class="form-label-p">Asset Descriptor (EN)</label>
-                    <input type="text" id="edit_name" class="form-input-p" required>
+                <div class="f-group-modal">
+                    <label>PRODUCT NAME (ENGLISH)</label>
+                    <input type="text" id="edit_name" class="f-input-modal" required>
                 </div>
-                <div class="form-group">
-                    <label class="form-label-p" style="display: flex; justify-content: space-between;">
-                        Nomenclature (TA)
-                        <span onclick="autoTranslateName()"
-                            style="color: var(--primary); cursor: pointer; font-size: 0.7rem; font-weight: 800;">
-                            <i class="fas fa-magic"></i> AUTO
-                        </span>
-                    </label>
-                    <input type="text" id="edit_name_ta" class="form-input-p" placeholder="Enter Tamil Name">
+                <div class="f-group-modal">
+                    <label>PRODUCT NAME (TAMIL) <span onclick="autoTranslateName()" style="color:var(--dash-secondary); cursor:pointer; font-size: 0.6rem; margin-left:8px;"><i class="fas fa-sync-alt"></i> AUTO</span></label>
+                    <input type="text" id="edit_name_ta" class="f-input-modal">
                 </div>
             </div>
 
-            <div class="toggle-box" style="margin-bottom: 2.5rem;">
-                <div style="display: flex; align-items: center; gap: 1.5rem;">
-                    <label class="switch">
-                        <input type="checkbox" id="edit_is_loose" onchange="togglePriceFields()">
-                        <span class="slider round"></span>
-                    </label>
-                    <div>
-                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-main);">Wholesale / Granular
-                            Mode</div>
-                        <div style="font-size: 0.75rem; color: #64748b;">Enable precision decimal tracking (Grams/ML).
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem; padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 24px; border: 1px solid rgba(255,255,255,0.03);">
+                <div>
+                    <label style="color:var(--dash-primary); font-size: 0.7rem; border-bottom: 1px solid rgba(99,102,241,0.2); padding-bottom: 8px; margin-bottom: 15px; display: block; letter-spacing: 2px;">RETAIL SETTINGS</label>
+                    <div class="f-group-modal" style="margin-bottom: 0;">
+                        <label>RETAIL PRICE (₹)</label>
+                        <div class="price-hero-modal">
+                            <span style="font-size: 1.5rem;">₹</span>
+                            <input type="number" step="0.01" id="edit_price" style="font-size: 2.2rem;" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+                <div style="border-left: 1px solid rgba(255,255,255,0.05); padding-left: 2rem;">
+                    <label style="color:#94a3b8; font-size: 0.7rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 15px; display: block; letter-spacing: 2px;">WHOLESALE SETTINGS</label>
+                    <div class="f-group-modal" style="margin-bottom: 0;">
+                        <label>WHOLESALE PRICE (₹)</label>
+                        <div class="price-hero-modal" style="border-color: rgba(255,255,255,0.1);">
+                            <span style="font-size: 1.5rem; color: #94a3b8;">₹</span>
+                            <input type="number" step="0.01" id="edit_wholesale_price" style="font-size: 2.2rem; color: #cbd5e1;" placeholder="0.00">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div id="standard-price-group" class="form-group" style="margin-bottom: 2rem;">
-                <label class="form-label-p">Strategic Selling Rate (â‚¹)</label>
-                <div style="position: relative;">
-                    <span
-                        style="position: absolute; left: 15px; top: 12px; font-weight: 700; color: #94a3b8;">â‚¹</span>
-                    <input type="number" step="0.01" id="edit_price" class="form-input-p"
-                        style="padding-left: 35px; font-size: 1.5rem; font-weight: 900;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+                <div class="f-group-modal">
+                    <label>PURCHASE COST (₹)</label>
+                    <input type="number" step="0.01" id="edit_last_cost" class="f-input-modal" placeholder="0.00">
+                </div>
+                <div class="f-group-modal">
+                    <label>LOW STOCK WARNING LEVEL</label>
+                    <input type="number" id="edit_reorder" class="f-input-modal" placeholder="10">
                 </div>
             </div>
-
-            <div id="loose-price-group" style="display: none; margin-bottom: 2rem;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-                    <div class="form-group">
-                        <label class="form-label-p">Rate per Gram (â‚¹)</label>
-                        <input type="number" step="0.0001" id="edit_price_gram" class="form-input-p"
-                            placeholder="0.0000" oninput="syncKgPrice()">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label-p">Rate per KG/L (â‚¹)</label>
-                        <input type="number" step="0.01" id="edit_price_kg" class="form-input-p" placeholder="0.00"
-                            oninput="syncGramPrice()">
-                    </div>
-                </div>
-                <div class="price-feedback-card">
-                    <span
-                        style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Real-time
-                        Effective Rate</span>
-                    <h2 id="calculated-kg-price" style="margin: 5px 0 0; font-weight: 900;">â‚¹ 0.00 / KG</h2>
-                </div>
+            <div class="modal-footer-actions">
+                <button type="button" class="btn-modal-action cancel" onclick="closeEditModal()">CANCEL</button>
+                <button type="submit" class="btn-modal-action save">SAVE CHANGES</button>
             </div>
-
-            <div class="form-group">
-                <label class="form-label-p">Safety Reorder Threshold</label>
-                <input type="number" id="edit_reorder" class="form-input-p" placeholder="Defines 'Low Stock' alert">
-            </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 3rem;">
-                <button type="button" class="btn btn-outline" style="flex: 1; border-radius: 12px;"
-                    onclick="closeEditModal()">Discard Changes</button>
-                <button type="submit" class="btn btn-primary"
-                    style="flex: 2; border-radius: 12px; background: linear-gradient(135deg, var(--primary), #4f46e5);">
-                    <i class="fas fa-check-double"></i> COMMIT TO MASTER
-                </button>
-            </div>
+            <input type="hidden" id="edit_is_loose" value="false">
+            <input type="hidden" id="edit_price_gram" value="0">
+            <input type="hidden" id="edit_price_kg" value="0">
         </form>
+
+
     </div>
+
+
 </div>
 
-<style>
-    .search-box-premium {
-        position: relative;
-        width: 350px;
-    }
 
-    .search-box-premium i {
-        position: absolute;
-        left: 20px;
-        top: 14px;
-        color: #94a3b8;
-    }
 
-    .search-box-premium input {
-        width: 100%;
-        padding: 12px 12px 12px 50px;
-        border-radius: 50px;
-        border: 1px solid var(--glass-border);
-        background: #f8fafc;
-        font-weight: 600;
-        transition: all 0.3s ease;
-    }
 
-    .search-box-premium input:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-        background: white;
-    }
-
-    .action-btn-config {
-        width: 40px;
-        height: 40px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        background: white;
-        color: #64748b;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .action-btn-config:hover {
-        background: var(--primary);
-        color: white;
-        border-color: var(--primary);
-        transform: rotate(45deg);
-    }
-
-    .chevron-btn {
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: #94a3b8;
-        transition: all 0.3s ease;
-        border-radius: 50%;
-    }
-
-    .chevron-btn:hover {
-        background: #f1f5f9;
-        color: var(--primary);
-    }
-
-    .expanded-panel {
-        background: white;
-        border-radius: 20px;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-        border: 1px solid #e2e8f0;
-    }
-
-    .expanded-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid #f1f5f9;
-        padding-bottom: 1rem;
-    }
-
-    .expanded-header h3 {
-        margin: 0;
-        font-size: 0.9rem;
-        font-weight: 800;
-        color: #1e293b;
-        letter-spacing: 1px;
-    }
-
-    .fifo-label {
-        font-size: 0.65rem;
-        font-weight: 900;
-        background: #f1f5f9;
-        padding: 4px 10px;
-        border-radius: 4px;
-        color: #475569;
-    }
-
-    .batch-grid {
-        display: grid;
-        grid-template-columns: 1.5fr 2fr 1.5fr 1.2fr 1.2fr;
-        gap: 1rem;
-        padding-bottom: 10px;
-        border-bottom: 2px solid #f1f5f9;
-        margin-bottom: 10px;
-    }
-
-    .batch-head {
-        font-size: 0.7rem;
-        font-weight: 800;
-        color: #94a3b8;
-        letter-spacing: 0.5px;
-    }
-
-    .batch-item {
-        display: grid;
-        grid-template-columns: 1.5fr 2fr 1.5fr 1.2fr 1.2fr;
-        gap: 1rem;
-        padding: 12px 0;
-        border-bottom: 1px solid #f8fafc;
-        font-size: 0.85rem;
-    }
-
-    .lot-id {
-        font-family: 'JetBrains Mono', monospace;
-        font-weight: 700;
-        color: var(--primary);
-    }
-
-    .lot-time {
-        font-weight: 500;
-        color: #64748b;
-    }
-
-    .lot-expiry {
-        font-weight: 700;
-    }
-
-    .lot-cost {
-        font-weight: 600;
-        color: #475569;
-    }
-
-    .lot-qty {
-        font-weight: 800;
-        color: #059669;
-    }
-
-    .text-right {
-        text-align: right;
-    }
-
-    .empty-batch {
-        text-align: center;
-        padding: 2rem;
-        color: #cbd5e1;
-        font-style: italic;
-    }
-
-    .modal-header-premium {
-        background: #1e293b;
-        color: white;
-        padding: 2rem 2.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .close-btn-p {
-        cursor: pointer;
-        font-size: 1.2rem;
-        opacity: 0.7;
-        transition: opacity 0.2s;
-    }
-
-    .close-btn-p:hover {
-        opacity: 1;
-    }
-
-    .form-label-p {
-        display: block;
-        font-size: 0.75rem;
-        font-weight: 800;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        margin-bottom: 8px;
-    }
-
-    .form-input-p {
-        width: 100%;
-        padding: 12px 18px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        background: #f8fafc;
-        font-weight: 600;
-        transition: all 0.2s;
-        box-sizing: border-box;
-    }
-
-    .form-input-p:focus {
-        border-color: var(--primary);
-        background: white;
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-
-    .toggle-box {
-        background: #f1f5f9;
-        padding: 1.2rem 1.5rem;
-        border-radius: 15px;
-        border: 1px solid #e2e8f0;
-    }
-
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 50px;
-        height: 26px;
-    }
-
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #cbd5e1;
-        transition: .4s;
-        border-radius: 34px;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 18px;
-        width: 18px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-    }
-
-    input:checked+.slider {
-        background-color: var(--primary);
-    }
-
-    input:checked+.slider:before {
-        transform: translateX(24px);
-    }
-
-    .price-feedback-card {
-        background: #eef2f7;
-        border-left: 5px solid var(--primary);
-        padding: 1.2rem 1.5rem;
-        border-radius: 12px;
-    }
-
-    @media print {
-
-        .navbar,
-        .btn,
-        .nav-links,
-        .search-box-premium,
-        th:last-child,
-        td:last-child,
-        .section-header div:last-child,
-        .action-btn-config {
-            display: none !important;
-        }
-
-        .dashboard-container {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .glass-panel {
-            border: none !important;
-        }
-    }
-</style>
 
 <script>
+
+
     function toggleLots(code) {
+
+
         const row = document.getElementById(`lots-${code}`);
+
+
         const icon = document.querySelector(`.lot-icon-${code}`);
-        if (row.style.display === 'none') {
-            row.style.display = 'table-row';
-            icon.style.transform = 'rotate(90deg)';
-        } else {
-            row.style.display = 'none';
-            icon.style.transform = 'rotate(0deg)';
-        }
+
+
+        const isHidden = row.style.display === 'none';
+
+
+        row.style.display = isHidden ? 'table-row' : 'none';
+
+
+        icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+
+
     }
+
+
+
+
 
     function filterProducts() {
-        const input = document.getElementById('productSearch');
-        const filter = input.value.toUpperCase();
-        const table = document.getElementById('productTable');
-        const tr = table.getElementsByClassName('product-row');
 
-        for (let i = 0; i < tr.length; i++) {
-            const nameDiv = tr[i].querySelector('div[style*="font-weight: 800"]');
-            const codeCol = tr[i].cells[1];
-            if (nameDiv || codeCol) {
-                const txtName = nameDiv.textContent || nameDiv.innerText;
-                const txtCode = codeCol.textContent || codeCol.innerText;
-                if (txtName.toUpperCase().indexOf(filter) > -1 || txtCode.toUpperCase().indexOf(filter) > -1) {
-                    tr[i].style.display = "";
-                    // Keep expanded lot rows hidden if main row is hidden
-                    const nextRow = tr[i].nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('lot-row-expanded')) {
-                        // Keep current state or hide? Let's hide for clean search.
-                        nextRow.style.display = 'none';
-                        const icon = tr[i].querySelector('.lot-icon-' + tr[i].getAttribute('data-code'));
-                        if (icon) icon.style.transform = 'rotate(0deg)';
-                    }
-                } else {
-                    tr[i].style.display = "none";
-                    const nextRow = tr[i].nextElementSibling;
-                    if (nextRow && nextRow.classList.contains('lot-row-expanded')) {
-                        nextRow.style.display = "none";
-                    }
-                }
-            }
-        }
+
+        const filter = document.getElementById('productSearch').value.toUpperCase().trim();
+
+
+        document.querySelectorAll('.product-row').forEach(row => {
+
+
+            const codeCell = row.cells[1].innerText.toUpperCase();
+
+
+            const nameCell = row.cells[2].innerText.toUpperCase();
+
+
+
+
+
+            const match = codeCell.includes(filter) || nameCell.includes(filter);
+
+
+
+
+
+            row.style.display = match ? "" : "none";
+
+
+            const lotRow = document.getElementById(`lots-${row.dataset.code}`);
+
+
+            if (lotRow) lotRow.style.display = "none";
+
+
+        });
+
+
     }
 
-    const editModal = document.getElementById("editPriceModal");
 
-    function openEditModal(code, name, name_ta, cat, price, isLoose, priceGram, reorder) {
+
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+
+        // Obsolete class-based listener removed in favor of direct onclick
+
+
+    });
+
+
+
+
+
+    function openEditModal(btn) {
+        const d = btn.dataset;
+        const code = d.code;
+        const name = d.name;
+        const name_ta = d.nameTa;
+        const price = parseFloat(d.price) || 0;
+        const wholesale = parseFloat(d.wholesale) || 0;
+        const gst = parseFloat(d.gst) || 5;
+        const lastCost = parseFloat(d.lastCost) || 0;
+        const reorder = parseInt(d.reorder) || 10;
+        const isLoose = d.isLoose === 'true';
+
         document.getElementById('edit_code').value = code;
-        document.getElementById('modal-product-name').innerText = name + " [" + code + "]";
+        document.getElementById('modal-product-name').innerText = `${name} [${code}]`;
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_name_ta').value = name_ta || '';
-        document.getElementById('edit_price').value = price;
-        document.getElementById('edit_is_loose').checked = isLoose;
-        document.getElementById('edit_price_gram').value = (priceGram && priceGram > 0) ? priceGram : (price / 1000).toFixed(4);
-        document.getElementById('edit_reorder').value = reorder || 10;
+        
+        document.getElementById('edit_price').value = price.toFixed(2);
+        document.getElementById('edit_wholesale_price').value = wholesale.toFixed(2);
+        
+        document.getElementById('edit_reorder').value = reorder;
+        document.getElementById('edit_last_cost').value = lastCost;
+        document.getElementById('edit_is_loose').value = isLoose ? 'true' : 'false';
 
-        togglePriceFields();
-        editModal.classList.add("show");
+        document.getElementById("editPriceModal").style.display = "flex";
     }
 
-    function closeEditModal() { editModal.classList.remove("show"); }
+    function closeEditModal() { document.getElementById("editPriceModal").style.display = "none"; }
 
-    function togglePriceFields() {
-        const isLoose = document.getElementById('edit_is_loose').checked;
-        document.getElementById('standard-price-group').style.display = isLoose ? 'none' : 'block';
-        document.getElementById('loose-price-group').style.display = isLoose ? 'block' : 'none';
-        if (isLoose) updateCalculatedPrice();
-    }
-
-    function syncKgPrice() {
-        const gramPrice = parseFloat(document.getElementById('edit_price_gram').value) || 0;
-        document.getElementById('edit_price_kg').value = (gramPrice * 1000).toFixed(2);
-        updateCalculatedPrice();
-    }
-
-    function syncGramPrice() {
-        const kgPrice = parseFloat(document.getElementById('edit_price_kg').value) || 0;
-        document.getElementById('edit_price_gram').value = (kgPrice / 1000).toFixed(4);
-        updateCalculatedPrice();
-    }
-
-    function updateCalculatedPrice() {
-        const gramPrice = parseFloat(document.getElementById('edit_price_gram').value) || 0;
-        const kgPrice = (gramPrice * 1000).toFixed(2);
-        document.getElementById('calculated-kg-price').innerText = "â‚¹ " + kgPrice + " / KG";
-    }
 
     async function autoTranslateName() {
         const englishName = document.getElementById('edit_name').value;
-        const tamilInput = document.getElementById('edit_name_ta');
-        if (!englishName) { alert("Please enter the English descriptor first!"); return; }
-
+        if (!englishName) return;
         try {
-            const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ta&dt=t&q=${encodeURI(englishName)}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            if (data && data[0] && data[0][0]) {
-                tamilInput.value = data[0][0][0];
-            }
-        } catch (error) {
-            alert("Translation engine unavailable.");
-        }
+            const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ta&dt=t&q=${encodeURI(englishName)}`);
+            const data = await res.json();
+            if (data?.[0]?.[0]?.[0]) document.getElementById('edit_name_ta').value = data[0][0][0];
+        } catch (e) { console.error("Translate error", e); }
     }
 
     async function updateProductPrice() {
-        const isLoose = document.getElementById('edit_is_loose').checked;
         const code = document.getElementById('edit_code').value;
         const data = {
             name: document.getElementById('edit_name').value,
             name_ta: document.getElementById('edit_name_ta').value,
-            is_loose: isLoose,
-            price: isLoose ? (parseFloat(document.getElementById('edit_price_gram').value) * 1000) : parseFloat(document.getElementById('edit_price').value),
-            price_per_gram: parseFloat(document.getElementById('edit_price_gram').value) || 0,
-            reorder_level: parseInt(document.getElementById('edit_reorder').value) || 0
+            is_loose: document.getElementById('edit_is_loose').value === 'true',
+            price: parseFloat(document.getElementById('edit_price').value) || 0,
+            wholesale_price: parseFloat(document.getElementById('edit_wholesale_price').value) || 0,
+            reorder_level: parseInt(document.getElementById('edit_reorder').value) || 0,
+            gst_percent: 0,
+            last_cost: parseFloat(document.getElementById('edit_last_cost').value) || 0
         };
 
         try {
@@ -708,11 +1836,12 @@
             });
             const result = await res.json();
             if (result.success) location.reload();
-            else alert('Master update failed: ' + result.message);
-        } catch (e) {
-            alert('Cloud sync failed');
-        }
+            else alert('Update failed: ' + (result.error || 'Unknown error'));
+        } catch (e) { alert('Cloud sync failure: ' + e.message); }
     }
-</script>{ %   e n d b l o c k   % } 
- 
- 
+</script>
+
+
+{% endblock %}
+
+

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Jai Agency - {{ title }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-container fade-in report-shell thermal-report">
+    <div class="section-header no-print">
+        <div>
+            <h1>{{ title }}</h1>
+            <p style="color: var(--text-muted);">Tracking of zero-value business distributions and gifts</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="/billing/navigation" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="print-report-header print-only">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">{{ title|upper }}</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr style="background: rgba(0,0,0,0.02);">
+                    <th class="print-date" style="padding: 1.25rem; font-size: 0.75rem;">DATE</th>
+                    <th class="print-time" style="padding: 1.25rem; font-size: 0.75rem;">TIME</th>
+                    <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">BILL</th>
+                    <th class="print-desc" style="padding: 1.25rem; font-size: 0.75rem;">DESCRIPTION / CUSTOMER</th>
+                    <th class="print-net" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">VALUATION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data %}
+                <tr>
+                    <td class="print-date" style="color: var(--navy-900); font-weight: 500;">{{ item.date_only }}</td>
+                    <td class="print-time" style="color: var(--text-secondary); font-size: 0.9rem;">{{ item.time_only }}
+                    </td>
+                    <td class="print-bill-id">
+                        <code
+                            style="font-weight: 700; color: var(--white); background: var(--navy-900); padding: 4px 10px; border-radius: 6px;">#{{ item.id }}</code>
+                    </td>
+                    <td class="print-desc" style="color: var(--text-secondary); font-size: 0.9rem;">
+                        {{ item.customer_name if item.customer_name else 'Walk-in' }}
+                        <span class="badge" style="background: rgba(var(--primary-rgb), 0.1); color: var(--primary); font-size: 0.65rem; padding: 2px 6px; margin-left: 5px;">GIFT</span>
+                    </td>
+                    <td class="print-net"
+                        style="text-align: right; font-weight: 800; font-size: 1.1rem; color: var(--text-muted);">
+                        FREE
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
+                        <i class="fas fa-gift"
+                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
+                        No complimentary transactions found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if data %}
+            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto',
+            'RETURNED') | list %}
+            <tfoot>
+                <tr style="background: var(--surface-light) !important; border-top: 2px solid var(--navy-900);">
+                    <td colspan="4" class="print-hide"
+                        style="padding: 1.5rem; text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1rem;">
+                        TOTAL COMPLIMENTARY ITEMS
+                    </td>
+                    <td class="print-only"
+                        style="display: none; padding: 1.5rem; text-align: right; font-weight: 700; color: #000; font-size: 10pt;">
+                        GIFTS COUNT:
+                    </td>
+                    <td class="print-net"
+                        style="text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1.25rem; padding: 1.5rem;">
+                        {{ active_sales | length }} Bills
+                    </td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A5;
+            margin: 5mm;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 138mm !important;
+            background: white !important;
+            color: black !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 10pt !important;
+        }
+        .print-report-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
+        }
+
+        .print-date { width: 22% !important; }
+        .print-bill-id { width: 20% !important; font-weight: bold; }
+        .print-time { width: 23% !important; text-align: center !important; }
+        .print-net { width: 35% !important; text-align: right !important; font-weight: bold !important; font-size: 9pt !important; }
+
+        tfoot tr td {
+            font-size: 10pt !important;
+            border-top: 2px solid #000 !important;
+            padding-top: 2mm !important;
+        }
+
+        code {
+            background: transparent !important;
+            color: black !important;
+            padding: 0 !important;
+        }
+
+        .print-footer {
+            text-align: center;
+            margin-top: 5mm;
+            border-top: 1px dashed #000;
+            padding-top: 2mm;
+            font-size: 7pt;
+        }
+    }
+</style>
+{% endblock %}

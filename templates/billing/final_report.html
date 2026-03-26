@@ -1,33 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Final Report{% endblock %}
+{% block title %}Jai Agency - Final Report{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-file-invoice-dollar"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/expenses">Expenses</a>
-        <a href="/billing/reports" class="active">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
-            V3.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
+<div class="dashboard-container fade-in report-shell final-thermal-report">
     <div class="section-header">
         <div>
             <h1>Final Daily Report</h1>
-            <p style="color: var(--text-muted);">Summary of sales and expenses for {{ report_date }}</p>
+            <p style="color: var(--text-muted);">Summary of sales and expenses for {{ report_date_display }}</p>
         </div>
         <div style="display: flex; gap: 1rem; align-items: center;">
             <div class="filter-box glass-panel"
@@ -46,37 +26,54 @@
     <div class="report-grid">
         <!-- Sales Summary -->
         <div class="report-card glass-panel">
-            <div class="card-header">
+            <div class="card-header no-print">
                 <i class="fas fa-shopping-cart"></i>
                 <h2>Total Sales</h2>
             </div>
+            <div class="print-header print-only">
+                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px;">
+                    <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+                    <p style="margin: 2px 0; font-size: 8pt;">FINAL DAILY REPORT</p>
+                    <p style="margin: 2px 0; font-size: 8pt;">Date: {{ report_date_display }}</p>
+                </div>
+            </div>
             <div class="data-list">
+                <div class="print-section-title print-only" style="font-weight: bold; margin-top: 5px;">SALES SUMMARY</div>
                 <div class="data-row">
                     <span>Cash Sales</span>
-                    <span class="value">₹{{ "%.2f"|format(cash_sales) }}</span>
+                    <span class="value">&#8377;{{ "%.2f"|format(cash_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>UPI Sales</span>
-                    <span class="value">₹{{ "%.2f"|format(upi_sales) }}</span>
+                    <span class="value">&#8377;{{ "%.2f"|format(upi_sales) }}</span>
                 </div>
                 <div class="data-row">
-                    <span>Card/Credit Sales</span>
-                    <span class="value">₹{{ "%.2f"|format(card_sales) }}</span>
+                    <span>Credit Card Sales</span>
+                    <span class="value">&#8377;{{ "%.2f"|format(card_sales) }}</span>
                 </div>
-                <div class="data-row total-row">
+                <div class="data-row">
+                    <span>Credit Sales</span>
+                    <span class="value">&#8377;{{ "%.2f"|format(credit_sales) }}</span>
+                </div>
+                <div class="data-row">
+                    <span>Complimentary Gifts</span>
+                    <span class="value">{{ compliment_count }} items (GIFT)</span>
+                </div>
+                <div class="data-row total-row" style="border-top: 1px solid #000;">
                     <span>Gross Sales</span>
-                    <span class="value">₹{{ "%.2f"|format(cash_sales + upi_sales + card_sales) }}</span>
+                    <span class="value">&#8377;{{ "%.2f"|format(cash_sales + upi_sales + card_sales + credit_sales) }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Expenses Summary -->
         <div class="report-card glass-panel">
-            <div class="card-header">
+            <div class="card-header no-print">
                 <i class="fas fa-wallet"></i>
                 <h2>Cash Debit Expenses</h2>
             </div>
             <div class="data-list">
+                <div class="print-section-title print-only" style="font-weight: bold; margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px;">EXPENSES</div>
                 {% for exp in expenses %}
                 <div class="data-row">
                     <span>{{ exp.description }}</span>
@@ -85,30 +82,32 @@
                 {% else %}
                 <div class="empty-state">No expenses recorded</div>
                 {% endfor %}
-                <div class="data-row total-row">
+                <div class="data-row total-row" style="border-top: 1px solid #000;">
                     <span>Total Expenses</span>
-                    <span class="value text-danger">₹{{ "%.2f"|format(total_expenses) }}</span>
+                    <span class="value text-danger">&#8377;{{ "%.2f"|format(total_expenses) }}</span>
                 </div>
             </div>
         </div>
 
         <!-- Reconciliation -->
         <div class="report-card glass-panel highlighted-card">
-            <div class="card-header">
+            <div class="card-header no-print">
                 <i class="fas fa-balance-scale"></i>
                 <h2>Reconciliation</h2>
             </div>
             <div class="data-list">
+                <div class="print-section-title print-only" style="font-weight: bold; margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px;">RECONCILIATION</div>
                 <div class="data-row input-row">
                     <span>Opening Balance (OB)</span>
                     <div class="input-wrapper">
-                        <span>₹</span>
+                        <span class="no-print">&#8377;</span>
                         <input type="number" id="openingBalance" value="0.00" step="0.01" oninput="calculateFinal()">
+                        <span class="print-only" id="printOB">&#8377;0.00</span>
                     </div>
                 </div>
                 <div class="data-row">
                     <span>Cash Sales</span>
-                    <span class="value">₹{{ "%.2f"|format(cash_sales) }}</span>
+                    <span class="value">&#8377;{{ "%.2f"|format(cash_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>Total Expenses</span>
@@ -117,17 +116,22 @@
                 <div class="divider"></div>
                 <div class="data-row result-row">
                     <span>Cash @ Hand (C@H)</span>
-                    <span class="value" id="cashAtHand">₹{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
+                    <span class="value" id="cashAtHand">&#8377;{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
                 </div>
-                <div class="data-row result-row main-result">
+                <div class="data-row result-row main-result" style="border: 2px solid #000 !important; padding: 5px !important; margin-top: 5px !important;">
                     <span>Final Cash Balance</span>
-                    <span class="value" id="finalBalance">₹{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
+                    <span class="value" id="finalBalance">&#8377;{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
                 </div>
             </div>
 
-            <div class="info-box">
+            <div class="info-box no-print">
                 <p><strong>C@H:</strong> Cash Sales - Total Expenses</p>
                 <p><strong>Final Balance:</strong> C@H + Opening Balance</p>
+            </div>
+            
+            <div class="print-footer print-only" style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px; font-size: 7pt;">
+                <p>Generated on {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+                <p>Jai Agency POS System</p>
             </div>
         </div>
     </div>
@@ -139,10 +143,10 @@
         --primary-glow: rgba(99, 102, 241, 0.4);
         --danger: #ef4444;
         --success: #10b981;
-        --text-main: #1e293b;
-        --text-muted: #64748b;
-        --glass-bg: rgba(255, 255, 255, 0.8);
-        --glass-border: rgba(226, 232, 240, 0.8);
+        --text-main: #f8fafc;
+        --text-muted: #9fb0c7;
+        --glass-bg: rgba(255, 255, 255, 0.04);
+        --glass-border: rgba(255, 255, 255, 0.08);
     }
 
     .dashboard-container {
@@ -243,26 +247,26 @@
     }
 
     .highlighted-card {
-        background: linear-gradient(135deg, #ffffff, #f8fafc);
-        border: 2px solid var(--primary);
-        box-shadow: 0 10px 30px var(--primary-glow);
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.94));
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 24px 60px -36px rgba(0, 0, 0, 0.9);
     }
 
     .input-row {
-        background: rgba(99, 102, 241, 0.05);
+        background: rgba(99, 102, 241, 0.12);
         padding: 1rem;
         border-radius: 12px;
-        border: 1px solid var(--primary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .input-wrapper {
         display: flex;
         align-items: center;
         gap: 5px;
-        background: white;
+        background: rgba(9, 14, 31, 0.88);
         padding: 5px 12px;
         border-radius: 8px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .input-wrapper input {
@@ -271,7 +275,7 @@
         width: 100px;
         font-weight: 700;
         font-size: 1.1rem;
-        color: var(--primary);
+        color: white;
         text-align: right;
     }
 
@@ -286,7 +290,7 @@
     }
 
     .main-result {
-        background: var(--primary);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.9), rgba(37, 99, 235, 0.85));
         color: white;
         padding: 1.5rem;
         border-radius: 15px;
@@ -306,7 +310,7 @@
     .info-box {
         margin-top: 2rem;
         padding: 1rem;
-        background: rgba(0, 0, 0, 0.02);
+        background: rgba(255, 255, 255, 0.04);
         border-radius: 10px;
         font-size: 0.8rem;
         color: var(--text-muted);
@@ -330,45 +334,32 @@
 
     @media print {
         @page {
-            margin: 0;
-            size: 80mm auto;
+            size: A5;
+            margin: 5mm;
         }
 
         body {
             margin: 0 !important;
             padding: 0 !important;
-            width: 80mm !important;
+            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: 'Courier New', Courier, monospace !important;
-            font-size: 9pt !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 10pt !important;
         }
 
-        .navbar,
-        .btn,
-        .filter-box,
-        .info-box {
+        .navbar, .btn, .filter-box, .info-box, .no-print, .print-only-header {
             display: none !important;
         }
 
+        .print-only {
+            display: block !important;
+        }
+
         .dashboard-container {
-            width: 80mm !important;
+            width: 138mm !important;
             padding: 2mm !important;
-            margin: 0 !important;
-        }
-
-        .section-header h1 {
-            font-size: 14pt !important;
-            text-align: center;
-            margin-bottom: 2mm !important;
-            color: black !important;
-        }
-
-        .section-header p {
-            font-size: 8pt !important;
-            text-align: center;
-            margin-bottom: 5mm !important;
-            color: black !important;
+            margin: 0 auto !important;
         }
 
         .report-grid {
@@ -377,26 +368,11 @@
         }
 
         .report-card {
-            margin-bottom: 5mm !important;
+            margin-bottom: 2mm !important;
             padding: 0 !important;
             border: none !important;
             box-shadow: none !important;
             background: transparent !important;
-        }
-
-        .card-header {
-            margin-bottom: 2mm !important;
-            padding-bottom: 1mm !important;
-            border-bottom: 1px solid #000 !important;
-        }
-
-        .card-header h2 {
-            font-size: 10pt !important;
-            color: black !important;
-        }
-
-        .card-header i {
-            display: none !important;
         }
 
         .data-list {
@@ -404,48 +380,53 @@
         }
 
         .data-row {
-            font-size: 8.5pt !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            font-size: 8pt !important;
             color: black !important;
-            border-bottom: 1px dashed #eee;
+            border-bottom: 1px dotted #ccc !important;
+            padding: 1mm 0 !important;
         }
 
         .value {
+            font-weight: bold !important;
             color: black !important;
         }
 
         .total-row {
             border-top: 1px solid #000 !important;
-            margin-top: 2mm !important;
+            margin-top: 1mm !important;
             padding-top: 1mm !important;
         }
 
         .main-result {
             background: white !important;
             color: black !important;
-            border: 2px solid #000 !important;
+            border: 1px solid #000 !important;
             padding: 2mm !important;
-            margin-top: 5mm !important;
+            margin-top: 3mm !important;
+            display: flex !important;
+            justify-content: space-between !important;
         }
 
         .main-result .value {
-            color: black !important;
-            font-size: 12pt !important;
+            font-size: 11pt !important;
         }
 
-        .divider {
-            border-bottom: 1px solid #000 !important;
-        }
-
-        .empty-state {
-            padding: 2mm !important;
-            font-size: 8pt !important;
-        }
+        #openingBalance { display: none !important; }
+        #printOB { display: inline !important; font-weight: bold; }
     }
 </style>
 
+    <div id="report-data" 
+         data-cash-sales="{{ cash_sales }}" 
+         data-total-expenses="{{ total_expenses }}" 
+         style="display: none;"></div>
+
 <script>
-    const cashSales = {{ cash_sales }};
-    const totalExpenses = {{ total_expenses }};
+    const reportData = document.getElementById('report-data').dataset;
+    const cashSales = parseFloat(reportData.cashSales) || 0;
+    const totalExpenses = parseFloat(reportData.totalExpenses) || 0;
 
     function filterByDate() {
         const date = document.getElementById('reportDate').value;
@@ -461,11 +442,17 @@
         const cah = cashSales - totalExpenses;
         const finalBalance = cah + ob;
 
-        document.getElementById('cashAtHand').innerText = '₹' + cah.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        document.getElementById('finalBalance').innerText = '₹' + finalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('cashAtHand').innerText = '₹' + cah.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('finalBalance').innerText = '₹' + finalBalance.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+        // Update specific print display
+        const printOB = document.getElementById('printOB');
+        if (printOB) printOB.innerText = '₹' + ob.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     // Initialize on load
     window.onload = calculateFinal;
 </script>
 {% endblock %}
+
+

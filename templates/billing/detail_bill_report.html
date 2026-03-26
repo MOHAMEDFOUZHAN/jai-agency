@@ -1,32 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - {{ title }}{% endblock %}
+{% block title %}Jai Agency - {{ title }}{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-file-invoice"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/reports" class="active">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
-            V3.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
-    <div class="section-header">
+<div class="dashboard-container fade-in report-shell thermal-report">
+    <div class="section-header no-print">
         <div>
             <h1>{{ title }}</h1>
-            <p style="color: var(--text-muted);">Itemized breakdown of all transactions</p>
+            <p style="color: var(--text-secondary);">Itemized breakdown of all transactions</p>
         </div>
         <div style="display: flex; gap: 1rem; align-items: center;">
             <button class="btn btn-primary" onclick="window.print()">
@@ -38,12 +19,18 @@
         </div>
     </div>
 
+    <div class="print-report-header print-only">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">{{ title|upper }}</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
-                <tr style="background: rgba(0,0,0,0.02);">
+                <tr style="background: var(--surface-light);">
                     <th class="print-date" style="padding: 1rem; font-size: 0.75rem;">DATE</th>
-                    <th class="print-bill-id" style="padding: 1rem; font-size: 0.75rem;">DOC ID</th>
+                    <th class="print-bill-id" style="padding: 1rem; font-size: 0.75rem;">BILL</th>
                     <th class="print-item" style="padding: 1rem; font-size: 0.75rem;">ITEM NAME</th>
                     <th class="print-net" style="padding: 1rem; font-size: 0.75rem; text-align: right;">AMOUNT</th>
                     <th class="print-hide" style="padding: 1rem; font-size: 0.75rem;">CUSTOMER</th>
@@ -54,24 +41,29 @@
                 </tr>
             </thead>
             <tbody>
-                {% for sale in data|reverse %}
+                {% for sale in data %}
                 {% set row_status = sale.status or 'ACTIVE' %}
                 {% set outer_loop = loop %}
 
                 {# Items rows #}
                 {% for item in sale.details %}
                 <tr class="item-row {% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %}"
-                    style="{% if loop.first %}border-top: 2px solid var(--primary);{% endif %}">
+                    style="{% if loop.first %}border-top: 2px solid var(--navy-900);{% endif %}">
 
                     {# Only show Bill Header info on the first item row of the bill #}
                     {% if loop.first %}
-                    <td class="print-date" style="color: var(--text-main); font-weight: 600;">
+                    <td class="print-date" style="color: var(--navy-900); font-weight: 700;">
                         <div>{{ sale.date_only }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);" class="print-hide">{{ sale.time_only
+                        <div style="font-size: 0.7rem; color: var(--text-tertiary);" class="print-hide">{{ sale.time_only
                             }}</div>
                     </td>
                     <td class="print-bill-id">
-                        <code style="font-weight: 800; color: var(--primary); font-size: 1rem;">#{{ sale.id }}</code>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <code style="font-weight: 800; color: var(--navy-900); font-size: 1rem; background: var(--surface-light); padding: 4px 8px; border-radius: 6px;">#{{ sale.id }}</code>
+                            <a href="/billing/print-receipt/{{ sale.id }}" class="btn btn-outline no-print" style="padding: 4px 8px; font-size: 0.75rem;" title="Print Bill">
+                                <i class="fas fa-print"></i>
+                            </a>
+                        </div>
                     </td>
                     {% else %}
                     <td class="print-date"></td>
@@ -79,18 +71,18 @@
                     {% endif %}
 
                     <td class="print-item">
-                        <div style="font-weight: 600; color: var(--text-main);">{{ item.name }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase;">{{
+                        <div style="font-weight: 700; color: var(--navy-900);">{{ item.name }}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">{{
                             item.category }}</div>
                     </td>
 
-                    <td class="print-net" style="text-align: right; font-weight: 700; color: var(--text-main);">
-                        ₹{{ "%.2f"|format(item.gross_amount if item.gross_amount else (item.qty * item.price)) }}
+                    <td class="print-net" style="text-align: right; font-weight: 800; color: var(--navy-900);">
+                        ?{{ "%.2f"|format(item.gross_amount if item.gross_amount else (item.qty * item.price)) }}
                     </td>
 
                     <td class="print-hide">
-                        <div style="font-weight: 700; color: var(--text-main);">{{ sale.customer_name }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">
+                        <div style="font-weight: 700; color: var(--navy-900);">{{ sale.customer_name }}</div>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">
                             {{ sale.customer_mobile }}
                             {% if sale.customer_id %}<span style="margin-left: 8px;">ID: {{ sale.customer_id }}</span>{%
                             endif %}
@@ -109,30 +101,30 @@
                         <span class="badge badge-success">ACTIVE</span>
                         {% endif %}
                     </td>
-                    <td class="print-hide" style="text-align: right; font-weight: 700;">{{ item.qty }}</td>
-                    <td class="print-hide" style="text-align: right; color: var(--text-muted);">{{
+                    <td class="print-hide" style="text-align: right; font-weight: 800; color: var(--navy-900);">{{ item.qty }}</td>
+                    <td class="print-hide" style="text-align: right; color: var(--navy-900); font-weight: 800;">{{
                         "%.2f"|format(item.price) }}</td>
                 </tr>
                 {% endfor %}
 
                 {# Bill Summary Row #}
-                <tr class="{% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %}"
-                    style="background: rgba(248, 250, 252, 0.5); border-bottom: 2px solid #e2e8f0;">
+                <tr class="{% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %} summary-row"
+                    style="background: var(--surface-light); border-bottom: 2px solid var(--border-light);">
                     <td colspan="4"
-                        style="text-align: right; font-size: 0.75rem; color: var(--text-muted); vertical-align: middle;">
-                        Payment: <strong>{{ sale.payment_method }}</strong>
+                        style="text-align: right; font-size: 0.8rem; color: var(--text-secondary); vertical-align: middle; font-weight: 600;">
+                        Payment: <strong style="color: var(--navy-900);">{% if sale.payment_method == 'COMPLIMENT' %}COMPLIMENTARY{% else %}{{ sale.payment_method }}{% endif %}</strong>
                     </td>
                     <td colspan="3"
-                        style="text-align: right; font-weight: 700; color: var(--text-muted); font-size: 0.85rem; padding: 0.75rem;">
+                        style="text-align: right; font-weight: 800; color: var(--text-secondary); font-size: 0.85rem; padding: 0.75rem;">
                         BILL TOTAL:</td>
                     <td
-                        style="text-align: right; font-weight: 900; font-size: 1rem; color: var(--primary); padding-right: 1.25rem;">
-                        ₹{{ "%.2f"|format(sale.total) }}
+                        style="text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--navy-900); padding-right: 1.25rem;">
+                        ?{{ "%.2f"|format(sale.total) }}
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
+                    <td colspan="8" style="text-align: center; padding: 4rem; color: var(--text-tertiary); opacity: 0.7;">
                         <i class="fas fa-list-alt"
                             style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
                         No transaction details found.
@@ -144,14 +136,14 @@
             {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto',
             'RETURNED') | list %}
             <tfoot>
-                <tr style="background: rgba(var(--primary-rgb), 0.05); border-top: 2px solid var(--glass-border);">
+                <tr style="background: var(--surface-light) !important; border-top: 2px solid var(--navy-900);">
                     <td colspan="7"
-                        style="padding: 1.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 1rem;">
+                        style="padding: 1.5rem; text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1rem;">
                         GRAND TOTAL (ALL BILLS)
                     </td>
                     <td colspan="2"
-                        style="text-align: right; font-weight: 800; color: var(--primary); font-size: 1.25rem; padding: 1.5rem; padding-right: 1.25rem; text-shadow: 0 0 10px rgba(99, 102, 241, 0.2);">
-                        ₹{{ "%.2f"|format(active_sales | sum(attribute='total')) }}
+                        style="text-align: right; font-weight: 900; color: var(--navy-900); font-size: 1.25rem; padding: 1.5rem; padding-right: 1.25rem;">
+                        ?{{ "%.2f"|format(active_sales | sum(attribute='total')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -162,53 +154,58 @@
 
 <style>
     .cancelled-row {
-        opacity: 0.4;
-        filter: grayscale(0.5);
+        background: rgba(239, 68, 68, 0.05) !important;
+        color: var(--danger) !important;
     }
+    
+    .cancelled-row td { color: var(--danger) !important; }
+    .cancelled-row code { color: var(--danger) !important; background: rgba(239, 68, 68, 0.1) !important; }
 
     .returned-row {
-        opacity: 0.65;
+        background: rgba(245, 158, 11, 0.05) !important;
+        color: #f59e0b !important;
     }
+    .returned-row td { color: #f59e0b !important; }
 
     .item-row:hover td {
-        background: rgba(99, 102, 241, 0.02) !important;
+        background: var(--surface-light) !important;
     }
 
     @media print {
         @page {
-            margin: 0;
-            size: 80mm auto;
+            size: A5;
+            margin: 5mm;
         }
 
         body {
             margin: 0 !important;
             padding: 0 !important;
-            width: 80mm !important;
+            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: 'Courier New', Courier, monospace !important;
-            font-size: 9pt !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 10pt !important;
         }
 
-        .navbar,
-        .btn,
-        .nav-links,
-        .section-header div:last-child,
-        .pill-tabs {
+        .navbar, .btn, .nav-links, .section-header div:last-child, .pill-tabs, .print-hide, .no-print, .print-only-header {
             display: none !important;
         }
 
-        .dashboard-container {
-            width: 80mm !important;
-            padding: 2mm !important;
-            margin: 0 !important;
+        .print-only {
+            display: block !important;
         }
 
-        .section-header h1 {
-            font-size: 14pt !important;
+        .dashboard-container {
+            width: 138mm !important;
+            padding: 2mm !important;
+            margin: 0 auto !important;
+        }
+
+        .print-report-header {
             text-align: center;
-            margin-bottom: 5mm !important;
-            color: black !important;
+            border-bottom: 2px solid #000;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
         }
 
         .table-container {
@@ -223,52 +220,31 @@
             border-collapse: collapse !important;
         }
 
-        th,
+        th {
+            border-bottom: 1px solid #000 !important;
+            text-align: left !important;
+            padding: 1mm 0 !important;
+            font-size: 7pt !important;
+        }
+
         td {
             padding: 1mm 0 !important;
-            border-bottom: 1px dashed #000 !important;
+            border-bottom: 1px dotted #ccc !important;
             font-size: 8pt !important;
             color: black !important;
             background: white !important;
         }
 
-        .item-row:not(:first-child) {
-            display: none !important;
-        }
+        .print-date { width: 15% !important; font-size: 7pt !important; }
+        .print-bill-id { width: 12% !important; font-weight: bold; font-size: 7pt !important; }
+        .print-item { width: 48% !important; white-space: normal !important; overflow: visible !important; }
+        .print-net { width: 25% !important; text-align: right !important; font-weight: bold !important; font-size: 8pt !important; }
 
-        tr[style*="background: rgba(248, 250, 252, 0.5)"] {
-            display: none !important;
-        }
-
-        .print-hide {
-            display: none !important;
-        }
-
-        .print-only {
-            display: inline !important;
-        }
-
-        .print-date {
-            width: 20% !important;
-            display: table-cell !important;
-        }
-
-        .print-bill-id {
-            width: 15% !important;
-            display: table-cell !important;
-        }
-
-        .print-item {
-            width: 40% !important;
-            display: table-cell !important;
-        }
-
-        .print-net {
-            width: 25% !important;
-            text-align: right !important;
+        .summary-row td {
+            border-top: 1px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
+            background: #eee !important;
             font-weight: bold !important;
-            font-size: 9pt !important;
-            display: table-cell !important;
         }
 
         tfoot tr td {
@@ -276,13 +252,18 @@
             border-top: 2px solid #000 !important;
             background: white !important;
             color: black !important;
+            padding-top: 2mm !important;
         }
 
-        code {
-            background: transparent !important;
-            color: black !important;
-            padding: 0 !important;
+        .print-footer {
+            text-align: center;
+            margin-top: 5mm;
+            border-top: 1px dashed #000;
+            padding-top: 2mm;
+            font-size: 7pt;
         }
     }
 </style>
 {% endblock %}
+
+

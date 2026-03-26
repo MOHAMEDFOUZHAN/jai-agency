@@ -1,185 +1,350 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Returns{% endblock %}
+{% block title %}Asset Reclamation | Maple Pro{% endblock %}
+
+{% block nav_links %}
+<a href="/inventory">Dashboard</a>
+<a href="/inventory/live-stock">Live</a>
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/products">Product Master</a>
+<a href="/inventory/suppliers">Suppliers</a>
+{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-undo"></i>
-        <span>Maple Pro <span
-                style="font-size: 0.8rem; opacity: 0.7; font-weight: 400; margin-left: 5px;">RETURNS</span></span>
-    </div>
-    <div class="nav-links">
-        <a href="/inventory">Overview</a>
-        <a href="/inventory/stock-list">Ledger</a>
-        <a href="/inventory/live-stock">Live</a>
-        <a href="/inventory/suppliers">Partners</a>
-        <a href="/logout" class="btn btn-danger" style="margin-left: 1rem;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
-    <div class="section-header">
-        <div>
-            <h1>Product Returns</h1>
-            <p style="color: var(--text-muted);">Process damaged, expired, or returned inventory</p>
+<div class="dashboard-wrapper">
+    <!-- Hero Section -->
+    <div class="dash-hero">
+        <div class="hero-main">
+            <h1>Asset Reclamation</h1>
+            <p>Process damaged, expired, or returned inventory.</p>
         </div>
-        <button class="btn btn-primary"
-            style="background: var(--danger); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);"
-            onclick="openReturnModal()">
-            <i class="fas fa-plus-circle"></i> New Return Case
-        </button>
+        <div class="hero-actions">
+            <button class="btn-neural primary" onclick="openReturnModal()" style="background: var(--dash-danger); color: white; border-color: rgba(239, 68, 68, 0.3);">
+                <i class="fas fa-plus-circle" style="margin-right: 10px;"></i> ENTRY
+            </button>
+        </div>
     </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Entry Date</th>
-                    <th>Product Details</th>
-                    <th>Reason</th>
-                    <th>Stock Action</th>
-                    <th style="text-align: center;">Qty</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for r in returns %}
-                <tr>
-                    <td style="color: var(--text-muted); font-size: 0.9rem;">
-                        <i class="far fa-calendar-alt" style="margin-right: 6px;"></i> {{ r.date }}
-                    </td>
-                    <td>
-                        <div style="font-weight: 700; color: var(--text-main);">{{ r.product_name }}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">#{{
-                            r.product_code }}</div>
-                    </td>
-                    <td><span style="font-weight: 600; color: var(--text-muted);">{{ r.reason }}</span></td>
-                    <td>
-                        {% if r.action == 'scrap' %}
-                        <span class="badge badge-danger" style="font-size: 0.7rem; letter-spacing: 0.5px;">SCRAPPED /
-                            REMOVED</span>
-                        {% else %}
-                        <span class="badge badge-success" style="font-size: 0.7rem; letter-spacing: 0.5px;">RESTOCKED /
-                            ADDED</span>
-                        {% endif %}
-                    </td>
-                    <td style="text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-main);">{{
-                        r.qty }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
-                        <i class="fas fa-history"
-                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
-                        No return operations recorded yet.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Log Section -->
+    <div class="neural-panel" style="padding: 0; overflow: hidden; border-radius: 32px;">
+        <div style="padding: 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02);">
+            <h3 style="margin: 0; font-size: 0.8rem; font-weight: 850; letter-spacing: 2px; text-transform: uppercase; color: white;">
+                <i class="fas fa-history" style="color: var(--dash-danger); margin-right: 15px;"></i> RETURN HISTORY
+            </h3>
+            <div class="badge" style="background: rgba(239, 68, 68, 0.1); color: var(--dash-danger);">{{ returns|length }} RETURNS</div>
+        </div>
+
+        <div class="neural-table-container" style="border: none; border-radius: 0;">
+            <table class="neural-table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 2.5rem;">DATE</th>
+                        <th>PRODUCT DETAIL</th>
+                        <th>REASON</th>
+                        <th>RESOLUTION</th>
+                        <th style="text-align: center; padding-right: 2.5rem;">QTY</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in returns %}
+                    <tr class="activity-row">
+                        <td style="padding-left: 2.5rem;">
+                            <div style="color: var(--text-tertiary); font-size: 0.8rem; font-weight: 700; font-family: 'DM Mono';">
+                                <i class="far fa-calendar-alt" style="margin-right: 8px; color: var(--dash-danger);"></i> {{ r.date }}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 800; color: white; font-size: 0.95rem;">{{ r.product_name }}</div>
+                            <div style="font-size: 0.7rem; color: var(--dash-primary); font-family: 'DM Mono';">SKU: #{{ r.product_code }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-tertiary); font-size: 0.85rem;">
+                                {{ r.reason }}
+                            </div>
+                        </td>
+                        <td>
+                            {% if r.action == 'scrap' %}
+                            <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: var(--dash-danger); font-size: 0.65rem; border: 1px solid rgba(239, 68, 68, 0.2);">SCRAP_DESTROYED</span>
+                            {% else %}
+                            <span class="badge" style="background: rgba(34, 197, 94, 0.1); color: var(--dash-success); font-size: 0.65rem; border: 1px solid rgba(34, 197, 94, 0.2);">RESTOCK_AUTHORIZED</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; padding-right: 2.5rem; font-weight: 950; font-size: 1.25rem; color: white; font-family: 'Outfit';">
+                            {{ r.qty }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 10rem; color: var(--text-tertiary);">
+                            <i class="fas fa-box-open" style="font-size: 4rem; opacity: 0.1; display: block; margin-bottom: 2rem;"></i>
+                            NO RETURN RECORDS FOUND
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Return Modal -->
-<div id="returnModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeReturnModal()">&times;</span>
-        <h2 style="margin-bottom: 2rem; font-weight: 800; color: white;">Log Product Return</h2>
-        <form id="returnForm" onsubmit="event.preventDefault(); submitReturn();">
-            <div class="form-group">
-                <label class="form-label">SKU / Product Code</label>
-                <div style="position: relative;">
-                    <i class="fas fa-search"
-                        style="position: absolute; left: 1rem; top: 1rem; color: var(--text-muted);"></i>
-                    <input type="text" id="r_code" class="input-dark" style="padding-left: 2.8rem;"
-                        placeholder="Search by code..." required onchange="checkProduct(this.value)">
+<!-- Modal -->
+<div id="returnModal" class="neural-modal-overlay">
+    <div class="neural-modal">
+        <div class="modal-header">
+            <h3>NEW RETURN</h3>
+            <button class="close-btn" onclick="closeReturnModal()">&times;</button>
+        </div>
+        <form id="returnForm" onsubmit="event.preventDefault(); submitReturn();" class="neural-form">
+            <div class="f-group">
+                <label>ITEM CODE / SKU</label>
+                <div class="input-with-icon">
+                    <i class="fas fa-barcode"></i>
+                    <input type="text" id="r_code" placeholder="Scan or enter code..." required onchange="checkProduct(this.value)">
                 </div>
             </div>
-            <div class="form-group">
-                <label class="form-label">Identified Product</label>
-                <input type="text" id="r_name" class="input-dark"
-                    style="background: rgba(255,255,255,0.05); font-weight: 700; color: var(--primary);" readonly
-                    placeholder="Identify product above...">
+            <div class="f-group">
+                <label>PRODUCT NAME</label>
+                <input type="text" id="r_name" readonly placeholder="Waiting for ID..." class="readonly-input">
             </div>
-            <div class="form-group">
-                <label class="form-label">Return Quantity</label>
-                <input type="number" id="r_qty" class="input-dark" min="1" required placeholder="0">
+            <div class="f-group">
+                <label>RETURN QTY</label>
+                <input type="number" id="r_qty" min="1" required placeholder="0" class="large-numeric">
             </div>
-            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div>
-                    <label class="form-label">Classification</label>
-                    <select id="r_reason" class="input-dark">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="f-group">
+                    <label>REASON</label>
+                    <select id="r_reason">
                         <option value="Damaged">📦 Damaged</option>
                         <option value="Expired">⌛ Expired</option>
                         <option value="Wrong Item">🚫 Wrong Item</option>
                         <option value="Other">❓ Other</option>
                     </select>
                 </div>
-                <div>
-                    <label class="form-label">Stock Resolution</label>
-                    <select id="r_action" class="input-dark">
+                <div class="f-group">
+                    <label>ACTION</label>
+                    <select id="r_action">
                         <option value="scrap">Scrap / Destroy</option>
-                        <option value="restock">Restock / Resale</option>
+                        <option value="restock">Restock</option>
                     </select>
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary"
-                style="width: 100%; margin-top: 1.5rem; background: var(--danger); border: none;">Finalize Return
-                Record</button>
+            <div class="form-actions">
+                <button type="button" class="btn-neural" onclick="closeReturnModal()">CANCEL</button>
+                <button type="submit" class="btn-neural primary" style="background: var(--dash-danger); color: white;">SUBMIT RETURN</button>
+            </div>
         </form>
     </div>
 </div>
 
+<style>
+    .dashboard-wrapper {
+        max-width: 1550px;
+        margin: 0 auto;
+        padding: 2.5rem;
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes dashboardEnter {
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+
+    .dash-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 3.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--dash-glass-border);
+    }
+
+    .hero-main h1 {
+        font-size: 3.5rem;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-main p {
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+    }
+
+    .neural-panel {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-glass-border);
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
+    }
+
+    /* Modal Styling */
+    .neural-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(7, 10, 25, 0.8);
+        backdrop-filter: blur(15px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .neural-modal {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-glass-border);
+        width: 100%;
+        max-width: 600px;
+        border-radius: 32px;
+        overflow: hidden;
+        animation: modalSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+        from { transform: translateY(50px) scale(0.95); opacity: 0; }
+        to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+        padding: 2rem 3rem;
+        background: rgba(255,255,255,0.02);
+        border-bottom: 1px solid var(--dash-glass-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+        font-weight: 900;
+        color: white;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        color: var(--text-tertiary);
+        font-size: 2rem;
+        cursor: pointer;
+    }
+
+    .neural-form {
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .f-group { display: flex; flex-direction: column; gap: 10px; }
+    .f-group label { font-size: 0.65rem; font-weight: 850; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 2px; }
+
+    .input-with-icon { position: relative; }
+    .input-with-icon i { position: absolute; left: 1.5rem; top: 1.1rem; color: var(--dash-primary); }
+    .input-with-icon input { padding-left: 3.5rem; }
+
+    input, select {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 16px 20px;
+        border-radius: 14px;
+        color: white;
+        font-weight: 600;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    input:focus { border-color: var(--dash-primary); background: rgba(255,255,255,0.06); }
+
+    .readonly-input { background: rgba(255,255,255,0.01) !important; color: var(--dash-primary) !important; font-weight: 800; }
+    .large-numeric { font-size: 1.5rem; font-family: 'Outfit'; font-weight: 900; }
+
+    .form-actions { display: flex; gap: 1.5rem; margin-top: 2rem; }
+    .form-actions .btn-neural { flex: 1; justify-content: center; }
+
+    .btn-neural {
+        background: rgba(255,255,255,0.05);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 16px 28px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+    }
+
+    .btn-neural:hover { background: white; color: var(--navy-900); transform: translateY(-2px); }
+</style>
+
 <script>
-    const modal = document.getElementById("returnModal");
-
-    function openReturnModal() {
-        modal.classList.add("show");
-    }
-
-    function closeReturnModal() {
-        modal.classList.remove("show");
-    }
-
-    window.onclick = function (event) {
-        if (event.target == modal) closeReturnModal();
-    }
+    function openReturnModal() { document.getElementById("returnModal").style.display = "flex"; }
+    function closeReturnModal() { document.getElementById("returnModal").style.display = "none"; }
 
     async function checkProduct(code) {
         if (!code) return;
         try {
             const res = await fetch('/api/product/' + code);
             const data = await res.json();
+            const nameInput = document.getElementById('r_name');
             if (data.success) {
-                document.getElementById('r_name').value = data.product.name;
+                nameInput.value = data.product.name;
+                nameInput.style.color = 'var(--dash-success)';
             } else {
-                document.getElementById('r_name').value = "❌ Product Not Found";
+                nameInput.value = "ENTITY_NOT_FOUND";
+                nameInput.style.color = 'var(--dash-danger)';
             }
         } catch (e) { console.error(e); }
     }
 
     async function submitReturn() {
+        const commitBtn = document.querySelector('.form-actions .primary');
+        commitBtn.disabled = true;
+        commitBtn.innerText = 'COMMITTING...';
+
         const data = {
             code: document.getElementById('r_code').value,
-            qty: parseInt(document.getElementById('r_qty').value),
+            qty: parseFloat(document.getElementById('r_qty').value),
             reason: document.getElementById('r_reason').value,
             action: document.getElementById('r_action').value
         };
-
         try {
             const res = await fetch('/api/inventory/return', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
-            if (result.success) {
+            if ((await res.json()).success) {
                 location.reload();
             } else {
-                alert('Error: ' + result.message);
+                alert("Transaction Failure");
+                commitBtn.disabled = false;
+                commitBtn.innerText = 'SUBMIT RETURN';
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            alert("Network Sync Error"); 
+            commitBtn.disabled = false;
+            commitBtn.innerText = 'SUBMIT RETURN';
+        }
     }
 </script>
 {% endblock %}

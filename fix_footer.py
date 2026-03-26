@@ -1,4 +1,4 @@
-
+﻿
 path = r'd:\Homewoode small factory\templates\inventory\products.html'
 with open(path, 'r') as f:
     content = f.read()

@@ -1,4 +1,4 @@
-import sqlite3
+﻿import sqlite3
 import os
 
 db_name = 'test_db.db'

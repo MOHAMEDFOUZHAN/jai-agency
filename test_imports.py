@@ -1,4 +1,4 @@
-print("Testing granular imports...")
+﻿print("Testing granular imports...")
 import os
 print("Imported os")
 import sys

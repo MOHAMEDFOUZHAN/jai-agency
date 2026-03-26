@@ -3,7 +3,16 @@ import json
 import os
 import datetime
 
-DB_FILE = 'KOKKALATTY.db'
+import sys
+
+def get_db_path():
+    program_data = os.environ.get('ProgramData', 'C:\\ProgramData')
+    jai_data_dir = os.path.join(program_data, 'jai agency')
+    if not os.path.exists(jai_data_dir):
+        os.makedirs(jai_data_dir, exist_ok=True)
+    return os.path.join(jai_data_dir, 'JAI_AGENCY.db')
+
+DB_FILE = get_db_path()
 DATA_FILE = 'data.json'
 
 def init_db():

@@ -1,134 +1,102 @@
 {% extends "base.html" %}
 
-{% block title %}Storage Management - Batch Tracking{% endblock %}
+{% block title %}Storage Ledger | Jai Agency{% endblock %}
+
+{% block nav_links %}
+<a href="/inventory">Dashboard</a>
+<a href="/inventory/live-stock">Live</a>
+<a href="/inventory/storage" class="active">Storage</a>
+<a href="/inventory/products">Product Master</a>
+<a href="/inventory/suppliers">Suppliers</a>
+<a href="/inventory/stock-return">Return Stock</a>
+{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-warehouse"></i>
-        <span>Kokkalatty Trades</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory" {% if page=='dashboard' %}class="active" {% endif %}>Dashboard</a>
-        <a href="/inventory/live-stock" {% if page=='live_stock' %}class="active" {% endif %}>Live</a>
-        <a href="/inventory/storage" {% if page=='storage' %}class="active" {% endif %}>Storage</a>
-        <a href="/inventory/products" {% if page=='products' %}class="active" {% endif %}>Product Master</a>
-        <a href="/inventory/suppliers" {% if page=='suppliers' %}class="active" {% endif %}>Suppliers</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.1
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in" style="max-width: 1300px;">
-    <div class="section-header">
-        <div>
-            <h1>Storage Ledger <span
-                    style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted); margin-left: 10px;">(FIFO -
-                    First In First Out)</span></h1>
-            <p style="color: var(--text-muted);">Monitoring active material batches and tracking inward stock movement.
-            </p>
+<div class="dashboard-wrapper">
+    <!-- Hero Section -->
+    <div class="dash-hero">
+        <div class="hero-main">
+            <span class="hero-kicker">Storage Control</span>
+            <h1>Resource Ledger</h1>
+            <p>Batch tracking and inward asset stabilization.</p>
         </div>
-        <div style="display: flex; gap: 0.75rem;">
-            <a href="/inventory/storage/add" class="btn btn-primary"
-                style="background: linear-gradient(135deg, var(--primary), #4f46e5);">
-                <i class="fas fa-plus"></i> QUICK ADD STOCK
+        <div class="hero-actions storage-hero-actions">
+            <a href="/inventory/storage/add" class="btn-neural storage-btn storage-btn-primary">
+                <i class="fas fa-plus"></i> ENTRY
             </a>
-            <a href="/inventory/stock-entry" class="btn btn-outline">
-                <i class="fas fa-file-invoice"></i> STANDARD INVOICE
-            </a>
+            <button type="button" onclick="window.print()" class="btn-neural storage-btn storage-btn-secondary">
+                <i class="fas fa-print"></i> PRINT
+            </button>
         </div>
     </div>
 
-    <div class="glass-panel" style="padding: 0; overflow: hidden; border: 1px solid var(--glass-border);">
-        <div
-            style="padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--glass-border);">
-            <h2
-                style="font-size: 1rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1.5px; margin: 0; font-weight: 700;">
-                <i class="fas fa-layer-group" style="color: var(--primary); margin-right: 12px;"></i> Active Cargo
-                Batches
-            </h2>
-            <div style="display: flex; gap: 1rem;">
-                <span class="badge"
-                    style="background: var(--primary-glow); color: var(--primary); padding: 8px 16px; border-radius: 50px;">
-                    <i class="fas fa-boxes" style="margin-right: 8px;"></i> {{ storage_view|length }} Active Lots
-                </span>
-            </div>
+    <div class="insight-card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1.75rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02);">
+            <h3 style="margin: 0; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.1em; color: white;">
+                <i class="fas fa-stream" style="color: var(--dash-secondary); margin-right: 12px;"></i> STOCK IN STORAGE
+            </h3>
+            <div class="badge" style="background: var(--dash-primary); color: white;">{{ storage_view|length }} ACTIVE BATCHES</div>
         </div>
 
-        <div class="table-container" style="overflow-x: auto; margin: 0; border: none; background: white;">
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+        <div class="neural-table-container" style="border: none; border-radius: 0;">
+            <table class="neural-table">
                 <thead>
-                    <tr style="background: #1e293b; color: white;">
-                        <th style="color: #cbd5e1; padding: 20px 24px;">Batch ID</th>
-                        <th style="color: #cbd5e1;">Arrived</th>
-                        <th style="color: #cbd5e1;">Product Information</th>
-                        <th style="color: #cbd5e1;">Grading</th>
-                        <th style="color: #cbd5e1; text-align: center;">Stock Qty</th>
-                        <th style="color: #cbd5e1;">Reference</th>
-                        <th style="color: #cbd5e1; text-align: center;">Status</th>
+                    <tr>
+                        <th style="padding-left: 2.5rem;">BATCH ID</th>
+                        <th>DATE & TIME</th>
+                        <th>GRADE</th>
+                        <th style="text-align: center;">QUANTITY</th>
+                        <th style="text-align: center;">STATUS</th>
+                        <th style="text-align: center; padding-right: 2.5rem;">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for b in storage_view %}
-                    <tr class="hover-row">
-                        <td style="padding: 18px 24px;">
-                            <div
-                                style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--primary); font-size: 0.95rem;">
-                                #{{ b.batch_no }}
-                            </div>
+                    <tr class="activity-row">
+                        <td style="padding-left: 2.5rem;">
+                            <div style="font-family: 'DM Mono'; font-weight: 700; color: var(--dash-secondary);">#{{ b.batch_no }}</div>
                         </td>
                         <td>
-                            <div style="font-weight: 600; color: var(--text-main);">{{ b.arrival_date }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">At {{ b.time_only }}</div>
-                        </td>
-                        <td>
-                            <div style="font-weight: 700; color: var(--text-main); font-size: 1rem;">{{ b.product_name
-                                }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px;">SKU: {{
-                                b.code }}</div>
+                            <div style="font-weight: 700; color: white;">{{ b.arrival_date }}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-tertiary);">{{ b.time_only }}</div>
                         </td>
                         <td>
                             {% if b.grade %}
-                            <span
-                                style="background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; color: #475569; border: 1px solid #e2e8f0;">
-                                {{ b.grade }}
-                            </span>
+                            <span class="badge" style="background: rgba(255,255,255,0.05); color: var(--text-tertiary); font-size: 0.65rem;">{{ b.grade }}</span>
                             {% else %}
-                            <span style="color: #cbd5e1;">--</span>
+                            <span style="opacity: 0.1;">--</span>
                             {% endif %}
                         </td>
                         <td style="text-align: center;">
-                            <div style="font-weight: 800; color: var(--text-main); font-size: 1.1rem;">{{ b.qty }}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">{{ b.unit or
-                                'PCS' }}</div>
-                        </td>
-                        <td>
-                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-main);">{{ b.invoice_no
-                                }}</div>
-                            <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">{{ b.remarks
-                                or 'No remarks' }}</div>
+                            <div style="font-weight: 950; color: white; font-size: 1.1rem; font-family: 'Outfit';">{{ b.qty }}</div>
+                            <div style="font-size: 0.65rem; color: var(--text-tertiary); font-weight: 800; letter-spacing: 1px;">{{ b.unit or 'PCS' }}</div>
                         </td>
                         <td style="text-align: center;">
-                            <span class="badge"
-                                style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.65rem; letter-spacing: 1px;">
-                                <i class="fas fa-check-circle" style="margin-right: 4px;"></i> LIVE STOCK
-                            </span>
+                            <div class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--dash-success); border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.6rem;">ACTIVE STK</div>
+                        </td>
+                        <td style="text-align: center; padding-right: 2.5rem;">
+                            <div style="display: flex; gap: 10px; justify-content: center;">
+                                <button class="control-btn edit-batch-btn" 
+                                    data-id="{{ b.id }}" 
+                                    data-qty="{{ b.qty }}" 
+                                    data-grade="{{ b.grade or '' }}" 
+                                    data-remarks="{{ b.remarks or '' }}"
+                                    data-code="{{ b.code }}"
+                                    data-expiry="{{ b.expiry or '' }}"
+                                    data-unit="{{ b.unit or '' }}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteBatch('{{ b.id }}')" class="control-btn" style="color: var(--dash-danger); border-color: rgba(239, 68, 68, 0.2);">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 6rem 2rem; color: var(--text-muted);">
-                            <div
-                                style="background: #f8fafc; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                                <i class="fas fa-box-open" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                            </div>
-                            <h3 style="color: var(--text-main); margin-bottom: 0.5rem;">Storage is Empty</h3>
-                            <p style="font-size: 0.9rem;">No active batches were found. Add stock to see them here.</p>
+                        <td colspan="6" style="text-align: center; padding: 8rem; color: var(--text-tertiary);">
+                            <i class="fas fa-box-open" style="font-size: 3rem; opacity: 0.1; display: block; margin-bottom: 2rem;"></i>
+                            STORAGE_EMPTY: No active cargo detected.
                         </td>
                     </tr>
                     {% endfor %}
@@ -138,21 +106,375 @@
     </div>
 </div>
 
+<!-- Edit Batch Modal -->
+<div id="editBatchModal" class="modal">
+    <div class="modal-content neural-panel-compact" style="max-width: 850px; padding: 0; overflow: hidden; border: 1px solid var(--dash-glass-border);">
+        <!-- Header -->
+        <div style="background: rgba(255,255,255,0.03); padding: 1.5rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="font-size: 1.5rem; color: white; margin: 0; font-family: 'Gill Sans', sans-serif;">Modify Resource</h2>
+                <p style="margin: 2px 0 0; color: var(--dash-secondary); font-weight: 850; font-family: 'DM Mono'; font-size: 0.65rem; text-transform: uppercase;">BATCH ID: #<span id="display_batch_id"></span></p>
+            </div>
+            <button class="btn-neural-compact" onclick="closeModal('editBatchModal')" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); width: 36px; height: 36px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="editBatchForm" onsubmit="handleBatchUpdate(event)" style="padding: 2.5rem;">
+            <input type="hidden" id="edit_batch_id">
+            
+            <div class="compact-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem;">
+                <!-- Left Sector -->
+                <div class="input-sector">
+                    <div class="f-group-compact">
+                        <label>ITEM CODE / SKU</label>
+                        <div class="neural-search" style="width: 100%;">
+                            <i class="fas fa-barcode"></i>
+                            <input type="text" id="edit_code" placeholder="SKU CODE" required style="font-family: 'DM Mono'; padding-left: 45px;">
+                        </div>
+                    </div>
+
+                    <div class="form-row-compact" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <div class="f-group-compact">
+                            <label>GRADE</label>
+                            <input type="text" id="edit_grade" placeholder="e.g. A / B">
+                        </div>
+                        <div class="f-group-compact">
+                            <label>UOM (UNIT)</label>
+                            <input type="text" id="edit_unit" placeholder="Kg / Nos" required>
+                        </div>
+                    </div>
+
+                    <div class="f-group-compact">
+                        <label>EXPIRY DATE</label>
+                        <input type="date" id="edit_expiry">
+                    </div>
+
+                    <div class="f-group-compact">
+                        <label>INTERNAL REMARKS</label>
+                        <textarea id="edit_remarks" style="min-height: 60px; font-size: 0.85rem; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; width: 100%; outline: none;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Right Sector -->
+                <div class="qty-sector">
+                    <div class="f-group-compact">
+                        <label>ADJUST QUANTITY</label>
+                        <div class="qty-input-wrapper" style="position: relative;">
+                            <input type="number" step="0.001" id="edit_qty" placeholder="0.000" required
+                                style="font-size: 3rem; height: 120px; text-align: center; font-family: 'Outfit'; font-weight: 950; border: 2px solid var(--dash-glass-border); background: rgba(255,255,255,0.02); border-radius: 20px; width: 100%; color: white; outline: none;">
+                            <div class="qty-unit-label" id="editQtySuffix" style="position: absolute; right: 20px; bottom: 15px; font-size: 0.7rem; font-weight: 950; color: var(--dash-primary); text-transform: uppercase;">UNIT</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions-compact" style="margin-top: 2rem; display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem;">
+                <button type="button" class="btn-neural" onclick="closeModal('editBatchModal')" style="width: 100%; justify-content: center; opacity: 0.5;">DISCARD</button>
+                <button type="submit" class="btn-submit-premium" style="width: 100%; padding: 1.25rem; border-radius: 16px; border: none; background: linear-gradient(135deg, var(--dash-success), #059669); color: white; font-weight: 850; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);">
+                    <i class="fas fa-save"></i> UPDATE STOCK
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <style>
-    .hover-row {
-        transition: all 0.2s ease;
+    .dashboard-wrapper {
+        max-width: 1550px;
+        margin: 0 auto;
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .hover-row:hover {
-        background: #f8fafc !important;
-        transform: scale(1.002);
-        box-shadow: inset 4px 0 0 var(--primary);
+    @keyframes dashboardEnter {
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
     }
 
-    th {
-        font-weight: 600 !important;
-        text-transform: none !important;
-        letter-spacing: 0.5px !important;
+    .hero-main h1 {
+        font-size: 3.5rem;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-main p {
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+    }
+
+    .storage-hero-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .storage-btn {
+        min-width: 240px;
+        justify-content: center;
+        padding: 0.95rem 1.35rem;
+        border-radius: 18px;
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+    }
+
+    .storage-btn-primary {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        color: var(--obsidian-950);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 18px 36px -20px rgba(255, 255, 255, 0.65);
+    }
+
+    .storage-btn-primary:hover {
+        background: linear-gradient(135deg, #ffffff, #e2e8f0);
+        color: var(--obsidian-950);
+        transform: translateY(-2px);
+        box-shadow: 0 22px 40px -18px rgba(255, 255, 255, 0.6);
+    }
+
+    .storage-btn-secondary {
+        background: rgba(255,255,255,0.05);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .storage-btn-secondary:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+        transform: translateY(-2px);
+        border-color: rgba(255,255,255,0.16);
+    }
+
+    .control-btn {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-tertiary);
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+        background: white;
+        color: var(--obsidian-950);
+        transform: scale(1.1);
+    }
+
+    .activity-row:hover td {
+        background: rgba(255,255,255,0.05) !important;
+    }
+
+    /* Compact UI Classes for Modal */
+    .neural-panel-compact {
+        background: #111827; /* Deep Navy Dark */
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 32px;
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
+    }
+
+    .f-group-compact { margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
+    .f-group-compact label { 
+        font-size: 0.65rem; 
+        font-weight: 900; 
+        color: var(--text-tertiary); 
+        text-transform: uppercase; 
+        letter-spacing: 0.1em;
+    }
+
+    .neural-search { position: relative; }
+    .neural-search i { 
+        position: absolute; left: 15px; top: 50%; transform: translateY(-50%); 
+        color: var(--dash-primary); font-size: 0.9rem;
+    }
+
+    .neural-panel-compact input[type="text"], 
+    .neural-panel-compact input[type="number"], 
+    .neural-panel-compact textarea {
+        background: rgba(255,255,255,0.03) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        padding: 12px 16px !important;
+        border-radius: 12px !important;
+        color: white !important;
+        font-weight: 600;
+        font-size: 0.95rem;
+        width: 100%;
+        outline: none;
+    }
+
+    .neural-panel-compact input:focus, 
+    .neural-panel-compact textarea:focus { 
+        border-color: var(--dash-primary) !important; 
+        background: rgba(255,255,255,0.06) !important; 
+    }
+
+    .compact-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 3rem; }
+    .form-row-compact { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+    .qty-input-wrapper { position: relative; }
+    .qty-input-wrapper input {
+        font-size: 3rem !important;
+        height: 120px !important;
+        text-align: center !important;
+        font-family: 'Outfit', sans-serif !important;
+        font-weight: 950 !important;
+        border: 2px solid rgba(255,255,255,0.1) !important;
+        background: rgba(255,255,255,0.02) !important;
+        border-radius: 20px !important;
+    }
+    .qty-unit-label {
+        position: absolute; right: 20px; bottom: 15px;
+        font-size: 0.7rem; font-weight: 950; color: var(--dash-primary);
+        text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    .btn-submit-premium {
+        width: 100%; padding: 1rem;
+        border-radius: 16px; border: none;
+        background: linear-gradient(135deg, var(--dash-primary), var(--dash-secondary));
+        color: white; font-weight: 850; font-size: 1rem;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        transition: 0.3s;
+        box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+    }
+    .btn-submit-premium:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.5); }
+
+    /* Modal Premium Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(10, 14, 28, 0.85);
+        backdrop-filter: blur(15px);
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .neural-panel {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-glass-border);
+        border-radius: 32px;
+        width: 100%;
+        max-width: 650px;
+        padding: 3rem;
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
+        animation: modalSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlide {
+        from { opacity: 0; transform: translateY(50px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .modal-header h2 { font-size: 1.75rem; color: white; margin: 0; }
+    .modal-header p { margin: 5px 0 0; color: var(--dash-secondary); font-weight: 800; font-family: 'DM Mono'; font-size: 0.7rem; letter-spacing: 1px; }
+
+    .close-btn { background: none; border: none; font-size: 2.5rem; color: var(--text-tertiary); cursor: pointer; transition: all 0.3s ease; }
+    .close-btn:hover { color: white; transform: rotate(90deg); }
+
+    .f-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2rem; }
+    .f-group label { font-size: 0.7rem; font-weight: 800; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; }
+    
+    .neural-input, input[type="text"], input[type="number"], textarea {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 14px 18px;
+        border-radius: 12px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        width: 100%;
+        font-family: inherit;
+    }
+
+    input:focus, textarea:focus { border-color: var(--dash-primary); background: rgba(255,255,255,0.06); }
+
+    .form-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; margin-top: 1rem; }
+    .btn-neural.secondary { opacity: 0.6; }
+
+    @media (max-width: 900px) {
+        .storage-hero-actions {
+            width: 100%;
+        }
+
+        .storage-btn {
+            width: 100%;
+            min-width: 0;
+        }
     }
 </style>
+
+<script>
+    document.querySelectorAll('.edit-batch-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            document.getElementById('edit_batch_id').value = id;
+            document.getElementById('display_batch_id').innerText = id;
+            document.getElementById('edit_qty').value = this.getAttribute('data-qty');
+            document.getElementById('edit_grade').value = this.getAttribute('data-grade') === 'None' ? '' : this.getAttribute('data-grade');
+            document.getElementById('edit_remarks').value = this.getAttribute('data-remarks') === 'None' ? '' : this.getAttribute('data-remarks');
+            document.getElementById('edit_code').value = this.getAttribute('data-code');
+            document.getElementById('edit_expiry').value = this.getAttribute('data-expiry') === 'None' ? '' : this.getAttribute('data-expiry');
+            const unit = this.getAttribute('data-unit') || 'PCS';
+            document.getElementById('edit_unit').value = unit;
+            document.getElementById('editQtySuffix').innerText = unit;
+            document.getElementById('editBatchModal').style.display = 'flex';
+        });
+    });
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    async function handleBatchUpdate(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit_batch_id').value;
+        const data = {
+            qty: parseFloat(document.getElementById('edit_qty').value),
+            grade: document.getElementById('edit_grade').value,
+            remarks: document.getElementById('edit_remarks').value,
+            code: document.getElementById('edit_code').value,
+            unit: document.getElementById('edit_unit').value,
+            expiry: document.getElementById('edit_expiry').value
+        };
+
+        try {
+            const res = await fetch(`/api/inventory/storage/edit/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) location.reload();
+            else alert('Update failed: ' + result.message);
+        } catch (err) { alert('An error occurred during sync.'); }
+    }
+
+    async function deleteBatch(id) {
+        if (!confirm('Delete this batch? This cannot be undone.')) return;
+        try {
+            const res = await fetch(`/api/inventory/storage/delete/${id}`, { method: 'POST' });
+            const result = await res.json();
+            if (result.success) location.reload();
+            else alert('Delete failed: ' + result.message);
+        } catch (err) { alert('An error occurred during deletion.'); }
+    }
+</script>
 {% endblock %}

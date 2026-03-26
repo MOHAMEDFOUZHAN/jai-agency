@@ -1,0 +1,32 @@
+Method 1: The "Shared Folder" Way (Not Recommended for SQLite)
+You can put the database file (KOKKALATTY.db) in a Shared Network Folder on the Main PC.
+
+Install the software on both PCs.
+Change the code so both softwares look at a network path (e.g., \\MAIN-PC\Shared\KOKKALATTY.db).
+The Problem with this: SQLite is a "local" database. It is not designed to work over a network cable.
+
+If both PCs try to save a bill at the exact same time, the network might "lock" the file.
+This can cause the software to crash or, in rare cases, corrupt the database.
+Most developers advise against this for SQLite.
+Method 2: The "Professional" Way (Best for SQLite)
+You still install the software on both PCs, but you set them up differently:
+
+PC 1 (Master): You run the full software. It handles the database.
+PC 2 (Client): You install the software, but you tell it: "Don't use your own database, just talk to PC 1."
+How to do this without writing new code:
+
+Run the .exe on the Main PC. It will start the server on Port 5003.
+On the Second PC, you don't even need to open the .exe. You just create a Desktop Shortcut that points to the Main PC's IP.
+If your client insists on "Software" feeling for PC 2: I can modify your 
+
+app.py
+ so that when it starts, it asks: "Is this the Main PC or the Second PC?"
+
+If they select Main, it starts normally.
+If they select Second, it just opens a window that connects to the Main PC.
+My Advice:
+Since you are using SQLite, Method 2 is 100% safer.
+
+If you put one SQLite file on a shared network drive (Method 1), your client might call you in a month saying the database is "Locked" or "Corrupted" because two people clicked "Save" at the same time.
+
+Would you like me to modify the code so the software has a "Connect to Main PC" option on the login screen? This would make it look like a professional multi-user "installed" software.

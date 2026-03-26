@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Client Directory | Jai Agency{% endblock %}
+
+{% block content %}
+<div class="main-wrapper report-shell client-thermal-report">
+    <div class="report-header no-print">
+        <div>
+            <h1 class="display">Client Directory</h1>
+            <p class="subtitle">Unified Customer Database & Management</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn-intelligence secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> PRINT DIRECTORY
+            </button>
+        </div>
+    </div>
+
+    <div class="print-report-header print-only">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">CLIENT DIRECTORY</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Customer master list</p>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Full Name</th>
+                        <th>Contact Number</th>
+                        <th class="no-print">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="mono">#{{ c.customer_id or '---' }}</td>
+                        <td style="font-weight: 800; color: white;">{{ c.customer_name }}</td>
+                        <td class="mono">{{ c.customer_mobile }}</td>
+                        <td class="no-print">
+                             <a href="/billing/reports/sales-bill?search={{ c.customer_mobile }}" class="btn-intelligence primary" style="padding: 6px 12px; font-size: 0.7rem;">
+                                <i class="fas fa-search"></i> VIEW SALES
+                             </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 3rem; opacity: 0.5;">
+                            No customer records found in the manifest.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

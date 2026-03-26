@@ -1,259 +1,222 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Sales Overview{% endblock %}
+{% block title %}Neural Analytics | Jai Agency{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-chart-line"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard" class="active">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/expenses">Expenses</a>
-        <a href="/billing/reports">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
-            V3.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
-    <div class="section-header">
-        <div>
-            <h1>Welcome, Sales Team!</h1>
-            <p style="color: var(--text-muted);">Performance tracking for {{ display_date }}.</p>
+<div class="dashboard-wrapper">
+    <div class="dash-hero">
+        <div class="hero-main">
+            <span class="hero-kicker">Billing Control</span>
+            <h1>Sales Analysis for {{ display_date }}</h1>
         </div>
-
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <button onclick="window.print()" class="btn btn-outline">
-                <i class="fas fa-print"></i> PRINT DASHBOARD
+        <div class="hero-actions">
+            <button onclick="window.print()" class="btn-intelligence secondary hero-btn">
+                <i class="fas fa-print"></i> Print Summary
             </button>
-            <button onclick="sendMail()" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i> MAIL SENDING
+            <button onclick="sendMail()" class="btn-intelligence primary hero-btn hero-btn-sync">
+                <i class="fas fa-sync-alt"></i> Sync Report
             </button>
-            {% if low_stock_alert > 0 %}
-            <div class="badge badge-danger" style="padding: 0.75rem 1.25rem; font-size: 0.85rem;">
-                <i class="fas fa-exclamation-triangle"></i>
-                {{ low_stock_alert }} low stock items
-            </div>
-            {% endif %}
-
-            {% if expiring_alert > 0 %}
-            <div class="badge badge-danger"
-                style="padding: 0.75rem 1.25rem; font-size: 0.85rem; background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3);">
-                <i class="fas fa-history"></i>
-                {{ expiring_alert }} batches expiring
-            </div>
-            {% endif %}
         </div>
     </div>
 
-    <div class="analytics-grid" style="margin-bottom: 2.5rem;">
-        <div class="mini-stat-box" style="background: #fff; box-shadow: 0 10px 20px var(--shadow-base);">
-            <i class="fas fa-file-invoice-dollar"
-                style="color: var(--primary); font-size: 1.8rem; margin-bottom: 1rem;"></i>
-            <div
-                style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">
-                Transactions</div>
-            <div style="font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-top: 8px;">{{ count_today
-                }}</div>
+    <div class="hero-strip">
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Business Date</span>
+            <strong>{{ display_date }}</strong>
         </div>
-        <div class="mini-stat-box" style="background: #fff; box-shadow: 0 10px 20px var(--shadow-base);">
-            <i class="fas fa-chart-line" style="color: var(--success); font-size: 1.8rem; margin-bottom: 1rem;"></i>
-            <div
-                style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">
-                Top Moving</div>
-            <div
-                style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                {{ top_moving }}</div>
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Peak Seller</span>
+            <strong>{{ top_moving }}</strong>
         </div>
-        <div class="mini-stat-box" style="background: #fff; box-shadow: 0 10px 20px var(--shadow-base);">
-            <i class="fas fa-clock" style="color: var(--warning); font-size: 1.8rem; margin-bottom: 1rem;"></i>
-            <div
-                style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700;">
-                System Time</div>
-            <div id="live-timer" style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-top: 8px;">
-                00:00:00
-            </div>
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">System State</span>
+            <strong>Billing counters active</strong>
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem;">
-        <!-- Left: Performance Chart -->
-        <div class="glass-panel" style="padding: 2.5rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <div>
-                    <h3 style="font-size: 1.25rem; font-weight: 700;">Weekly Performance</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted);">Sales revenue history</p>
-                </div>
-                <div class="badge badge-success" style="letter-spacing: 1px;">LIVE DATA</div>
+    <div class="neural-grid">
+        <div class="neural-card" style="--accent-color: #10b981;">
+            <div class="card-meta">
+                <span class="card-label">Total Sales</span>
+                <div class="card-icon"><i class="fas fa-wave-square"></i></div>
             </div>
-            <div id="sales-chart" style="min-height: 350px;"></div>
+            <div class="card-value">&#8377;{{ "{:,.2f}".format(total_today) }}</div>
+            <div class="card-sub"><span class="card-state is-live">Live</span> Revenue booked today</div>
         </div>
 
-        <!-- Right: Live Activity Feed -->
-        <div class="glass-panel" style="padding: 0; display: flex; flex-direction: column; overflow: hidden;">
-            <div
-                style="padding: 1.5rem; background: rgba(255, 255, 255, 0.03); border-bottom: 1px solid var(--glass-border); display: flex; align-items: center; gap: 1rem;">
-                <div
-                    style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: pulse 2s infinite;">
+        <div class="neural-card" style="--accent-color: #6366f1;">
+            <div class="card-meta">
+                <span class="card-label">Total Bills</span>
+                <div class="card-icon"><i class="fas fa-project-diagram"></i></div>
+            </div>
+            <div class="card-value">{{ count_today }}</div>
+            <div class="card-sub">Bills generated today</div>
+        </div>
+
+        <div class="neural-card" style="--accent-color: #f59e0b;">
+            <div class="card-meta">
+                <span class="card-label">Average Order Value</span>
+                <div class="card-icon"><i class="fas fa-chart-area"></i></div>
+            </div>
+            <div class="card-value">&#8377;{{ "{:,.2f}".format(average_sale) }}</div>
+            <div class="card-sub">Average amount per bill</div>
+        </div>
+
+        <div class="neural-card" style="--accent-color: #0ea5e9;">
+            <div class="card-meta">
+                <span class="card-label">Top Product</span>
+                <div class="card-icon"><i class="fas fa-medal"></i></div>
+            </div>
+            <div class="card-value card-value-compact">{{ top_moving }}</div>
+            <div class="card-sub">Most sold item today</div>
+        </div>
+    </div>
+
+    <div class="analytics-block">
+        <div class="chart-vessel">
+            <div class="vessel-header">
+                <div class="vessel-title">
+                    <i class="fas fa-brain" style="color: var(--dash-primary);"></i>
+                    Sales Trend
                 </div>
-                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-main);">Live Intelligence Stream</h3>
+                <div class="badge badge-soft">Last 7 Days</div>
+            </div>
+            <div id="neural-chart" style="min-height: 380px;"></div>
+        </div>
+
+        <div class="insight-vessel">
+            <div class="insight-card">
+                <div class="panel-heading">
+                    <h4 class="card-label">Settlement Distribution</h4>
+                    <span class="panel-meta">Payment mix today</span>
+                </div>
+                <div class="split-list">
+                    {% set mode_labels = {'CASH': 'CASH PAYMENTS', 'UPI': 'DIGITAL UPI', 'CARD': 'CREDIT/DEBIT CARD', 'CREDIT': 'CREDIT SALES'} %}
+                    {% for mode, val in payment_split.items() %}
+                    {% set split_pct = (val / total_today * 100) if total_today > 0 else 0 %}
+                    <div class="split-item">
+                        <div class="split-info">
+                            <span style="color: white; opacity: 0.8;">{{ mode_labels.get(mode, mode) }}</span>
+                            <span style="color: var(--dash-secondary);">&#8377;{{ "{:,.0f}".format(val) }}</span>
+                        </div>
+                        <div class="split-track">
+                            <div class="split-fill" style="width: {{ split_pct }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
 
-            <div id="activity-feed" style="flex: 1; padding: 1.5rem; overflow-y: auto; max-height: 480px;">
-                {% for activity in recent_activity %}
-                <div class="activity-item"
-                    style="margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted);">{{ activity.time
-                            }}</span>
-                        <span class="badge"
-                            style="background: rgba(99, 102, 241, 0.1); color: var(--primary); border: 1px solid rgba(99, 102, 241, 0.2);">BILL
-                            #{{ activity.id }}</span>
+            <div class="insight-card {% if low_stock_alert > 0 %}is-alert{% endif %}">
+                <div class="panel-heading">
+                    <h4 class="card-label">Stock Inventory</h4>
+                    {% if low_stock_alert > 0 %}
+                    <span class="panel-alert">Alert</span>
+                    {% else %}
+                    <span class="panel-meta">Stable</span>
+                    {% endif %}
+                </div>
+                {% if low_stock_items %}
+                <div class="inventory-alert-list">
+                    {% for item in low_stock_items %}
+                    <div class="inventory-alert-item">
+                        <span class="inventory-alert-name">{{ item.name }}</span>
+                        <div class="inventory-alert-stock">
+                            <div class="inventory-alert-value">{{ item.stock }}</div>
+                            <div class="inventory-alert-unit">{{ item.unit }}</div>
+                        </div>
                     </div>
-                    <div
-                        style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: 0 20px 20px 20px; border: 1px solid var(--glass-border);">
-                        <div style="font-weight: 700; font-size: 1rem; color: var(--text-main);">Sale Authorized</div>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">{{
-                            activity.items_count }} items processed</div>
-                        <div
-                            style="font-size: 1.25rem; font-weight: 800; color: var(--primary); margin-top: 10px; text-shadow: 0 0 15px var(--primary-glow);">
-                            ₹{{ "%.2f"|format(activity.total) }}</div>
-                    </div>
+                    {% endfor %}
                 </div>
                 {% else %}
-                <div style="text-align: center; color: var(--text-muted); padding: 5rem 1rem; opacity: 0.5;">
-                    <i class="fas fa-radar" style="font-size: 2.5rem; margin-bottom: 1rem; display: block;"></i>
-                    No activity detected.
+                <div class="empty-state">
+                    <div class="empty-state-icon is-success">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <p>Stock levels are healthy</p>
                 </div>
-                {% endfor %}
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes pulse {
-        0% {
-            transform: scale(0.95);
-            opacity: 0.5;
-        }
-
-        50% {
-            transform: scale(1.1);
-            opacity: 1;
-        }
-
-        100% {
-            transform: scale(0.95);
-            opacity: 0.5;
-        }
-    }
-
-    #activity-feed::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    #activity-feed::-webkit-scrollbar-thumb {
-        background: var(--glass-border);
-        border-radius: 10px;
-    }
-</style>
 {% endblock %}
 
 {% block scripts %}
-<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="{{ url_for('static', filename='lib/apexcharts.min.js') }}"></script>
 <script>
-    // Live Timer for Mission Intelligence
-    setInterval(() => {
-        const now = new Date();
-        document.getElementById('live-timer').innerText = now.toLocaleTimeString('en-GB');
-    }, 1000);
-
-    // Weekly Performance Chart
-    // Weekly Performance Chart
-    var options = {
+    const chartOptions = {
         series: [{
-            name: 'Revenue',
+            name: 'Stream Volume',
             data: JSON.parse('{{ chart_values | tojson | safe }}')
         }],
         chart: {
             type: 'area',
-            height: 350,
-            fontFamily: 'Inter, sans-serif',
+            height: 380,
+            fontFamily: 'Outfit, sans-serif',
             toolbar: { show: false },
-            animations: { enabled: true, easing: 'easeinout', speed: 800 }
+            zoom: { enabled: false },
+            background: 'transparent'
         },
-        stroke: { curve: 'smooth', width: 3 },
+        theme: { mode: 'dark' },
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 4, colors: ['#6366f1'] },
         fill: {
             type: 'gradient',
-            gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 }
+            gradient: {
+                shadeIntensity: 1,
+                opacityFrom: 0.6,
+                opacityTo: 0.05,
+                stops: [0, 90, 100],
+                colorStops: [
+                    { offset: 0, color: '#6366f1', opacity: 1 },
+                    { offset: 100, color: '#6366f1', opacity: 0 }
+                ]
+            }
         },
-        dataLabels: { enabled: false },
-        colors: ['#5c53ff'],
-        theme: { mode: 'light' },
+        markers: {
+            size: 6,
+            colors: ['#6366f1'],
+            strokeWidth: 3,
+            strokeColors: '#151c38',
+            hover: { size: 9 }
+        },
+        grid: {
+            borderColor: 'rgba(255,255,255,0.05)',
+            strokeDashArray: 8,
+            xaxis: { lines: { show: true } }
+        },
         xaxis: {
             categories: JSON.parse('{{ chart_labels | tojson | safe }}'),
             axisBorder: { show: false },
             axisTicks: { show: false },
-            labels: { style: { colors: '#64748b', fontSize: '12px', fontWeight: 600 } }
+            labels: { style: { colors: '#94a3b8', fontWeight: 700, fontSize: '11px' } }
         },
         yaxis: {
             labels: {
-                formatter: function (val) { return '₹' + Math.floor(val).toLocaleString(); },
-                style: { colors: '#64748b', fontWeight: 600 }
+                formatter: val => '₹' + Math.floor(val / 1000) + 'K',
+                style: { colors: '#94a3b8', fontWeight: 700, fontSize: '11px' }
             }
         },
-        grid: {
-            borderColor: 'rgba(0,0,0,0.05)',
-            strokeDashArray: 4,
-            padding: { left: 20, right: 20 }
-        },
         tooltip: {
-            theme: 'light',
-            y: { formatter: function (val) { return '₹' + val.toLocaleString(); } }
+            theme: 'dark',
+            y: { formatter: val => '₹' + val.toLocaleString() },
+            style: { fontSize: '12px' },
+            x: { show: false }
         }
     };
 
+    new ApexCharts(document.querySelector('#neural-chart'), chartOptions).render();
 
-
-    var chart = new ApexCharts(document.querySelector('#sales-chart'), options);
-    chart.render();
-
-    function sendMail() {
-        const confirmed = confirm("Generate and send end-of-day operations report to registered administrator email?");
-        if (!confirmed) return;
-
-        // Show a loading message
-        const btn = event.currentTarget;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
-        btn.disabled = true;
-
-        fetch('/api/send-report', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    alert("SUCCESS: " + data.message);
-                } else {
-                    alert("ERROR: " + data.message);
-                }
-            })
-            .catch(err => {
-                console.error("Mail Error:", err);
-                alert("Critical Connection Error: Could not reach the mail server.");
-            })
-            .finally(() => {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            });
+    async function sendMail() {
+        if (!confirm("Synchronize local intelligence nodes with master backup?")) return;
+        try {
+            const res = await fetch('/api/send-report', { method: 'POST' });
+            const data = await res.json();
+            alert(data.success ? "Neural Sync Complete." : "Node Error: " + data.message);
+        } catch (e) {
+            alert("Core Comms Disrupted.");
+        }
     }
 </script>
 {% endblock %}

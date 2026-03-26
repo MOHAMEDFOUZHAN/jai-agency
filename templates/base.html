@@ -4,29 +4,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sales Demo{% endblock %}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>{% block title %}Jai Agency{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-        integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
-        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/all.min.css') }}">
 </head>
 
 <body>
-    <div class="print-only-header">
-        <h1>KOKKALATTY TEEA TRADERS</h1>
+    <div class="app-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
     </div>
-    <div class="material-bg"></div>
-    {% block content %}{% endblock %}
+    <div class="app-vignette"></div>
+
+    <div class="print-only-header">
+        <h1>Jai Agency</h1>
+    </div>
+
+    <nav class="navbar no-print">
+        <div class="logo">
+            <div class="logo-mark">
+                <img src="{{ url_for('static', filename='css/images/logo.ico') }}" alt="Logo">
+            </div>
+            <div class="logo-copy">
+                <div class="logo-text">JAI <span>AGENCY</span></div>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            {% block nav_links %}
+            <a href="/billing/dashboard">Dashboard</a>
+            <a href="/billing">Billing</a>
+            <a href="/billing/navigation">Sales Menu</a>
+            <a href="/billing/expenses">Expenses</a>
+            {% endblock %}
+        </div>
+
+        <div class="nav-right">
+            <div class="nav-badge">
+                <div class="dot"></div>
+                <span>SYSTEM ON</span>
+            </div>
+            <a href="/logout" class="avatar" title="Logout">
+                <i class="fas fa-power-off"></i>
+            </a>
+        </div>
+    </nav>
+
+    <main class="main-wrapper">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer no-print">
+        <div class="footer-content">
+            <div class="footer-meta">&copy; 2026 Managed by Maple Pro</div>
+            <div class="footer-divider"></div>
+            <a href="#" class="brand-link">JAI <span>AGENCY</span></a>
+        </div>
+    </footer>
 
     <script>
-        // Simple Interaction Scripts
         document.querySelectorAll('a, button').forEach(el => {
-            el.addEventListener('mousedown', () => el.style.transform = 'scale(0.98)');
+            el.addEventListener('mousedown', () => el.style.transform = 'scale(0.96)');
             el.addEventListener('mouseup', () => el.style.transform = 'scale(1)');
-            el.addEventListener('mouseleave', () => el.style.transform = '');
+            el.addEventListener('mouseleave', () => el.style.transform = 'scale(1)');
+        });
+
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-links a, .pill-tabs a').forEach(link => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
         });
     </script>
     {% block scripts %}{% endblock %}

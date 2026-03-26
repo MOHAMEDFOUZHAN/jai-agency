@@ -1,7 +1,7 @@
-import sqlite3
+﻿import sqlite3
 import os
 
-db_path = 'KOKKALATTY.db'
+db_path = 'Jai Agency.db'
 
 if not os.path.exists(db_path):
     print(f"{db_path} not found.")

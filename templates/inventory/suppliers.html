@@ -1,117 +1,88 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Suppliers{% endblock %}
+{% block title %}Vendor Directory | Jai Agency{% endblock %}
+
+{% block nav_links %}
+<a href="/inventory">Dashboard</a>
+<a href="/inventory/live-stock">Live</a>
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/products">Product Master</a>
+<a href="/inventory/suppliers" class="active">Suppliers</a>
+<a href="/inventory/stock-return">Return Stock</a>
+{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-warehouse"></i>
-        <span>Kokkalatty Trades</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory" {% if page=='dashboard' %}class="active" {% endif %}>Dashboard</a>
-        <a href="/inventory/live-stock" {% if page=='live_stock' %}class="active" {% endif %}>Live</a>
-        <a href="/inventory/storage" {% if page=='storage' %}class="active" {% endif %}>Storage</a>
-        <a href="/inventory/products" {% if page=='products' %}class="active" {% endif %}>Product Master</a>
-        <a href="/inventory/suppliers" {% if page=='suppliers' %}class="active" {% endif %}>Suppliers</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.1
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in" style="max-width: 1200px;">
-    <div class="section-header" style="margin-bottom: 3rem;">
-        <div>
-            <h1 style="display: flex; align-items: center; gap: 1rem; font-weight: 900; letter-spacing: -1px;">
-                <i class="fas fa-address-book" style="color: var(--primary);"></i>
-                Vendor Directory
-                <span
-                    style="font-size: 0.8rem; font-weight: 700; color: var(--primary); background: var(--primary-glow); padding: 5px 15px; border-radius: 50px; text-transform: uppercase;">
-                    {{ suppliers | length }} Registered
-                </span>
-            </h1>
-            <p style="color: var(--text-muted);">Manage your supply chain partners and contact information.</p>
+<div class="dashboard-wrapper">
+    <!-- Hero Section -->
+    <div class="dash-hero">
+        <div class="hero-main">
+            <h1>Partner Directory</h1>
+            <p>Supply chain logistics and vendor liaison management.</p>
         </div>
-        <div style="display: flex; gap: 1rem;">
-            <button onclick="window.print()" class="btn btn-outline" style="border-radius: 50px;">
-                <i class="fas fa-print"></i> EXPORT DIRECTORY
+        <div class="hero-actions" style="display: flex; gap: 1rem;">
+            <button class="btn-neural primary" onclick="openModal()">
+                <i class="fas fa-user-plus"></i> ENTRY
             </button>
-            <button class="btn btn-primary" onclick="openModal()"
-                style="border-radius: 50px; background: linear-gradient(135deg, var(--primary), #4f46e5);">
-                <i class="fas fa-user-plus"></i> ADD NEW PARTNER
+            <button onclick="window.print()" class="btn-neural">
+                <i class="fas fa-print"></i> PRINT
             </button>
         </div>
     </div>
 
-    <div class="glass-panel"
-        style="padding: 0; border: 1px solid var(--glass-border); overflow: hidden; background: white;">
-        <div class="table-container" style="border: none;">
-            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+    <div class="insight-card" style="padding: 0; overflow: hidden;">
+        <div style="padding: 1.75rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.02);">
+            <h3 style="margin: 0; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.1em; color: white;">
+                <i class="fas fa-truck-loading" style="color: var(--dash-secondary); margin-right: 12px;"></i> SUPPLIERS
+            </h3>
+            <div class="badge" style="background: var(--dash-primary); color: white;">{{ suppliers | length }} REGISTERED_VENDORS</div>
+        </div>
+
+        <div class="neural-table-container" style="border: none; border-radius: 0;">
+            <table class="neural-table">
                 <thead>
-                    <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
-                        <th
-                            style="padding: 20px 25px; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                            Partner Information</th>
-                        <th
-                            style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                            Contact Liaison</th>
-                        <th
-                            style="color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px;">
-                            Communication Channels</th>
-                        <th
-                            style="text-align: right; color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; padding-right: 25px;">
-                            Management</th>
+                    <tr>
+                        <th style="padding-left: 2.5rem;">PARTNER_INFORMATION</th>
+                        <th>CONTACT_LIAISON</th>
+                        <th>CHANNELS</th>
+                        <th style="text-align: right; padding-right: 2.5rem;">COMMAND</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for s in suppliers %}
-                    <tr class="supplier-row">
-                        <td style="padding: 20px 25px;">
+                    <tr class="activity-row">
+                        <td style="padding-left: 2.5rem;">
                             <div style="display: flex; align-items: center; gap: 15px;">
-                                <div
-                                    style="width: 45px; height: 45px; background: #eef2f7; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-weight: 800; font-size: 1.1rem; border: 1px solid #e2e8f0;">
+                                <div style="width: 45px; height: 45px; background: rgba(255,255,255,0.05); border-radius: 14px; display: flex; align-items: center; justify-content: center; color: var(--dash-primary); font-weight: 850; font-size: 1.25rem; border: 1px solid rgba(255,255,255,0.1); font-family: 'Outfit';">
                                     {{ s.name[0] | upper }}
                                 </div>
                                 <div>
-                                    <div style="font-weight: 800; color: var(--text-main); font-size: 1.05rem;">{{
-                                        s.name }}</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">
-                                        PID: #818-{{ s.id }}</div>
+                                    <div style="font-weight: 800; color: white; font-size: 1.05rem;">{{ s.name }}</div>
+                                    <div style="font-size: 0.7rem; color: var(--dash-secondary); font-family: 'DM Mono';">VN_UID_{{ s.id }}</div>
                                 </div>
                             </div>
                         </td>
                         <td>
-                            <div style="font-weight: 600; color: #475569;">
-                                <i class="fas fa-user-tie"
-                                    style="margin-right: 8px; color: #94a3b8; font-size: 0.8rem;"></i>
+                            <div style="font-weight: 700; color: white; opacity: 0.8;">
+                                <i class="fas fa-user-tie" style="margin-right: 10px; color: var(--dash-primary); font-size: 0.8rem;"></i>
                                 {{ s.contact or 'N/A' }}
                             </div>
                         </td>
                         <td>
-                            <div style="margin-bottom: 4px; display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-phone" style="font-size: 0.8rem; color: #94a3b8;"></i>
-                                <span style="font-weight: 600; color: var(--text-main); font-size: 0.9rem;">{{ s.phone
-                                    or 'No Phone' }}</span>
+                            <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-phone" style="font-size: 0.75rem; color: var(--dash-success);"></i>
+                                <span style="font-weight: 700; color: white; font-size: 0.9rem; font-family: 'DM Mono';">{{ s.phone or 'NO_DATA' }}</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <i class="fas fa-envelope" style="font-size: 0.8rem; color: #94a3b8;"></i>
-                                <span style="color: var(--primary); font-weight: 500; font-size: 0.85rem;">{{ s.email or
-                                    'No Email' }}</span>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fas fa-envelope" style="font-size: 0.75rem; color: var(--dash-secondary);"></i>
+                                <span style="color: var(--text-tertiary); font-size: 0.8rem;">{{ s.email or 'NO_DATA' }}</span>
                             </div>
                         </td>
-                        <td style="text-align: right; padding-right: 25px;">
-                            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                                <button class="action-btn edit" onclick='openEditModal({{ s|tojson|safe }})'
-                                    title="Edit Details">
+                        <td style="text-align: right; padding-right: 2.5rem;">
+                            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                <button class="control-btn" onclick='openEditModal({{ s|tojson|safe }})'>
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="action-btn delete" onclick="deleteSupplier({{ s.id }})"
-                                    title="Remove Partner">
+                                <button class="control-btn" style="color: var(--dash-danger); border-color: rgba(239, 68, 68, 0.2);" onclick="deleteSupplier({{ s.id }})">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -119,14 +90,9 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="4" style="text-align: center; padding: 6rem 2rem; color: var(--text-muted);">
-                            <div
-                                style="background: #f8fafc; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                                <i class="fas fa-users-slash" style="font-size: 2.5rem; opacity: 0.3;"></i>
-                            </div>
-                            <h3 style="color: var(--text-main); margin-bottom: 0.5rem;">No Vendors Found</h3>
-                            <p style="font-size: 0.9rem;">Your supplier directory is empty. Click 'Add New Partner' to
-                                begin.</p>
+                        <td colspan="4" style="text-align: center; padding: 8rem; color: var(--text-tertiary);">
+                            <i class="fas fa-users-slash" style="font-size: 3rem; opacity: 0.1; display: block; margin-bottom: 2rem;"></i>
+                            NO_PARTNERS_REGISTERED_IN_CLUSTER
                         </td>
                     </tr>
                     {% endfor %}
@@ -136,49 +102,195 @@
     </div>
 </div>
 
-<!-- Modal Logic -->
+<!-- Modal -->
 <div id="addSupplierModal" class="modal">
-    <div class="modal-content" style="max-width: 550px; border-radius: 25px; padding: 3rem;">
-        <span class="close-btn" onclick="closeModal()"><i class="fas fa-times"></i></span>
-        <h2
-            style="margin-bottom: 2.5rem; font-weight: 900; letter-spacing: -1px; display: flex; align-items: center; gap: 15px;">
-            <i class="fas fa-user-plus" style="color: var(--primary);"></i>
-            <span id="modalTitle">Register Partner</span>
-        </h2>
+    <div class="modal-content neural-panel">
+        <div class="modal-header">
+            <div>
+                <h2 id="modalTitle">Register Partner</h2>
+                <p id="modalSub">SUPPLY_CHAIN_LIAISON_V1.0</p>
+            </div>
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+        </div>
         <form id="addSupplierForm" onsubmit="event.preventDefault(); submitSupplier();">
-            <div class="form-group">
-                <label class="form-label">Legal Company Name</label>
-                <input type="text" id="s_name" class="form-input" placeholder="e.g. Kokkalatty Supplies Ltd" required
-                    style="padding: 14px 20px;">
+            <div class="f-group">
+                <label>LEGAL_ENTITY_NAME</label>
+                <input type="text" id="s_name" placeholder="e.g. Maple Logistics Group" required>
             </div>
-            <div class="form-group">
-                <label class="form-label">Primary Point of Contact</label>
-                <input type="text" id="s_contact" class="form-input" placeholder="Full name of representative"
-                    style="padding: 14px 20px;">
+            <div class="f-group">
+                <label>LIAISON_PERSONNEL</label>
+                <input type="text" id="s_contact" placeholder="Designated representative">
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
-                <div class="form-group">
-                    <label class="form-label">Mobile / Phone</label>
-                    <input type="text" id="s_phone" class="form-input" placeholder="+91 00000 00000"
-                        style="padding: 14px 20px;">
+            <div class="form-row">
+                <div class="f-group">
+                    <label>TELE_COMMUNICATION</label>
+                    <input type="text" id="s_phone" placeholder="+91 00000 00000">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" id="s_email" class="form-input" placeholder="contact@vendor.com"
-                        style="padding: 14px 20px;">
+                <div class="f-group">
+                    <label>DIGITAL_MAIL</label>
+                    <input type="email" id="s_email" placeholder="liaison@cluster.com">
                 </div>
             </div>
-            <div style="display: flex; gap: 1rem; margin-top: 2.5rem;">
-                <button type="button" class="btn btn-outline" style="flex: 1; border-radius: 12px;"
-                    onclick="closeModal()">Cancel</button>
-                <button type="submit" class="btn btn-primary"
-                    style="flex: 2; border-radius: 12px; background: var(--primary);">
-                    <i class="fas fa-check"></i> CONFIRM & SAVE
-                </button>
+            <div class="form-actions">
+                <button type="button" class="btn-neural secondary" onclick="closeModal()">CANCEL</button>
+                <button type="submit" class="btn-neural primary">SAVE SUPPLIER</button>
             </div>
         </form>
     </div>
 </div>
+
+<style>
+    .dashboard-wrapper {
+        max-width: 1550px;
+        margin: 0 auto;
+        padding: 2.5rem;
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes dashboardEnter {
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+
+    .dash-hero {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 3.5rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--dash-glass-border);
+    }
+
+    .hero-main h1 {
+        font-size: 3.5rem;
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        color: white;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero-main p {
+        font-size: 0.8rem;
+        font-weight: 800;
+        letter-spacing: 0.15em;
+        color: var(--text-tertiary);
+        text-transform: uppercase;
+    }
+
+    .btn-neural {
+        background: rgba(255,255,255,0.05);
+        color: white;
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 14px 28px;
+        border-radius: 16px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        font-family: inherit;
+    }
+
+    .btn-neural:hover {
+        background: white;
+        color: var(--navy-900);
+        transform: translateY(-2px);
+    }
+
+    .btn-neural.primary { background: white; color: var(--navy-900); }
+
+    .control-btn {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--text-tertiary);
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+        background: white;
+        color: var(--navy-900);
+        transform: scale(1.1);
+    }
+
+    .activity-row:hover {
+        background: rgba(255,255,255,0.03);
+    }
+
+    /* Modal Premium Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(10, 14, 28, 0.85);
+        backdrop-filter: blur(15px);
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+
+    .neural-panel {
+        background: var(--dash-card-bg);
+        border: 1px solid var(--dash-glass-border);
+        border-radius: 32px;
+        width: 100%;
+        max-width: 650px;
+        padding: 3rem;
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.7);
+        animation: modalSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlide {
+        from { opacity: 0; transform: translateY(50px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 3rem;
+    }
+
+    .modal-header h2 { font-size: 2.25rem; color: white; margin: 0; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; }
+    .modal-header p { margin: 5px 0 0; color: var(--dash-secondary); font-weight: 800; font-family: 'DM Mono'; font-size: 0.7rem; letter-spacing: 2px; }
+
+    .close-btn { background: none; border: none; font-size: 2.5rem; color: var(--text-tertiary); cursor: pointer; transition: all 0.3s ease; }
+    .close-btn:hover { color: white; transform: rotate(90deg); }
+
+    .f-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2rem; }
+    .f-group label { font-size: 0.7rem; font-weight: 800; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.1em; }
+    
+    input[type="text"], input[type="email"], input[type="number"], textarea {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        padding: 14px 18px;
+        border-radius: 14px;
+        color: white;
+        font-weight: 600;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+        width: 100%;
+        font-family: inherit;
+    }
+
+    input:focus, textarea:focus { border-color: var(--dash-primary); background: rgba(255,255,255,0.06); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .form-actions { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; margin-top: 1rem; }
+    .btn-neural.secondary { opacity: 0.6; }
+    .btn-neural.primary:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 20px 40px -10px rgba(255,255,255,0.2); }
+</style>
 
 <script>
     const modal = document.getElementById("addSupplierModal");
@@ -187,11 +299,12 @@
     function openModal() {
         currentEditId = null;
         document.getElementById('addSupplierForm').reset();
-        document.getElementById('modalTitle').innerText = "Register New Partner";
-        modal.classList.add("show");
+        document.getElementById('modalTitle').innerText = "Register Partner";
+        document.getElementById('modalSub').innerText = "SUPPLY_CHAIN_LIAISON_V1.0";
+        modal.style.display = "flex";
     }
 
-    function closeModal() { modal.classList.remove("show"); }
+    function closeModal() { modal.style.display = "none"; }
 
     function openEditModal(supplier) {
         currentEditId = supplier.id;
@@ -199,8 +312,9 @@
         document.getElementById('s_contact').value = supplier.contact || '';
         document.getElementById('s_phone').value = supplier.phone || '';
         document.getElementById('s_email').value = supplier.email || '';
-        document.getElementById('modalTitle').innerText = "Edit Partner Profile";
-        modal.classList.add("show");
+        document.getElementById('modalTitle').innerText = "Update Partner Profile";
+        document.getElementById('modalSub').innerText = "VN_UID_" + currentEditId;
+        modal.style.display = "flex";
     }
 
     async function submitSupplier() {
@@ -210,90 +324,22 @@
             phone: document.getElementById('s_phone').value,
             email: document.getElementById('s_email').value
         };
-
         const url = currentEditId ? '/api/suppliers/edit/' + currentEditId : '/api/suppliers/add';
-
         try {
             const res = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            const result = await res.json();
-            if (result.success) location.reload();
-            else alert("Error: " + result.message);
-        } catch (e) {
-            alert("Connection error");
-        }
+            if ((await res.json()).success) location.reload();
+            else alert("Transaction failure");
+        } catch (e) { alert("Network sync error"); }
     }
 
     async function deleteSupplier(id) {
-        if (!confirm("Are you sure you want to remove this partner from your database? This action cannot be undone.")) return;
+        if (!confirm("Delete this supplier? This cannot be undone.")) return;
         const res = await fetch('/api/suppliers/delete/' + id, { method: 'POST' });
         if ((await res.json()).success) location.reload();
     }
 </script>
-
-<style>
-    .supplier-row {
-        transition: all 0.2s ease;
-    }
-
-    .supplier-row:hover {
-        background: #f8fafc !important;
-    }
-
-    .action-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        border: 1px solid #e2e8f0;
-        background: white;
-        color: #64748b;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-    }
-
-    .action-btn.edit:hover {
-        background: var(--primary-glow);
-        color: var(--primary);
-        border-color: var(--primary);
-    }
-
-    .action-btn.delete:hover {
-        background: rgba(239, 68, 68, 0.1);
-        color: #ef4444;
-        border-color: #f87171;
-    }
-
-    @media print {
-
-        .navbar,
-        .btn,
-        .nav-links,
-        .section-header div:last-child,
-        th:last-child,
-        td:last-child,
-        .close-btn {
-            display: none !important;
-        }
-
-        .dashboard-container {
-            max-width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        .glass-panel {
-            border: none !important;
-        }
-
-        tr {
-            page-break-inside: avoid;
-        }
-    }
-</style>
 {% endblock %}

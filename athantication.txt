@@ -1,0 +1,3 @@
+Username	Password	Role
+branch1	send123	Sender Only
+branch2	receive456	Receiver Only

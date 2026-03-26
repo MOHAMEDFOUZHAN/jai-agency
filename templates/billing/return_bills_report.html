@@ -1,29 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - {{ title }}{% endblock %}
+{% block title %}Jai Agency - {{ title }}{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-undo-alt"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/reports" class="active">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
-            V3.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
-    <div class="section-header">
+<div class="dashboard-container fade-in report-shell thermal-report">
+    <div class="section-header no-print">
         <div>
             <h1>{{ title }}</h1>
             <p style="color: var(--text-muted);">History of processed item returns</p>
@@ -38,61 +19,42 @@
         </div>
     </div>
 
+    <div class="print-report-header print-only">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">{{ title|upper }}</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    </div>
+
     <div class="table-container">
         <table>
             <thead>
                 <tr style="background: rgba(255, 59, 48, 0.05);">
                     <th class="print-date" style="padding: 1.25rem; font-size: 0.75rem;">DATE</th>
-                    <th class="print-time" style="display: none; padding: 1.25rem; font-size: 0.75rem;">TIME</th>
                     <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">BILL ID</th>
-                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem;">PRODUCT</th>
-                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem; text-align: center;">QTY</th>
                     <th class="print-net" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">REFUND</th>
-                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem;">TYPE/REASON</th>
                 </tr>
             </thead>
             <tbody>
-                {% for item in data|reverse %}
+                {% for item in data %}
                 <tr>
-                    <td class="print-date" style="color: var(--text-muted);">
-                        <div style="font-weight: 600; color: var(--text-main);">{{ item.date.split(' ')[0] }}</div>
-                        <div style="font-size: 0.8rem;" class="print-hide">{{ item.date.split(' ')[1] }}</div>
+                    <td class="print-date" style="color: var(--text-secondary);">
+                        <div style="font-weight: 700; color: var(--navy-900);">{{ item.date.split(' ')[0] }}</div>
                     </td>
-                    <td class="print-time" style="display: none;">{{ item.date.split(' ')[1] }}</td>
                     <td class="print-bill-id">
                         {% if item.bill_id %}
-                        <code
-                            style="font-weight: 700; color: var(--danger); background: rgba(255, 59, 48, 0.1); padding: 2px 8px; border-radius: 4px;">#{{ item.bill_id }}</code>
+                        <code style="font-weight: 700; color: var(--white); background: var(--danger); padding: 4px 10px; border-radius: 6px;">#{{ item.bill_id }}</code>
                         {% else %}
-                        <span style="color: var(--text-muted); font-size: 0.8rem;">N/A</span>
+                        <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600;">N/A</span>
                         {% endif %}
                     </td>
-                    <td class="print-hide">
-                        <div style="font-weight: 700;">{{ item.product_name }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-muted);">Code: {{ item.product_code }}</div>
-                    </td>
-                    <td class="print-hide" style="text-align: center; font-weight: 700;">
-                        {{ item.qty }}
-                    </td>
-                    <td class="print-net" style="text-align: right; font-weight: 800; color: var(--danger);">
-                        {% if item.refund_amount %}
-                        ₹{{ "%.2f"|format(item.refund_amount) }}
-                        {% else %}
-                        -
-                        {% endif %}
-                    </td>
-                    <td class="print-hide">
-                        <span class="badge"
-                            style="background: rgba(0,0,0,0.05); color: var(--text-main); font-size: 0.7rem;">
-                            {{ item.type or item.reason or 'RETURN' }}
-                        </span>
+                    <td class="print-net" style="text-align: right; font-weight: 900; color: var(--danger); font-size: 1.1rem;">
+                        ₹{{ "%.2f"|format(item.refund_amount or 0) }}
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
-                        <i class="fas fa-undo"
-                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
+                    <td colspan="3" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
+                        <i class="fas fa-undo" style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
                         No return records found.
                     </td>
                 </tr>
@@ -100,20 +62,16 @@
             </tbody>
             {% if data %}
             <tfoot>
-                <tr style="background: rgba(239, 68, 68, 0.05); border-top: 2px solid var(--glass-border);">
-                    <td colspan="4" class="print-hide"
-                        style="padding: 1.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 1rem;">
+                <tr style="background: var(--surface-light) !important; border-top: 2px solid var(--danger);">
+                    <td colspan="2" class="print-hide" style="padding: 1.5rem; text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1rem;">
                         TOTAL REFUND AMOUNT
                     </td>
-                    <td class="print-only"
-                        style="display: none; padding: 1.5rem; text-align: right; font-weight: 700; color: #000; font-size: 10pt;">
+                    <td class="print-only" style="display: none; padding: 1.5rem; text-align: right; font-weight: 700; color: #000; font-size: 10pt;">
                         REFUND TOTAL:
                     </td>
-                    <td class="print-net"
-                        style="text-align: right; font-weight: 800; color: var(--danger); font-size: 1.25rem; padding: 1.5rem;">
+                    <td class="print-net" style="text-align: right; font-weight: 800; color: var(--danger); font-size: 1.25rem; padding: 1.5rem;">
                         ₹{{ "%.2f"|format(data | sum(attribute='refund_amount')) }}
                     </td>
-                    <td class="print-hide"></td>
                 </tr>
             </tfoot>
             {% endif %}
@@ -124,104 +82,37 @@
 <style>
     @media print {
         @page {
-            margin: 0;
-            size: 80mm auto;
+            size: A5;
+            margin: 5mm;
         }
 
         body {
             margin: 0 !important;
             padding: 0 !important;
-            width: 80mm !important;
+            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: 'monospace' !important;
-            font-size: 9pt !important;
-        }
-
-        .navbar,
-        .btn,
-        .nav-links,
-        .section-header div:last-child,
-        .pill-tabs {
-            display: none !important;
-        }
-
-        .dashboard-container {
-            width: 80mm !important;
-            padding: 2mm !important;
-            margin: 0 !important;
-        }
-
-        .section-header h1 {
-            font-size: 14pt !important;
-            text-align: center;
-            margin-bottom: 5mm !important;
-            color: black !important;
-        }
-
-        .table-container {
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
-        }
-
-        table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-
-        th,
-        td {
-            padding: 1mm 0 !important;
-            border-bottom: 1px dashed #000 !important;
-            font-size: 8pt !important;
-            color: black !important;
-            background: white !important;
-        }
-
-        .print-hide {
-            display: none !important;
-        }
-
-        .print-only {
-            display: table-cell !important;
-        }
-
-        .print-date {
-            width: 20% !important;
-            display: table-cell !important;
-        }
-
-        .print-bill-id {
-            width: 20% !important;
-        }
-
-        .print-time {
-            width: 25% !important;
-            text-align: center !important;
-            display: table-cell !important;
-        }
-
-        .print-net {
-            width: 35% !important;
-            text-align: right !important;
-            font-weight: bold !important;
+            font-family: Arial, sans-serif !important;
             font-size: 10pt !important;
         }
+        .print-report-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
+        }
+
+        .print-date { width: 33% !important; }
+        .print-bill-id { width: 33% !important; font-weight: bold; }
+        .print-net { width: 34% !important; text-align: right !important; font-weight: bold !important; font-size: 9pt !important; }
 
         tfoot tr td {
             font-size: 10pt !important;
             border-top: 2px solid #000 !important;
-            background: white !important;
-            color: black !important;
-        }
-
-        code {
-            background: transparent !important;
-            color: black !important;
-            padding: 0 !important;
+            padding-top: 2mm !important;
         }
     }
 </style>
 {% endblock %}
+
+

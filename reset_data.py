@@ -1,8 +1,8 @@
-import os
+﻿import os
 import shutil
 import database_setup
 
-DB_FILE = 'KOKKALATTY.db'
+DB_FILE = 'Jai Agency.db'
 DATA_FILE = 'data.json'
 BACKUP_DATA_FILE = 'data_backup.json'
 

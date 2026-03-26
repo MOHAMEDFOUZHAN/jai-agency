@@ -1,447 +1,1455 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Wholesale Entry{% endblock %}
 
-{% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-boxes"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory">Dashboard</a>
-        <div class="dropdown">
-            <a href="#" class="dropdown-toggle active">Invoice <i class="fas fa-chevron-down"
-                    style="font-size: 0.7rem;"></i></a>
-            <div class="dropdown-menu">
-                <a href="/inventory/stock-list">Stock Ledger</a>
-            </div>
-        </div>
-        <a href="/inventory/products">Product Master</a>
-        <a href="/inventory/live-stock">Live</a>
-        <a href="/inventory/stock-return">Stock Return</a>
-        <a href="/inventory/payments">Payment Towards Invoice</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.0
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
 
-<style>
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
 
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        background: white;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        border-radius: 8px;
-        padding: 8px 0;
-        top: 100%;
-        text-align: left;
-    }
 
-    .dropdown-menu a {
-        color: var(--text-main) !important;
-        padding: 10px 16px !important;
-        text-decoration: none;
-        display: block !important;
-        font-size: 0.85rem !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-    }
+{% block title %}Register Shipment | Maple Pro{% endblock %}
 
-    .dropdown-menu a:hover {
-        background: var(--bg-main) !important;
-        color: var(--primary) !important;
-    }
 
-    .dropdown:hover .dropdown-menu {
-        display: block;
-    }
-</style>
 
-<div class="dashboard-container fade-in" style="max-width: 1400px;">
-    <div class="section-header">
-        <div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <a href="/inventory/wholesale"
-                    style="color: var(--primary); font-size: 0.8rem; text-decoration: none;">WHOLESALE</a>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">/</span>
-                <span style="color: var(--text-muted); font-size: 0.8rem;">NEW INVOICE</span>
-            </div>
-            <h1>Register New Shipment</h1>
-            <p style="color: var(--text-muted);">Configure arrival details and inventory items below.</p>
-        </div>
-        <div style="display: flex; gap: 0.75rem;">
-            <a href="/inventory/wholesale" class="btn btn-outline">BACK TO LIST</a>
-            <button class="btn btn-primary" onclick="saveStock()">SAVE SHIPMENT</button>
-        </div>
-    </div>
 
-    <!-- New Entry Section Header -->
-    <div style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 1rem;">
-        <h2
-            style="font-size: 1.2rem; color: var(--text-main); letter-spacing: 1px; text-transform: uppercase; margin: 0;">
-            <i class="fas fa-plus-square" style="color: var(--primary); margin-right: 10px;"></i> Register New Invoice
-        </h2>
-        <div style="flex: 1; height: 1px; background: linear-gradient(to right, var(--glass-border), transparent);">
-        </div>
-    </div>
 
-    <!-- Main Invoice Data -->
-    <div class="glass-panel" style="margin-bottom: 2rem;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-            <div class="form-group">
-                <label class="form-label">Purchase ID</label>
-                <select id="purchase-id" class="input-dark" style="height: 48px;">
-                    <option value="WHOLESALE">Wholesale Procurement</option>
-                    <option value="BULK-TRF">Bulk Transfer</option>
-                    <option value="LOCAL-MKT">Local Market</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Date</label>
-                <input type="date" id="entry-date" class="input-dark" value="{{ today }}">
-            </div>
-        </div>
+{% block nav_links %}
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
-            <div class="form-group">
-                <label class="form-label">Invoice / GRN No</label>
-                <input type="text" id="invoice-no" class="input-dark" placeholder="Reference number">
-            </div>
-            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                <div>
-                    <label class="form-label">Supplier / Yard</label>
-                    <select id="supplier-id" class="input-dark" style="height: 48px;">
-                        <option value="">-- Select Vendor --</option>
-                        {% for s in suppliers %}
-                        <option value="{{ s.id }}">{{ s.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div>
-                    <label class="form-label">Freight / Loading (₹)</label>
-                    <input type="number" id="shipping-charges" class="input-dark" value="0"
-                        oninput="calculateGrandTotals()">
-                </div>
-            </div>
-        </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
-            <div class="form-group">
-                <label class="form-label">No. of Varieties</label>
-                <input type="number" id="items-count" class="input-dark" value="1" readonly>
-            </div>
-            <div class="form-group" style="display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem;">
-                <input type="checkbox" id="is-credit" style="width: 20px; height: 20px; accent-color: var(--primary);"
-                    onchange="toggleDueDate()">
-                <label class="form-label" style="margin-bottom: 0;" for="is-credit">Buy on Credit</label>
-            </div>
-            <div id="due-date-container" class="form-group" style="display: none;">
-                <label class="form-label">Payment Due Date</label>
-                <input type="date" id="due-date" class="input-dark">
-            </div>
-        </div>
-    </div>
+<a href="/inventory/wholesale">Back to Logs</a>
 
-    <!-- Items Container -->
-    <div id="items-container"></div>
 
-    <div style="margin-bottom: 3rem;">
-        <button class="btn btn-outline"
-            style="width: 100%; border-style: dashed; padding: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;"
-            onclick="addItemBlock()">
-            <i class="fas fa-plus-circle"></i> ADD ANOTHER ITEM BLOCK
-        </button>
-    </div>
+<a href="/inventory/live-stock">Live</a>
 
-    <!-- Global Summary -->
-    <div class="glass-panel"
-        style="display: flex; justify-content: flex-end; gap: 4rem; align-items: center; padding: 1.5rem;">
-        <div style="text-align: right;">
-            <p class="stat-title" style="font-size: 0.7rem; letter-spacing: 1px;">TOTAL VOLUME</p>
-            <h2 id="grand-qty" style="color: white; font-size: 2rem; font-weight: 800;">0.000</h2>
-        </div>
-        <div style="text-align: right;">
-            <p class="stat-title" style="font-size: 0.7rem; letter-spacing: 1px;">GRAND TOTAL</p>
-            <h2 id="grand-total-display"
-                style="color: var(--primary); font-size: 2.5rem; font-weight: 900; text-shadow: 0 0 20px var(--primary-glow);">
-                ₹ 0.00</h2>
-        </div>
-    </div>
-</div>
+
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+
+
+<a href="/inventory/products">Product Master</a>
+
+
 {% endblock %}
 
-{% block scripts %}
+
+
+
+
+{% block content %}
+
+
+<div class="dashboard-wrapper">
+
+
+    <!-- Hero Section -->
+
+
+    <div class="dash-hero">
+
+
+        <div class="hero-main">
+
+
+            <h1>Register Shipment</h1>
+
+
+            <p>Configure arrival parameters and resource allocation.</p>
+
+
+        </div>
+
+
+        <div class="hero-actions">
+
+
+            <button class="btn-neural primary" onclick="saveStock()">
+
+
+                <i class="fas fa-save" style="margin-right: 10px;"></i> ENTRY
+
+
+            </button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- Main Invoice Data -->
+
+
+    <div class="neural-panel" style="margin-bottom: 3rem; padding: 3rem;">
+
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-bottom: 2.5rem;">
+
+
+            <div class="f-group">
+
+
+                <label>PURCHASE TYPE</label>
+
+
+                <select id="purchase-id" class="neural-input">
+
+
+                    <option value="WHOLESALE">Wholesale Procurement</option>
+
+
+                    <option value="BULK-TRF">Bulk Transfer</option>
+
+
+                    <option value="LOCAL-MKT">Local Market Buy</option>
+
+
+                </select>
+
+
+            </div>
+
+
+            <div class="f-group">
+
+
+                <label>DATE</label>
+
+
+                <input type="date" id="entry-date" value="{{ today }}" class="neural-input" style="color: var(--dash-primary); font-weight: 800;">
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+        <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 2.5rem;">
+
+
+            <div class="f-group">
+
+
+                <label>INVOICE NO.</label>
+
+
+                <input type="text" id="invoice-no" placeholder="Enter reference ID..." class="neural-input">
+
+
+            </div>
+
+
+            <div class="f-group">
+
+
+                <label>SUPPLIER</label>
+
+
+                <select id="supplier-id" class="neural-input">
+
+
+                    <option value="">-- Select Supplier --</option>
+
+
+                    {% for s in suppliers %}
+
+
+                    <option value="{{ s.id }}">{{ s.name }}</option>
+
+
+                    {% endfor %}
+
+
+                </select>
+
+
+            </div>
+
+
+            <div class="f-group">
+
+
+                <label>SHIPPING CHARGES (&#8377;)</label>
+
+
+                <input type="number" id="shipping-charges" value="0" step="0.01" oninput="calculateGrandTotals()" class="neural-input" style="font-weight: 900; color: white;">
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+        <div style="margin-top: 2.5rem; padding-top: 2.5rem; border-top: 1px solid var(--dash-glass-border); display: flex; gap: 4rem; align-items: center;">
+
+
+            <label class="precision-toggle" style="margin-bottom: 0; padding: 1rem 2rem; cursor: pointer;">
+
+
+                <div class="toggle-info">
+
+
+                    <span class="t-title">CREDIT PURCHASE</span>
+
+
+                </div>
+
+
+                <label class="switch" style="margin-left: 20px;">
+
+
+                    <input type="checkbox" id="is-credit" onchange="toggleDueDate()">
+
+
+                    <span class="slider"></span>
+
+
+                </label>
+
+
+            </label>
+
+
+            <div id="due-date-container" class="f-group" style="display: none; flex: 1; max-width: 320px; margin-bottom: 0;">
+
+
+                <label>DUE DATE</label>
+
+
+                <input type="date" id="due-date" class="neural-input">
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- Items Section Header -->
+
+
+    <div style="margin: 4rem 0 2rem; display: flex; align-items: center; gap: 1.5rem;">
+
+
+        <h2 style="font-size: 0.8rem; color: white; letter-spacing: 3px; text-transform: uppercase; margin: 0; font-weight: 900; opacity: 0.9;">
+
+
+            <i class="fas fa-boxes" style="color: var(--dash-primary); margin-right: 15px;"></i> ITEMS LIST
+
+
+        </h2>
+
+
+        <div style="flex: 1; height: 1px; background: linear-gradient(to right, var(--dash-glass-border), transparent);"></div>
+
+
+        <div class="badge" style="background: var(--dash-primary); color: white; font-size: 0.7rem;" id="items-count-badge">1 ITEM ADDED</div>
+
+
+    </div>
+
+
+
+
+
+    <!-- Items Container -->
+
+
+    <div id="items-container"></div>
+
+
+
+
+
+    <div style="margin-bottom: 5rem;">
+
+
+        <button class="btn-neural" style="width: 100%; border-style: dashed; padding: 2.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; background: rgba(255,255,255,0.02); justify-content: center; font-size: 0.9rem;" onclick="addItemBlock()">
+
+
+            <i class="fas fa-plus-circle" style="font-size: 1.2rem;"></i> ADD ITEM
+
+
+        </button>
+
+
+    </div>
+
+
+
+
+
+    <!-- Global Summary -->
+
+
+    <div class="sticky-footer">
+
+
+        <div class="footer-stat">
+
+
+            <span class="stat-label">TOTAL QTY</span>
+
+
+            <h2 id="grand-qty">0.000</h2>
+
+
+        </div>
+
+
+        <div class="divider"></div>
+
+
+        <div class="footer-stat" style="text-align: right;">
+
+
+            <span class="stat-label" style="color: var(--dash-primary);">GRAND TOTAL</span>
+
+
+            <h2 id="grand-total-display" style="color: white; font-size: 3rem;">&#8377; 0.00</h2>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<style>
+
+
+    .dashboard-wrapper {
+
+
+        max-width: 1550px;
+
+
+        margin: 0 auto;
+
+
+        padding: 2.5rem;
+
+
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+
+
+    }
+
+
+
+
+
+    @keyframes dashboardEnter {
+
+
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+
+
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+
+    }
+
+
+
+
+
+    .dash-hero {
+
+
+        display: flex;
+
+
+        justify-content: space-between;
+
+
+        align-items: flex-end;
+
+
+        margin-bottom: 3.5rem;
+
+
+        padding-bottom: 2rem;
+
+
+        border-bottom: 1px solid var(--dash-glass-border);
+
+
+    }
+
+
+
+
+
+    .hero-main h1 {
+
+
+        font-size: 3.5rem;
+
+
+        font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+
+
+        color: white;
+
+
+        line-height: 1;
+
+
+        margin-bottom: 0.5rem;
+
+
+        letter-spacing: -0.02em;
+
+
+    }
+
+
+
+
+
+    .hero-main p {
+
+
+        font-size: 0.8rem;
+
+
+        font-weight: 800;
+
+
+        letter-spacing: 0.15em;
+
+
+        color: var(--text-tertiary);
+
+
+        text-transform: uppercase;
+
+
+    }
+
+
+
+
+
+    .neural-panel {
+
+
+        background: var(--dash-card-bg);
+
+
+        border: 1px solid var(--dash-glass-border);
+
+
+        border-radius: 32px;
+
+
+        box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5);
+
+
+    }
+
+
+
+
+
+    .f-group { display: flex; flex-direction: column; gap: 10px; margin-bottom: 2rem; }
+
+
+    .f-group label { font-size: 0.65rem; font-weight: 800; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.15em; }
+
+
+
+
+
+    .neural-input, input, select, textarea {
+
+
+        background: rgba(255,255,255,0.03);
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        padding: 16px 20px;
+
+
+        border-radius: 14px;
+
+
+        color: white;
+
+
+        font-weight: 600;
+
+
+        font-size: 1rem;
+
+
+        outline: none;
+
+
+        transition: all 0.3s ease;
+
+
+        width: 100%;
+
+
+        font-family: inherit;
+
+
+    }
+
+
+
+
+
+    input:focus, select:focus { border-color: var(--dash-primary); background: rgba(255,255,255,0.08); }
+
+
+
+
+
+    .btn-neural {
+
+
+        background: rgba(255,255,255,0.05);
+
+
+        color: white;
+
+
+        border: 1px solid rgba(255,255,255,0.1);
+
+
+        padding: 14px 28px;
+
+
+        border-radius: 16px;
+
+
+        font-size: 0.75rem;
+
+
+        font-weight: 800;
+
+
+        letter-spacing: 0.1em;
+
+
+        cursor: pointer;
+
+
+        transition: all 0.3s ease;
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+        gap: 12px;
+
+
+        text-decoration: none;
+
+
+    }
+
+
+
+
+
+    .btn-neural:hover { background: white; color: var(--navy-900); transform: translateY(-2px); }
+
+
+    .btn-neural.primary { background: white; color: var(--navy-900); }
+
+
+
+
+
+    .precision-toggle {
+
+
+        background: rgba(255,255,255,0.02);
+
+
+        padding: 1.5rem 2.5rem;
+
+
+        border-radius: 20px;
+
+
+        border: 1px solid rgba(255,255,255,0.05);
+
+
+        display: flex;
+
+
+        align-items: center;
+
+
+    }
+
+
+
+
+
+    .switch { position: relative; display: inline-block; width: 48px; height: 26px; }
+
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; }
+
+
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+
+
+    input:checked + .slider { background-color: var(--dash-primary); }
+
+
+    input:checked + .slider:before { transform: translateX(22px); }
+
+
+
+
+
+    .sticky-footer {
+
+
+        position: sticky;
+
+
+        bottom: 2rem;
+
+
+        z-index: 100;
+
+
+        background: rgba(13, 17, 34, 0.9);
+
+
+        backdrop-filter: blur(25px);
+
+
+        border: 1px solid var(--dash-primary);
+
+
+        border-radius: 32px;
+
+
+        padding: 2rem 4rem;
+
+
+        display: flex;
+
+
+        justify-content: flex-end;
+
+
+        align-items: center;
+
+
+        gap: 4rem;
+
+
+        box-shadow: 0 -20px 40px rgba(0,0,0,0.5);
+
+
+    }
+
+
+
+
+
+    .footer-stat .stat-label { font-size: 0.7rem; font-weight: 800; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 2px; }
+
+
+    .footer-stat h2 { margin: 5px 0 0; font-family: 'Outfit'; font-weight: 950; font-size: 2.25rem; color: white; }
+
+
+    .divider { width: 1px; height: 50px; background: rgba(255,255,255,0.1); }
+
+
+
+
+
+    .item-block {
+
+
+        background: var(--dash-card-bg);
+
+
+        border: 1px solid var(--dash-glass-border);
+
+
+        border-left: 6px solid var(--dash-primary);
+
+
+        border-radius: 24px;
+
+
+        padding: 2.5rem;
+
+
+        margin-bottom: 2.5rem;
+
+
+        animation: itemFade 0.5s ease-out;
+
+
+    }
+
+
+
+
+
+    @keyframes itemFade {
+
+
+        from { opacity: 0; transform: scale(0.98) translateY(10px); }
+
+
+        to { opacity: 1; transform: scale(1) translateY(0); }
+
+
+    }
+
+
+</style>
+
+
+
+
+
 <script>
+
+
     const inventory = JSON.parse('{{ inventory| tojson | safe }}');
+
+
     let itemCount = 0;
 
-    window.toggleDueDate = function () {
-        const isCredit = document.getElementById('is-credit').checked;
-        document.getElementById('due-date-container').style.display = isCredit ? 'block' : 'none';
-    };
 
-    window.addItemBlock = function () {
+
+
+
+    function toggleDueDate() {
+
+
+        const isCredit = document.getElementById('is-credit').checked;
+
+
+        document.getElementById('due-date-container').style.display = isCredit ? 'block' : 'none';
+
+
+    }
+
+
+
+
+
+    function addItemBlock() {
+
+
         itemCount++;
+
+
+        document.getElementById('items-count-badge').innerText = `${itemCount} VARIETIES_DEFINED`;
+
+
         const container = document.getElementById('items-container');
+
+
         const blockId = Date.now();
+
+
         const block = document.createElement('div');
+
+
         block.id = `item-block-${blockId}`;
-        block.className = 'glass-panel fade-in';
-        block.style.marginBottom = '2rem';
-        block.style.borderLeft = '4px solid var(--primary)';
+
+
+        block.className = 'item-block';
+
+
+
+
 
         block.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <div>
-                    <h3 style="color: var(--accent); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px; display: inline-block;">Product ${itemCount} Details</h3>
-                </div>
-                <button class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="removeItemBlock(${blockId})">
-                    <i class="fas fa-trash"></i> REMOVE
+
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
+
+
+                <h3 style="color: white; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-weight: 900;">
+
+
+                    <span style="color: var(--dash-primary);">[#0${itemCount}]</span> ENTITY_SPECIFICATION
+
+
+                </h3>
+
+
+                <button class="btn-neural" style="padding: 10px 18px; font-size: 0.65rem; color: var(--dash-danger); border-color: rgba(239, 68, 68, 0.2);" onclick="removeItemBlock(${blockId})">
+
+
+                    <i class="fas fa-trash"></i> PURGE_BLOCK
+
+
                 </button>
+
+
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group">
-                    <label class="form-label">Product Code</label>
-                    <input type="text" class="input-dark m-code" placeholder="Type to search..." onchange="checkProduct(this, ${blockId})">
+
+
+
+
+            <div style="display: grid; grid-template-columns: 1fr 2fr 1.2fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+
+
+                <div class="f-group">
+
+
+                <div class="f-group">
+
+
+                    <label>SKU / Item Code</label>
+
+
+                    <input type="text" class="m-code" placeholder="SKU..." onchange="checkProduct(this, ${blockId})" style="border-color: var(--dash-primary); font-family: 'DM Mono';">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <input type="text" class="input-dark m-name" placeholder="Product name/desc">
+
+
+                <div class="f-group">
+
+
+                    <label>Product Name</label>
+
+
+                    <input type="text" class="m-name" placeholder="Name...">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <input type="text" class="input-dark m-cat" placeholder="Category">
+
+
+                <div class="f-group">
+
+
+                    <label>Category</label>
+
+
+                    <input type="text" class="m-cat" placeholder="Category..." style="opacity: 0.6;">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Base Unit</label>
-                    <select class="input-dark m-unit" style="height: 48px;">
-                        <option value="Kg">Kg</option>
-                        <option value="Ltr">Ltr</option>
-                        <option value="Gm">Gm</option>
-                        <option value="Nos">Nos</option>
-                        <option value="Box">Box</option>
+
+
+                <div class="f-group">
+
+
+                    <label>Unit</label>
+
+
+                    <select class="m-unit">
+
+
+                        <option value="Kg">KILOGRAM (Kg)</option>
+
+
+                        <option value="Ltr">LITER (Ltr)</option>
+
+
+                        <option value="Gm">GRAM (Gm)</option>
+
+
+                        <option value="Nos">NUMERIC (Nos)</option>
+
+
+                        <option value="Box">BOX (Box)</option>
+
+
                     </select>
+
+
                 </div>
+
+
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group">
-                    <label class="form-label">Quantity</label>
-                    <input type="number" step="0.001" class="input-dark m-qty" placeholder="e.g. 27.52" oninput="calculateSubtotal(${blockId})">
+
+
+
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-bottom: 2rem;">
+
+
+                <div class="f-group">
+
+
+                    <label>Quantity</label>
+
+
+                    <input type="number" step="0.001" class="m-qty" placeholder="0.000" oninput="calculateSubtotal(${blockId})" style="font-size: 1.2rem; font-family: 'Outfit';">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Unit Cost (Base)</label>
-                    <input type="number" step="0.01" class="input-dark m-cost" placeholder="0.00" oninput="calculateSubtotal(${blockId})">
+
+
+                <div class="f-group">
+
+
+                    <label>Unit Cost</label>
+
+
+                    <input type="number" step="0.01" class="m-cost" placeholder="0.00" oninput="calculateSubtotal(${blockId})" style="font-family: 'Outfit';">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Discount %</label>
-                    <input type="number" class="input-dark m-disc" value="0" oninput="calculateSubtotal(${blockId})">
+
+
+                <div class="f-group">
+
+
+                    <label>Discount (%)</label>
+
+
+                    <input type="number" class="m-disc" value="0" oninput="calculateSubtotal(${blockId})" style="color: var(--dash-danger);">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">GST %</label>
-                    <input type="number" class="input-dark m-gst-p" value="0" oninput="calculateSubtotal(${blockId})">
+
+
+                <div class="f-group">
+
+
+                    <label>GST (%)</label>
+
+
+                    <input type="number" class="m-gst-p" value="0" oninput="calculateSubtotal(${blockId})" style="color: var(--dash-primary);">
+
+
                 </div>
+
+
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem;">
-                <div class="form-group">
-                    <label class="form-label">GST Value</label>
-                    <input type="text" class="input-dark m-gst-v" value="0.00" readonly style="background: rgba(0,0,0,0.2);">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">IGST %</label>
-                    <input type="number" class="input-dark m-igst-p" value="0" oninput="calculateSubtotal(${blockId})">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">IGST Value</label>
-                    <input type="text" class="input-dark m-igst-v" value="0.00" readonly style="background: rgba(0,0,0,0.2);">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Arrival Date</label>
-                    <input type="date" class="input-dark m-date" value="${document.getElementById('entry-date').value}">
-                </div>
-            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; align-items: flex-end;">
-                <div class="form-group">
-                    <label class="form-label">Expiry Date</label>
-                    <input type="date" class="input-dark m-expiry">
+
+
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; margin-bottom: 2.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 2.5rem;">
+
+
+                <div class="f-group">
+
+
+                    <label>Expiry Date</label>
+
+
+                    <input type="date" class="m-expiry" style="color: var(--dash-danger);">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Selling Price (MRP)</label>
-                    <input type="number" step="0.01" class="input-dark m-mrp" placeholder="0.00" oninput="calculateSubtotal(${blockId})">
+
+
+                <div class="f-group">
+
+
+                    <label>M.R.P</label>
+
+
+                    <input type="number" step="0.01" class="m-mrp" placeholder="0.00" oninput="calculateSubtotal(${blockId})" style="font-weight: 900; color: white; font-family: 'Outfit';">
+
+
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Margin % (on MRP)</label>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; height: 48px; background: rgba(0,0,0,0.2); padding: 0 1rem; border-radius: 10px;">
-                        <span class="m-margin-badge" style="font-weight: 800; color: var(--text-muted);">0.00%</span>
+
+
+                <div class="f-group">
+
+
+                    <label>Profit Margin</label>
+
+
+                    <div style="display: flex; align-items: center; gap: 1rem; height: 52px; background: rgba(0,0,0,0.2); padding: 0 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+
+
+                        <span class="m-margin-badge" style="font-weight: 950; color: var(--text-tertiary); font-family: 'Outfit'; font-size: 1.1rem;">0.00%</span>
+
+
+                        <span style="font-size: 0.6rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px;">PROFIT</span>
+
+
                     </div>
+
+
                 </div>
-                <div style="text-align: right; padding-bottom: 10px;">
-                    <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 700;">SUBTOTAL:</span>
-                    <span style="color: var(--primary); font-size: 1.5rem; font-weight: 800; margin-left: 10px;">₹ <span class="m-subtotal">0.00</span></span>
+
+
+                <div style="text-align: right;">
+
+
+                    <label style="font-size: 0.65rem; font-weight: 800; color: var(--text-tertiary); display: block; margin-bottom: 8px;">Subtotal</label>
+
+
+                    <span style="color: white; font-size: 2rem; font-weight: 950; font-family: 'Outfit';">&#8377; <span class="m-subtotal">0.00</span></span>
+
+
                 </div>
+
+
             </div>
+
+
+            
+
+
+            <!-- Hidden Fields for logic -->
+
+
+            <input type="hidden" class="m-gst-v" value="0">
+
+
+            <input type="hidden" class="m-igst-p" value="0">
+
+
+            <input type="hidden" class="m-igst-v" value="0">
+
+
+            <input type="hidden" class="m-date" value="${document.getElementById('entry-date').value}">
+
+
         `;
+
+
         container.appendChild(block);
-        calculateGrandTotals();
-    };
 
-    window.removeItemBlock = function (id) {
+
+        calculateGrandTotals();
+
+
+    }
+
+
+
+
+
+    function removeItemBlock(id) {
+
+
         document.getElementById(`item-block-${id}`).remove();
-        itemCount--;
-        // Update labels
-        const labels = document.querySelectorAll('#items-container h3');
-        labels.forEach((h3, index) => {
-            h3.innerText = `Product ${index + 1} Details`;
-        });
-        calculateGrandTotals();
-    };
 
-    window.calculateSubtotal = function (id) {
+
+        itemCount--;
+
+
+        document.getElementById('items-count-badge').innerText = `${itemCount} ITEMS ADDED`;
+
+
+        const labels = document.querySelectorAll('#items-container .item-block h3 span');
+
+
+        labels.forEach((span, index) => {
+
+
+            span.innerText = `[#0${index + 1}]`;
+
+
+        });
+
+
+        calculateGrandTotals();
+
+
+    }
+
+
+
+
+
+    function calculateSubtotal(id) {
+
+
         const block = document.getElementById(`item-block-${id}`);
+
+
         const qty = parseFloat(block.querySelector('.m-qty').value) || 0;
+
+
         const cost = parseFloat(block.querySelector('.m-cost').value) || 0;
+
+
         const disc = parseFloat(block.querySelector('.m-disc').value) || 0;
+
+
         const gstP = parseFloat(block.querySelector('.m-gst-p').value) || 0;
-        const igstP = parseFloat(block.querySelector('.m-igst-p').value) || 0;
+
+
         const mrp = parseFloat(block.querySelector('.m-mrp').value) || 0;
 
+
+
+
+
         const base = (qty * cost);
+
+
         const afterDisc = base - (base * (disc / 100));
 
-        // Landed cost calculation for margin
-        const unitCostAfterTax = (cost * (1 - disc / 100)) * (1 + (gstP + igstP) / 100);
+
+        const unitCostAfterTax = (cost * (1 - disc / 100)) * (1 + (gstP) / 100);
+
+
+
+
 
         const gstVal = afterDisc * (gstP / 100);
-        const igstVal = afterDisc * (igstP / 100);
+
 
         block.querySelector('.m-gst-v').value = gstVal.toFixed(2);
-        block.querySelector('.m-igst-v').value = igstVal.toFixed(2);
 
-        const subtotal = afterDisc + gstVal + igstVal;
+
+
+
+
+        const subtotal = afterDisc + gstVal;
+
+
         block.querySelector('.m-subtotal').innerText = subtotal.toFixed(2);
 
-        // Margin Calculation
+
+
+
+
         if (mrp > 0) {
+
+
             const margin = ((mrp - unitCostAfterTax) / mrp) * 100;
+
+
             const badge = block.querySelector('.m-margin-badge');
+
+
             badge.innerText = margin.toFixed(2) + '%';
-            badge.style.color = margin > 20 ? 'var(--success)' : (margin > 5 ? 'var(--warning)' : 'var(--danger)');
+
+
+            badge.style.color = margin > 20 ? 'var(--dash-success)' : (margin > 5 ? 'var(--dash-warning)' : 'var(--dash-danger)');
+
+
         }
 
-        calculateGrandTotals();
-    };
 
-    window.calculateGrandTotals = function () {
+        calculateGrandTotals();
+
+
+    }
+
+
+
+
+
+    function calculateGrandTotals() {
+
+
         let totalQty = 0;
+
+
         let itemsSum = 0;
+
+
         const shipping = parseFloat(document.getElementById('shipping-charges').value) || 0;
 
+
+
+
+
         document.querySelectorAll('.m-qty').forEach(el => totalQty += (parseFloat(el.value) || 0));
+
+
         document.querySelectorAll('.m-subtotal').forEach(el => itemsSum += (parseFloat(el.innerText) || 0));
+
+
+
+
 
         const grandTotal = itemsSum + shipping;
 
-        document.getElementById('grand-qty').innerText = totalQty.toFixed(3);
-        document.getElementById('grand-total-display').innerText = `₹ ${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
-    };
 
-    window.checkProduct = function (input, id) {
+        document.getElementById('grand-qty').innerText = totalQty.toFixed(3);
+
+
+        document.getElementById('grand-total-display').innerText = `&#8377; ${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+
+    }
+
+
+
+
+
+    function checkProduct(input, id) {
+
+
         const code = input.value.trim();
+
+
         const block = document.getElementById(`item-block-${id}`);
+
+
         const existing = inventory.find(i => i.code === code);
+
+
         if (existing) {
+
+
             block.querySelector('.m-name').value = existing.name;
+
+
             block.querySelector('.m-cat').value = existing.category;
+
+
             block.querySelector('.m-mrp').value = existing.price;
+
+
             if (existing.gst_percent) block.querySelector('.m-gst-p').value = existing.gst_percent;
+
+
             if (existing.unit) block.querySelector('.m-unit').value = existing.unit;
 
-            input.style.borderColor = 'var(--success)';
-            calculateSubtotal(id);
-        }
-    };
 
-    window.saveStock = async function () {
-        const blocks = document.querySelectorAll('[id^="item-block-"]');
+            input.style.borderColor = 'var(--dash-success)';
+
+
+            calculateSubtotal(id);
+
+
+        } else {
+
+
+            input.style.borderColor = 'rgba(255,255,255,0.1)';
+
+
+        }
+
+
+    }
+
+
+
+
+
+    async function saveStock() {
+
+
+        const blocks = document.querySelectorAll('.item-block');
+
+
         const items = [];
 
+
         blocks.forEach(block => {
+
+
             const code = block.querySelector('.m-code').value;
+
+
             const qty = block.querySelector('.m-qty').value;
+
+
             if (!code || !qty) return;
 
+
             items.push({
+
+
                 code,
+
+
                 name: block.querySelector('.m-name').value,
+
+
                 category: block.querySelector('.m-cat').value || 'Loose Items',
+
+
                 unit: block.querySelector('.m-unit').value,
+
+
                 qty: parseFloat(qty),
+
+
                 cost: parseFloat(block.querySelector('.m-cost').value || 0),
+
+
                 mrp: parseFloat(block.querySelector('.m-mrp').value || 0),
+
+
                 discount_percent: parseFloat(block.querySelector('.m-disc').value || 0),
+
+
                 gst_percent: parseFloat(block.querySelector('.m-gst-p').value || 0),
-                igst_percent: parseFloat(block.querySelector('.m-igst-p').value || 0),
+
+
+                igst_percent: 0,
+
+
                 arrival_date: block.querySelector('.m-date').value,
+
+
                 expiry: block.querySelector('.m-expiry').value || null
+
+
             });
+
+
         });
 
-        if (items.length === 0) return alert('No items added!');
-        // if (!document.getElementById('supplier-id').value) return alert('Select a vendor.');
 
-        const saveBtn = document.querySelector('.btn-primary');
+
+
+
+        if (items.length === 0) return alert('No items added.');
+
+
+        const saveBtn = document.querySelector('.btn-neural.primary');
+
+
         saveBtn.disabled = true;
+
+
         saveBtn.innerText = 'SAVING...';
 
+
+
+
+
         const payload = {
+
+
             invoice_no: document.getElementById('invoice-no').value,
+
+
             supplier_id: document.getElementById('supplier-id').value,
+
+
             purchase_type: document.getElementById('purchase-id').value,
+
+
             date: document.getElementById('entry-date').value,
+
+
             is_credit: document.getElementById('is-credit').checked,
+
+
             shipping_charges: parseFloat(document.getElementById('shipping-charges').value || 0),
+
+
             due_date: document.getElementById('due-date').value,
+
+
             items
+
+
         };
 
+
+
+
+
         try {
+
+
             const res = await fetch('/api/inventory/stock-entry', {
+
+
                 method: 'POST',
+
+
                 headers: { 'Content-Type': 'application/json' },
+
+
                 body: JSON.stringify(payload)
+
+
             });
-            const data = await res.json();
-            if (data.success) {
-                alert('Stock registered successfully!');
+
+
+            if ((await res.json()).success) {
+
+
+                alert('Saved successfully.');
+
+
                 window.location.href = '/inventory/wholesale';
+
+
             } else {
-                alert('Error: ' + data.message);
+
+
+                alert('Could not save. Please try again.');
+
+
                 saveBtn.disabled = false;
-                saveBtn.innerText = 'SAVE SHIPMENT';
+
+
+        saveBtn.innerText = 'ENTRY';
+
+
             }
+
+
         } catch (e) {
-            alert('Network failure');
+
+
+            alert('NETWORK_VEX_ERROR: Verification failed.');
+
+
             saveBtn.disabled = false;
-            saveBtn.innerText = 'SAVE SHIPMENT';
+
+
+            saveBtn.innerText = 'ENTRY';
+
+
         }
-    };
+
+
+    }
+
+
+
+
 
     document.addEventListener('DOMContentLoaded', addItemBlock);
+
+
 </script>
+
+
 {% endblock %}
+
+

@@ -1,4 +1,4 @@
-#!C:\Users\fouzh\OneDrive\Desktop\Sales(demo) theme\.venv\Scripts\python.exe
+#!D:\Jai Agency\.venv\Scripts\python.exe
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 """

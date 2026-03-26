@@ -3,25 +3,7 @@
 {% block title %}Maple Pro - {{ title }}{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-file-invoice"></i>
-        <span>Maple Pro</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/billing/dashboard">Dashboard</a>
-        <a href="/billing">Billing</a>
-        <a href="/billing/navigation">Sales Menu</a>
-        <a href="/billing/customers" class="active">Customers</a>
-        <a href="/billing/reports">Reports</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span style="color: var(--text-muted); font-size: 0.8rem;">LEDGER V1.0</span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<div class="dashboard-container fade-in">
+<div class="dashboard-container fade-in report-shell">
     <div class="section-header">
         <div>
             <h1>{{ title }}</h1>
@@ -37,7 +19,11 @@
         </div>
     </div>
 
-    <!-- Customer Info Card -->
+    <div class="print-report-header print-only" style="display: none; text-align: center; border-bottom: 2px solid #000; margin-bottom: 5mm; padding-bottom: 3mm;">
+        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
+        <p style="margin: 2px 0; font-size: 10pt; font-weight: bold;">{{ title|upper }}</p>
+        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    </div>
     <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--glass-border);">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
@@ -67,7 +53,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in data|reverse %}
+                {% for item in data %}
                 <tr>
                     <td class="print-bill-id">
                         <code
@@ -86,14 +72,14 @@
                             {% for detail in item.details %}
                             <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                                 <span style="font-weight: 600;">{{ detail.product_name }} (x{{ detail.qty }})</span>
-                                <span style="font-weight: 700; color: var(--primary);">₹{{
+                                <span style="font-weight: 700; color: var(--primary);">&#8377;{{
                                     "%.2f"|format(detail.gross_amount) }}</span>
                             </div>
                             {% endfor %}
                             <div
                                 style="margin-top: 8px; padding-top: 5px; border-top: 2px dashed #cbd5e1; display: flex; justify-content: space-between; font-weight: 800;">
                                 <span>NET TOTAL</span>
-                                <span>₹{{ "%.2f"|format(item.net_total) }}</span>
+                                <span>&#8377;{{ "%.2f"|format(item.net_total) }}</span>
                             </div>
                             <div
                                 style="display: flex; justify-content: space-between; color: var(--success); font-size: 0.75rem;">
@@ -146,18 +132,18 @@
 <style>
     @media print {
         @page {
-            margin: 0;
-            size: 80mm auto;
+            size: A5;
+            margin: 5mm;
         }
 
         body {
             margin: 0 !important;
             padding: 0 !important;
-            width: 80mm !important;
+            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: 'monospace' !important;
-            font-size: 9pt !important;
+            font-family: Arial, sans-serif !important;
+            font-size: 10pt !important;
         }
 
         .navbar,
@@ -176,11 +162,15 @@
         }
 
         .section-header h1 {
-            font-size: 14pt !important;
-            text-align: center;
-            margin-bottom: 2mm !important;
-            color: black !important;
-            text-transform: uppercase;
+            display: none !important;
+        }
+
+        .print-report-header {
+            display: block !important;
+            text-align: center !important;
+            border-bottom: 2px solid #000;
+            margin-bottom: 3mm;
+            padding-bottom: 2mm;
         }
 
         .section-header p {
@@ -271,3 +261,5 @@
     }
 </style>
 {% endblock %}
+
+

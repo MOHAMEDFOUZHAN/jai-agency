@@ -1,159 +1,110 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - Inventory Dashboard{% endblock %}
+{% block title %}Inventory Intelligence | Jai Agency{% endblock %}
+
+{% block nav_links %}
+<a href="/inventory" class="active">Dashboard</a>
+<a href="/inventory/live-stock">Live</a>
+<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/products">Product Master</a>
+<a href="/inventory/suppliers">Suppliers</a>
+<a href="/inventory/stock-return">Return Stock</a>
+{% endblock %}
 
 {% block content %}
-<nav class="navbar fade-in">
-    <div class="logo">
-        <i class="fas fa-warehouse"></i>
-        <span>Kokkalatty Trades</span>
-    </div>
-    <div class="nav-links pill-tabs" style="margin: 0 auto;">
-        <a href="/inventory" {% if page=='dashboard' %}class="active" {% endif %}>Dashboard</a>
-        <a href="/inventory/live-stock" {% if page=='live_stock' %}class="active" {% endif %}>Live</a>
-        <a href="/inventory/storage" {% if page=='storage' %}class="active" {% endif %}>Storage</a>
-        <a href="/inventory/products" {% if page=='products' %}class="active" {% endif %}>Product Master</a>
-        <a href="/inventory/suppliers" {% if page=='suppliers' %}class="active" {% endif %}>Suppliers</a>
-    </div>
-    <div style="display: flex; gap: 1rem; align-items: center;">
-        <span
-            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
-            INV-HUB V3.1
-        </span>
-        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
-    </div>
-</nav>
-
-<style>
-    .dropdown {
-        position: relative;
-        display: inline-block;
-    }
-
-    .dropdown-menu {
-        display: none;
-        position: absolute;
-        background: white;
-        min-width: 160px;
-        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        border-radius: 8px;
-        padding: 8px 0;
-        top: 100%;
-        text-align: left;
-    }
-
-    .dropdown-menu a {
-        color: var(--text-main) !important;
-        padding: 10px 16px !important;
-        text-decoration: none;
-        display: block !important;
-        font-size: 0.85rem !important;
-        border-radius: 0 !important;
-        background: transparent !important;
-    }
-
-    .dropdown-menu a:hover {
-        background: var(--bg-main) !important;
-        color: var(--primary) !important;
-    }
-
-    .dropdown:hover .dropdown-menu {
-        display: block;
-    }
-</style>
-
-<div class="dashboard-container fade-in">
-    <div class="section-header" style="margin-bottom: 3rem;">
-        <div>
-            <h1 style="display: flex; align-items: center; gap: 15px; font-weight: 900; letter-spacing: -1px;">
-                <i class="fas fa-chart-line" style="color: var(--primary); font-size: 2rem;"></i>
-                Inventory Intelligence
-            </h1>
-            <p style="color: var(--text-muted); font-weight: 500;">Real-time asset tracking and stock telemetry.</p>
+<div class="dashboard-wrapper">
+    <div class="dash-hero">
+        <div class="hero-main">
+            <span class="hero-kicker">Inventory Command</span>
+            <h1>Stock overview and operational watchlist</h1>
+            <p>Keep reorder risks, valuation, and expiry movement visible in a calmer control-room layout.</p>
         </div>
-        <div style="display: flex; gap: 1rem; align-items: center;">
-            <button onclick="window.print()" class="btn btn-outline">
-                <i class="fas fa-print"></i> EXPORT DASHBOARD
+        <div class="hero-actions">
+            <button onclick="window.print()" class="btn-neural hero-btn">
+                <i class="fas fa-print"></i> PRINT
             </button>
         </div>
     </div>
 
-    <!-- Summary Statistics -->
-    <div class="stats-grid"
-        style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 3.5rem;">
-        <div class="stat-card" style="border-left: 4px solid var(--primary);">
-            <div class="stat-title"><i class="fas fa-cubes"></i> Total SKUs</div>
-            <div class="stat-value">{{ stats.total_skus }}</div>
+    <div class="hero-strip">
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Active SKUs</span>
+            <strong>{{ stats.total_skus }}</strong>
         </div>
-        <div class="stat-card" style="border-left: 4px solid var(--success);">
-            <div class="stat-title"><i class="fas fa-wallet"></i> Stock Value</div>
-            <div class="stat-value" style="color: var(--success);">
-                <span style="font-size: 1.2rem; font-weight: 600; vertical-align: middle; margin-right: 4px;">₹</span>{{
-                "{:,.0f}".format(stats.total_stock_value) }}
-            </div>
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Low Stock</span>
+            <strong>{{ stats.low_stock_count }} items</strong>
         </div>
-        <div class="stat-card" style="border-left: 4px solid var(--danger);">
-            <div class="stat-title"><i class="fas fa-arrow-down"></i> Low Stock</div>
-            <div class="stat-value" style="color: var(--danger);">
-                {{ stats.low_stock_count }}
-            </div>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid var(--warning);">
-            <div class="stat-title"><i class="fas fa-hourglass-end"></i> Expiring (30d)</div>
-            <div class="stat-value" style="color: var(--warning);">
-                {{ stats.expiring_count }}
-            </div>
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Expiring Soon</span>
+            <strong>{{ stats.expiring_count }} batches</strong>
         </div>
     </div>
 
-    <!-- Alerts Section -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+    <div class="neural-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="neural-card" style="--accent-color: var(--dash-primary);">
+            <div class="card-meta">
+                <span class="card-label">Global SKU Count</span>
+                <div class="card-icon"><i class="fas fa-fingerprint"></i></div>
+            </div>
+            <div class="card-value">{{ stats.total_skus }}</div>
+            <div class="card-sub">Active master catalog indices</div>
+        </div>
 
-        <!-- Low Stock Panel -->
-        <div class="glass-panel" style="padding: 0; border: 1px solid var(--glass-border); overflow: hidden;">
-            <div
-                style="padding: 1.5rem; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
-                <h3
-                    style="font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px;">
-                    <i class="fas fa-exclamation-circle" style="color: var(--danger);"></i>
-                    Critical Reorder List
-                </h3>
+        <div class="neural-card" style="--accent-color: var(--dash-danger);">
+            <div class="card-meta">
+                <span class="card-label">Critical Vulnerability</span>
+                <div class="card-icon"><i class="fas fa-level-down-alt"></i></div>
+            </div>
+            <div class="card-value">{{ stats.low_stock_count }}</div>
+            <div class="card-sub">Units below reorder threshold</div>
+        </div>
+
+        <div class="neural-card" style="--accent-color: var(--dash-warning);">
+            <div class="card-meta">
+                <span class="card-label">Expiry Quarantine</span>
+                <div class="card-icon"><i class="fas fa-clock"></i></div>
+            </div>
+            <div class="card-value">{{ stats.expiring_count }}</div>
+            <div class="card-sub">Batches nearing end of life</div>
+        </div>
+    </div>
+
+    <div class="analytics-block inventory-analytics">
+        <div class="insight-card">
+            <div class="panel-heading panel-heading-row">
+                <span class="card-label"><i class="fas fa-exclamation-triangle" style="color: var(--dash-danger); margin-right: 8px;"></i> Reorder Watchlist</span>
+                <span class="badge badge-danger">Low Stock</span>
             </div>
 
-            <div style="padding: 1.5rem;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <div class="neural-table-container">
+                <table class="neural-table">
                     <thead>
-                        <tr
-                            style="text-align: left; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">
-                            <th style="padding: 0 10px 10px;">Material / SKU</th>
-                            <th style="padding: 0 10px 10px;">Classification</th>
-                            <th style="padding: 0 10px 10px; text-align: right;">On Hand</th>
+                        <tr>
+                            <th>PRODUCT / SKU</th>
+                            <th>CATEGORY</th>
+                            <th style="text-align: right;">QTY</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in low_stock %}
-                        <tr style="background: rgba(0,0,0,0.02); border-radius: 8px;">
-                            <td style="padding: 12px 10px; border-radius: 8px 0 0 8px;">
-                                <div style="font-weight: 700; color: var(--text-main);">{{ item.name }}</div>
-                                <div style="font-size: 0.75rem; color: var(--primary); font-family: monospace;">{{
-                                    item.code }}</div>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: white;">{{ item.name }}</div>
+                                <div style="font-size: 0.7rem; color: var(--dash-secondary); font-family: 'DM Mono';">SKU_{{ item.code }}</div>
                             </td>
-                            <td style="padding: 12px 10px; color: var(--text-muted); font-size: 0.85rem;">{{
-                                item.category }}</td>
-                            <td style="padding: 12px 10px; text-align: right; border-radius: 0 8px 8px 0;">
-                                <span
-                                    style="background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 5px 12px; border-radius: 50px; font-weight: 800; font-size: 0.9rem;">
-                                    {{ item.stock }}
-                                </span>
+                            <td><span class="badge badge-soft">{{ item.category }}</span></td>
+                            <td style="text-align: right;">
+                                <div style="font-weight: 950; color: var(--dash-danger); font-size: 1.1rem; font-family: 'Outfit';">{{ item.stock }} <span style="font-size: 0.7rem; opacity: 0.6;">{{ item.unit }}</span></div>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="3" style="padding: 3rem; text-align: center; color: var(--text-muted);">
-                                <i class="fas fa-check-circle"
-                                    style="font-size: 2.5rem; color: var(--success); opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
-                                All stock levels are within safety limits.
+                            <td colspan="3" style="padding: 0;">
+                                <div class="table-empty-state">
+                                    <i class="fas fa-check-double"></i>
+                                    <span>Stock levels OK</span>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -162,49 +113,41 @@
             </div>
         </div>
 
-        <!-- Expiry Watchlist Panel -->
-        <div class="glass-panel" style="padding: 0; border: 1px solid var(--glass-border); overflow: hidden;">
-            <div
-                style="padding: 1.5rem; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
-                <h3
-                    style="font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 10px; color: var(--text-main); text-transform: uppercase; letter-spacing: 1px;">
-                    <i class="fas fa-hourglass-half" style="color: var(--warning);"></i>
-                    Expiry Telemetry
-                </h3>
+        <div class="insight-card">
+            <div class="panel-heading panel-heading-row">
+                <span class="card-label"><i class="fas fa-hourglass-end" style="color: var(--dash-warning); margin-right: 8px;"></i> Expiry Tracker</span>
+                <span class="badge badge-warning">Tracking</span>
             </div>
 
-            <div style="padding: 1.5rem;">
-                <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+            <div class="neural-table-container">
+                <table class="neural-table">
                     <thead>
-                        <tr
-                            style="text-align: left; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700;">
-                            <th style="padding: 0 10px 10px;">Item / Batch</th>
-                            <th style="padding: 0 10px 10px; text-align: right;">Deadline</th>
+                        <tr>
+                            <th>PRODUCT / BATCH</th>
+                            <th style="text-align: right;">EXPIRY DATE</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in expiring %}
-                        <tr style="background: rgba(0,0,0,0.02);">
-                            <td style="padding: 12px 10px; border-radius: 8px 0 0 8px;">
-                                <div style="font-weight: 700; color: var(--text-main);">{{ item.name }}</div>
-                                <div style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted);">Lot:
-                                    {{ item.batch_id }}</div>
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: white;">{{ item.name }}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: 'DM Mono';">LOT_{{ item.batch_id }}</div>
                             </td>
-                            <td style="padding: 12px 10px; text-align: right; border-radius: 0 8px 8px 0;">
-                                <div style="font-weight: 700; color: var(--text-main); font-size: 0.9rem;">{{ item.date
-                                    }}</div>
-                                <div
-                                    style="font-size: 0.75rem; font-weight: 600; color: {{ 'var(--danger)' if item.days_remaining < 0 else 'var(--warning)' }};">
-                                    {{ item.days_remaining }} Days Remaining
+                            <td style="text-align: right;">
+                                <div style="font-weight: 800; color: white; font-family: 'Outfit';">{{ item.date }}</div>
+                                <div style="font-size: 0.7rem; color: {{ 'var(--dash-danger)' if item.days_remaining < 0 else 'var(--dash-warning)' }}; font-weight: 900; letter-spacing: 1px;">
+                                    {{ item.days_remaining }} DAYS REMAINING
                                 </div>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="2" style="padding: 3rem; text-align: center; color: var(--text-muted);">
-                                <i class="fas fa-shield-alt"
-                                    style="font-size: 2.5rem; color: var(--primary); opacity: 0.2; display: block; margin-bottom: 1rem;"></i>
-                                No immediate batch expiration risks.
+                            <td colspan="2" style="padding: 0;">
+                                <div class="table-empty-state">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>No items expiring</span>
+                                </div>
                             </td>
                         </tr>
                         {% endfor %}
@@ -212,7 +155,6 @@
                 </table>
             </div>
         </div>
-
     </div>
 </div>
 {% endblock %}

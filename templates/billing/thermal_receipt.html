@@ -1,255 +1,343 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bill #{{ sale.id }}</title>
+    <title>Jai Agency - Bill #{{ sale.id }}</title>
     <style>
-        /* Standalone Style to prevent Global CSS Interference */
         body {
             margin: 0;
-            padding: 0;
-            background: #f1f5f9;
+            background: #eef2f7;
             font-family: Arial, sans-serif;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
 
         .no-print {
-            padding: 1rem;
-            background: white;
-            border-bottom: 1px solid #ddd;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: #ffffff;
+            border-bottom: 1px solid #d9dee8;
+        }
+
+        .actions {
+            display: flex;
+            gap: 0.75rem;
         }
 
         .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 1rem;
+            border-radius: 10px;
             border: 1px solid transparent;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         .btn-primary {
-            background: #6366f1;
-            color: white;
+            background: #0f172a;
+            color: #ffffff;
         }
 
         .btn-outline {
-            background: white;
-            border-color: #ddd;
-            color: #4b5563;
+            background: #ffffff;
+            border-color: #cbd5e1;
+            color: #334155;
         }
 
-        .receipt-container {
+        .receipt-wrap {
+            padding: 1.25rem 0 2rem;
             display: flex;
             justify-content: center;
-            padding: 20px 0;
         }
 
-        /* STRICT 80MM LOCK */
-        .bill-box {
-            width: 80mm;
-            background: white;
-            padding: 10px;
+        .receipt {
+            width: 138mm;
+            margin: 0 auto;
+            background: #ffffff;
+            color: #000000;
+            padding: 4mm 3.5mm;
             box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            font-family: 'Courier New', Courier, monospace;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+            font-family: "Courier New", Courier, monospace;
+            font-size: 10px;
+            line-height: 1.28;
         }
 
-        .text-center {
+        .center {
             text-align: center;
         }
 
-        .text-right {
-            text-align: right;
-        }
-
         .bold {
-            font-weight: bold;
+            font-weight: 700;
         }
 
-        table {
+        .store-name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+        }
+
+        .muted {
+            color: #374151;
+        }
+
+        .rule {
+            border-top: 1px dashed #000000;
+            margin: 7px 0;
+        }
+
+        .meta-row,
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+
+        .meta-row.compact {
+            gap: 0.35rem;
+        }
+
+        .items {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 13px;
+            margin-top: 2px;
         }
 
-        th {
-            border-bottom: 1px dotted black;
-            padding: 5px 0;
-            text-align: left;
-        }
-
-        td {
-            padding: 5px 0;
+        .items th,
+        .items td {
+            padding: 3px 0;
             vertical-align: top;
         }
 
-        .divider {
-            border-top: 1px dotted #000;
-            margin: 10px 0;
+        .items th {
+            font-size: 10px;
+            font-weight: 700;
+            border-bottom: 1px dashed #000000;
+        }
+
+        .items th:nth-child(1),
+        .items td:nth-child(1) {
+            width: 8%;
+            text-align: left;
+        }
+
+        .items th:nth-child(2),
+        .items td:nth-child(2) {
+            width: 40%;
+            text-align: left;
+        }
+
+        .items th:nth-child(3),
+        .items td:nth-child(3) {
+            width: 18%;
+            text-align: right;
+        }
+
+        .items th:nth-child(4),
+        .items td:nth-child(4) {
+            width: 12%;
+            text-align: center;
+        }
+
+        .items th:nth-child(5),
+        .items td:nth-child(5) {
+            width: 22%;
+            text-align: right;
+        }
+
+        .item-name {
+            font-weight: 700;
+        }
+
+        .item-sub {
+            font-size: 9px;
+            color: #4b5563;
+        }
+
+        .totals {
+            margin-top: 2px;
+            margin-left: 38%;
+        }
+
+        .total-row {
+            padding: 2px 0;
+        }
+
+        .grand {
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .grand .label {
+            line-height: 1;
+        }
+
+        .footer-note {
+            margin-top: 6px;
+            text-align: center;
+            font-size: 10px;
         }
 
         @media print {
             body {
-                background: white !important;
+                margin: 0;
+                background: #ffffff !important;
             }
 
             .no-print {
                 display: none !important;
             }
 
-            .receipt-container {
+            .receipt-wrap {
                 padding: 0 !important;
                 display: block !important;
             }
 
-            .bill-box {
-                width: 80mm !important;
-                margin: 0 !important;
+            .receipt {
+                width: 138mm !important;
+                margin: 0 auto !important;
                 box-shadow: none !important;
-                border: none !important;
             }
 
             @page {
-                size: 80mm auto;
-                margin: 0;
+                size: A5;
+                margin: 5mm;
             }
         }
     </style>
 </head>
-
 <body>
-
     <div class="no-print">
-        <a href="/billing" class="btn btn-outline">← Back to Billing</a>
-        <div style="display: flex; gap: 10px;">
+        <a href="/billing" class="btn btn-outline">Billing</a>
+        <div class="actions">
             <button class="btn btn-primary" onclick="window.print()">Print Receipt</button>
             <a href="/billing/navigation" class="btn btn-outline">Sales Menu</a>
         </div>
     </div>
 
-    <div class="receipt-container">
-        <div class="bill-box">
-            <div class="text-center" style="font-family: 'Courier New', Courier, monospace;">
-                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">KOKKALATTY TEEA TRADERS</h1>
-                <p style="margin: 2px 0; font-size: 11px;">HOLMWOOD, NANKEM HOSPITAL PREMISES,</p>
-                <p style="margin: 2px 0; font-size: 11px;">COONOOR - 643 101.</p>
-                <p style="margin: 2px 0; font-size: 12px; font-weight: bold;">GSTIN: 33AAQFK2881H1Z2</p>
-                <p style="margin: 2px 0; font-size: 12px;">Contact: 8903642757</p>
+    <div class="receipt-wrap">
+        <div class="receipt">
+            <div class="center">
+                <div class="store-name">Jai Agency</div>
+                <div class="muted">[YOUR NEW ADDRESS LINE 1]</div>
+                <div class="muted">[YOUR NEW ADDRESS LINE 2]</div>
+                <div class="bold">GSTIN: [YOUR NEW GSTIN]</div>
+                <div>Contact: [YOUR NEW CONTACT]</div>
             </div>
 
-            <div class="divider" style="border-top: 1px dotted #000;"></div>
+            <div class="rule"></div>
 
-            <div style="font-size: 13px; font-family: 'Courier New', Courier, monospace;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Bill No: {{ sale.id }}</span>
-                    <span>DT: {{ sale.date_only }} {{ sale.time_only }}</span>
-                </div>
-                {% if sale.customer_id %}
-                <div>Customer ID: {{ sale.customer_id }}</div>
-                {% endif %}
+            <div class="meta-row compact">
+                <span>Bill No: {{ sale.id }}</span>
+                <span>DT: {{ sale.date_only }}</span>
             </div>
+            <div class="meta-row compact">
+                <span>TM: {{ sale.time_only }}</span>
+                <span></span>
+            </div>
+            {% if sale.customer_name and sale.customer_name != 'Walk-in' %}
+            <div class="meta-row compact">
+                <span>Customer: {{ sale.customer_name }}</span>
+                <span></span>
+            </div>
+            {% endif %}
 
-            <div class="divider" style="border-top: 1px dotted #000;"></div>
+            <div class="rule"></div>
 
-            <table style="font-family: 'Courier New', Courier, monospace; font-size: 13px;">
+            <table class="items">
                 <thead>
-                    <tr style="border-bottom: 1px dotted black;">
-                        <th width="10%">S.no</th>
-                        <th width="35%">Description</th>
-                        <th width="15%" class="text-center">Rate</th>
-                        <th width="15%" class="text-center">Quantity</th>
-                        <th width="25%" class="text-right">Amount</th>
+                    <tr>
+                        <th>Sr</th>
+                        <th>Description</th>
+                        <th>Rate</th>
+                        <th>Qty</th>
+                        <th>Amount</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in sale.details %}
                     <tr>
-                        <td class="text-center">{{ loop.index }}</td>
-                        <td>{{ item.name }}</td>
-                        <td class="text-center">{{ "%.2f"|format(item.price) }}</td>
-                        <td class="text-center">{{ item.qty }}</td>
-                        <td class="text-right">{{ "%.2f"|format(item.gross_amount) }}</td>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <div class="item-name">{{ item.name }}</div>
+                            <div class="item-sub">GST: {{ item.gst_percent or 0 }}%</div>
+                        </td>
+                        <td>{{ "%.2f"|format(item.price) }}</td>
+                        <td>{{ item.qty }}</td>
+                        <td>{{ "%.2f"|format(item.gross_amount if item.gross_amount else (item.qty * item.price)) }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
 
-            <div class="divider" style="border-top: 1px dotted #000; margin-left: 40%;"></div>
+            <div class="rule"></div>
 
-            <div style="font-size: 13px; font-family: 'Courier New', Courier, monospace;">
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
-                    <div style="display: flex; width: 60%; justify-content: space-between;">
-                        <span>Subtotal:</span>
-                        <span>{{ "%.2f"|format(sale.subtotal) }}</span>
-                    </div>
+            <div class="totals">
+                <div class="total-row">
+                    <span>Subtotal:</span>
+                    <span>{{ "%.2f"|format(sale.subtotal) }}</span>
                 </div>
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
-                    <div style="display: flex; width: 60%; justify-content: space-between;">
-                        <span>Tax:</span>
-                        <span>{{ "%.2f"|format(sale.tax_total) }}</span>
-                    </div>
+                <div class="total-row">
+                    <span>Tax:</span>
+                    <span>{{ "%.2f"|format(sale.tax_total) }}</span>
                 </div>
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
-                    <div style="display: flex; width: 60%; justify-content: space-between;">
-                        <span>Total:</span>
-                        <span>{{ "%.2f"|format(sale.subtotal + sale.tax_total) }}</span>
-                    </div>
+                <div class="total-row">
+                    <span>Total:</span>
+                    <span>{{ "%.2f"|format(sale.subtotal + sale.tax_total) }}</span>
                 </div>
                 {% if sale.discount_total > 0 %}
-                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
-                    <div style="display: flex; width: 60%; justify-content: space-between;">
-                        <span>Discount:</span>
-                        <span>{{ "%.2f"|format(sale.discount_total) }}</span>
-                    </div>
+                <div class="total-row">
+                    <span>Discount:</span>
+                    <span>-{{ "%.2f"|format(sale.discount_total) }}</span>
                 </div>
                 {% endif %}
-                <div
-                    style="display: flex; justify-content: flex-end; margin-top: 5px; border-top: 1px dotted black; padding-top: 5px;">
-                    <div
-                        style="display: flex; width: 60%; justify-content: space-between; font-weight: bold; font-size: 15px;">
-                        <span>Grand Total:</span>
-                        <span>{{ "%.2f"|format(sale.net_total) }}</span>
-                    </div>
-                </div>
             </div>
 
-            <div class="divider" style="border-top: 1px dotted #000;"></div>
+            <div class="rule"></div>
 
-            <div style="font-size: 12px; font-family: 'Courier New', Courier, monospace;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span>Payment: {{ sale.payment_method }}</span>
-                </div>
-                <div style="display: flex; justify-content: flex-start; gap: 20px;">
-                    <span>CGST: {{ "%.2f"|format(sale.cgst_total) }}</span>
-                    <span>SGST: {{ "%.2f"|format(sale.sgst_total) }}</span>
-                </div>
+            <div class="total-row grand">
+                <span class="label">Grand<br>Total:</span>
+                <span>{{ "%.2f"|format(sale.net_total) }}</span>
             </div>
 
-            <div class="divider" style="border-top: 1px dotted #000;"></div>
+            <div class="rule"></div>
 
-            <div class="text-center" style="font-size: 12px; font-family: 'Courier New', Courier, monospace;">
-                <p>{{ t['Thank You'] }}</p>
+            <div class="meta-row compact">
+                <span>Payment: {% if sale.payment_method == 'COMPLIMENT' %}COMPLIMENTARY GIFT{% else %}{{ sale.payment_method }}{% endif %}</span>
+                <span></span>
             </div>
+            <div class="meta-row compact">
+                <span>CGST: {{ "%.2f"|format(sale.cgst_total or 0) }}</span>
+                <span>SGST: {{ "%.2f"|format(sale.sgst_total or 0) }}</span>
+            </div>
+            {% if sale.amount_paid is defined and sale.payment_method == 'CREDIT' %}
+            <div class="meta-row compact">
+                <span>Paid Now: {{ "%.2f"|format(sale.amount_paid or 0) }}</span>
+                <span>Balance: {{ "%.2f"|format(sale.balance or 0) }}</span>
+            </div>
+            {% endif %}
+
+            <div class="rule"></div>
+
+            <div class="footer-note">Jai Agency POS</div>
         </div>
     </div>
 
     <script>
         window.onload = function () {
-            setTimeout(() => {
+            setTimeout(function () {
                 window.print();
-            }, 500);
+            }, 400);
         };
     </script>
-
 </body>
-
 </html>
