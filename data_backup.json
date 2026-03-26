@@ -1,0 +1,66 @@
+{
+    "products": [
+        {
+            "code": "1001",
+            "name": "oil",
+            "category": "oil",
+            "price": 100.0
+        },
+        {
+            "code": "1",
+            "name": "oil",
+            "category": "oil",
+            "price": 1.0
+        }
+    ],
+    "storage": [
+        {
+            "batch_id": "RET-SALES-0171127",
+            "code": "1001",
+            "qty": 1.0,
+            "entry_time": "2026-01-17 11:27:06",
+            "arrival_date": "2026-01-17",
+            "expiry": null,
+            "cost": 0,
+            "invoice_no": "RET-#1"
+        }
+    ],
+    "sales_log": [
+        {
+            "id": 1,
+            "date": "2026-01-11 23:21:18",
+            "items": 1,
+            "total": 0.0,
+            "payment_method": "CASH",
+            "details": [
+                {
+                    "id": 1001,
+                    "name": "oil",
+                    "price": 100,
+                    "qty": 0.0
+                }
+            ]
+        }
+    ],
+    "suppliers": [
+        {
+            "id": 1,
+            "name": "maple pro",
+            "contact": "MOHAMED FOUZHAN M",
+            "phone": "09698713000",
+            "email": "mfouzhan@gmail.com",
+            "balance": 0.0
+        }
+    ],
+    "returns_log": [
+        {
+            "date": "2026-01-17 11:27:06",
+            "type": "SALES_RETURN",
+            "bill_id": 1,
+            "product_code": "1001",
+            "product_name": "oil",
+            "qty": 1.0,
+            "refund_amount": 100.0
+        }
+    ]
+}

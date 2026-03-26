@@ -1,0 +1,261 @@
+{% extends "base.html" %} <!-- TEST -->
+
+{% block title %}Maple Pro - Stock Return{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-boxes"></i>
+        <span>Maple Pro</span>
+    </div>
+    <div class="nav-links pill-tabs" style="margin: 0 auto;">
+        <a href="/inventory">Dashboard</a>
+        <a href="/inventory/products">Product Master</a>
+        <a href="/inventory/live-stock">Live</a>
+        <a href="/inventory/suppliers">Suppliers</a>
+        <a href="/inventory/stock-return" class="active">Stock Return</a>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <span
+            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
+            INV-HUB V3.0
+        </span>
+        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
+    </div>
+</nav>
+
+<style>
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-menu {
+        display: none;
+        position: absolute;
+        background: white;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        border-radius: 8px;
+        padding: 8px 0;
+        top: 100%;
+        text-align: left;
+    }
+
+    .dropdown-menu a {
+        color: var(--text-main) !important;
+        padding: 10px 16px !important;
+        text-decoration: none;
+        display: block !important;
+        font-size: 0.85rem !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+    }
+
+    .dropdown-menu a:hover {
+        background: var(--bg-main) !important;
+        color: var(--primary) !important;
+    }
+
+    .dropdown:hover .dropdown-menu {
+        display: block;
+    }
+</style>
+
+<div class="dashboard-container fade-in" style="max-width: 1200px;">
+    <div class="section-header">
+        <div>
+            <h1>Stock Return Management</h1>
+            <p style="color: var(--text-muted);">Process returns to vendors, damaged goods, or expired stock.</p>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem;">
+
+        <!-- Return Form -->
+        <div class="glass-panel">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-weight: 700;">
+                <i class="fas fa-undo-alt" style="color: var(--warning); margin-right: 8px;"></i> Process Return
+            </h3>
+
+            <div class="form-group">
+                <label class="form-label">Search Product</label>
+                <div style="position: relative;">
+                    <input type="text" id="product-search" class="input-dark" placeholder="Name or Code..."
+                        onkeyup="searchProduct()">
+                    <div id="search-results" class="dropdown-menu"
+                        style="width: 100%; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Product Details</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 8px;">
+                    <input type="text" id="selected-product-name" class="input-dark" disabled
+                        style="background: rgba(0,0,0,0.2); flex: 1;" placeholder="Product Name">
+                    <input type="text" id="selected-product-unit" class="input-dark" disabled
+                        style="background: rgba(0,0,0,0.2); width: 80px; text-align: center;" placeholder="Unit">
+                </div>
+                <input type="hidden" id="selected-product-code">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Select Lot (Optional)</label>
+                <select id="batch-select" class="input-dark">
+                    <option value="">-- Auto (FIFO) --</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label">Return Qty</label>
+                    <input type="number" id="return-qty" class="input-dark" step="0.001" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reason</label>
+                    <select id="return-reason" class="input-dark">
+                        <option value="DAMAGED">Damaged / Spoilt</option>
+                        <option value="EXPIRED">Expired</option>
+                        <option value="VENDOR_RETURN">Return to Vendor</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <textarea id="return-notes" class="input-dark" rows="3" placeholder="Additional details..."></textarea>
+            </div>
+
+            <button class="btn btn-primary" style="width: 100%; margin-top: 1rem;" onclick="submitReturn()">
+                CONFIRM RETURN
+            </button>
+        </div>
+
+        <!-- Recent Returns Log -->
+        <div class="glass-panel">
+            <h3 style="margin-bottom: 1.5rem; color: var(--text-main); font-weight: 700;">
+                <i class="fas fa-history" style="color: var(--primary); margin-right: 8px;"></i> Recent Returns
+            </h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr
+                            style="border-bottom: 1px solid var(--glass-border); text-align: left; color: var(--text-muted); font-size: 0.8rem;">
+                            <th style="padding: 10px;">Date</th>
+                            <th style="padding: 10px;">Product</th>
+                            <th style="padding: 10px;">Type</th>
+                            <th style="padding: 10px; text-align: right;">Qty</th>
+                            <th style="padding: 10px; text-align: right;">Refund Value</th>
+                        </tr>
+                    </thead>
+                    <tbody id="returns-table-body">
+                        {% for log in logs %}
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 12px 10px; font-size: 0.85rem;">{{ log.date }}</td>
+                            <td style="padding: 12px 10px;">
+                                <div style="font-weight: 600;">{{ log.product_name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ log.product_code }}</div>
+                            </td>
+                            <td style="padding: 12px 10px;"><span class="badge"
+                                    style="background: rgba(239, 68, 68, 0.1); color: var(--danger);">{{ log.type
+                                    }}</span></td>
+                            <td style="padding: 12px 10px; text-align: right; font-weight: 700;">{{ log.qty }}</td>
+                            <td style="padding: 12px 10px; text-align: right; color: var(--text-muted);">₹{{
+                                "%.2f"|format(log.refund_amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const inventory = JSON.parse('{{ inventory | tojson | safe }}');
+
+    function searchProduct() {
+        const input = document.getElementById('product-search').value.toUpperCase();
+        const results = document.getElementById('search-results');
+        results.innerHTML = '';
+        if (input.length < 1) return;
+
+        const matches = inventory.filter(p => p.name.toUpperCase().includes(input) || p.code.toUpperCase().includes(input)).slice(0, 8);
+
+        matches.forEach(p => {
+            const div = document.createElement('div');
+            div.innerHTML = `<a href="#" onclick="selectProduct('${p.code}')">${p.name} <span style="float: right; color: var(--text-muted);">#${p.code}</span></a>`;
+            results.appendChild(div);
+        });
+        results.style.display = matches.length ? 'block' : 'none';
+    }
+
+    function selectProduct(code) {
+        const product = inventory.find(p => p.code === code);
+        if (product) {
+            document.getElementById('selected-product-name').value = product.name;
+            document.getElementById('selected-product-unit').value = product.unit || 'Nos';
+            document.getElementById('selected-product-code').value = product.code;
+            document.getElementById('product-search').value = '';
+            document.getElementById('search-results').style.display = 'none';
+
+            // Populate batches
+            const batchSelect = document.getElementById('batch-select');
+            batchSelect.innerHTML = '<option value="">-- Auto (FIFO) --</option>';
+            if (product.batches && product.batches.length) {
+                product.batches.forEach(b => {
+                    const option = document.createElement('option');
+                    option.value = b.batch_id;
+                    option.text = `#${String(b.id).padStart(3, '0')} (Exp: ${b.expiry || 'N/A'}) - Qty: ${b.qty}`;
+                    batchSelect.appendChild(option);
+                });
+            }
+        }
+    }
+
+    async function submitReturn() {
+        const code = document.getElementById('selected-product-code').value;
+        const qty = parseFloat(document.getElementById('return-qty').value);
+        const reason = document.getElementById('return-reason').value;
+        const notes = document.getElementById('return-notes').value;
+        const batchId = document.getElementById('batch-select').value;
+
+        if (!code) return alert("Please select a product.");
+        if (!qty || qty <= 0) return alert("Please enter a valid quantity.");
+
+        const payload = {
+            product_code: code,
+            qty: qty,
+            reason: reason,
+            notes: notes,
+            batch_id: batchId
+        };
+
+        try {
+            const res = await fetch('/api/inventory/return-stock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Return processed successfully.');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (e) {
+            alert('System error.');
+        }
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('#product-search')) {
+            document.getElementById('search-results').style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

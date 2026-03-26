@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - Returns{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-undo"></i>
+        <span>Maple Pro <span
+                style="font-size: 0.8rem; opacity: 0.7; font-weight: 400; margin-left: 5px;">RETURNS</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/inventory">Overview</a>
+        <a href="/inventory/stock-list">Ledger</a>
+        <a href="/inventory/live-stock">Live</a>
+        <a href="/inventory/suppliers">Partners</a>
+        <a href="/logout" class="btn btn-danger" style="margin-left: 1rem;">Sign out</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in">
+    <div class="section-header">
+        <div>
+            <h1>Product Returns</h1>
+            <p style="color: var(--text-muted);">Process damaged, expired, or returned inventory</p>
+        </div>
+        <button class="btn btn-primary"
+            style="background: var(--danger); box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);"
+            onclick="openReturnModal()">
+            <i class="fas fa-plus-circle"></i> New Return Case
+        </button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Entry Date</th>
+                    <th>Product Details</th>
+                    <th>Reason</th>
+                    <th>Stock Action</th>
+                    <th style="text-align: center;">Qty</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in returns %}
+                <tr>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">
+                        <i class="far fa-calendar-alt" style="margin-right: 6px;"></i> {{ r.date }}
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: var(--text-main);">{{ r.product_name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">#{{
+                            r.product_code }}</div>
+                    </td>
+                    <td><span style="font-weight: 600; color: var(--text-muted);">{{ r.reason }}</span></td>
+                    <td>
+                        {% if r.action == 'scrap' %}
+                        <span class="badge badge-danger" style="font-size: 0.7rem; letter-spacing: 0.5px;">SCRAPPED /
+                            REMOVED</span>
+                        {% else %}
+                        <span class="badge badge-success" style="font-size: 0.7rem; letter-spacing: 0.5px;">RESTOCKED /
+                            ADDED</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center; font-weight: 800; font-size: 1.1rem; color: var(--text-main);">{{
+                        r.qty }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
+                        <i class="fas fa-history"
+                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
+                        No return operations recorded yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Return Modal -->
+<div id="returnModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeReturnModal()">&times;</span>
+        <h2 style="margin-bottom: 2rem; font-weight: 800; color: white;">Log Product Return</h2>
+        <form id="returnForm" onsubmit="event.preventDefault(); submitReturn();">
+            <div class="form-group">
+                <label class="form-label">SKU / Product Code</label>
+                <div style="position: relative;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 1rem; top: 1rem; color: var(--text-muted);"></i>
+                    <input type="text" id="r_code" class="input-dark" style="padding-left: 2.8rem;"
+                        placeholder="Search by code..." required onchange="checkProduct(this.value)">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Identified Product</label>
+                <input type="text" id="r_name" class="input-dark"
+                    style="background: rgba(255,255,255,0.05); font-weight: 700; color: var(--primary);" readonly
+                    placeholder="Identify product above...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Return Quantity</label>
+                <input type="number" id="r_qty" class="input-dark" min="1" required placeholder="0">
+            </div>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                    <label class="form-label">Classification</label>
+                    <select id="r_reason" class="input-dark">
+                        <option value="Damaged">📦 Damaged</option>
+                        <option value="Expired">⌛ Expired</option>
+                        <option value="Wrong Item">🚫 Wrong Item</option>
+                        <option value="Other">❓ Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Stock Resolution</label>
+                    <select id="r_action" class="input-dark">
+                        <option value="scrap">Scrap / Destroy</option>
+                        <option value="restock">Restock / Resale</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary"
+                style="width: 100%; margin-top: 1.5rem; background: var(--danger); border: none;">Finalize Return
+                Record</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById("returnModal");
+
+    function openReturnModal() {
+        modal.classList.add("show");
+    }
+
+    function closeReturnModal() {
+        modal.classList.remove("show");
+    }
+
+    window.onclick = function (event) {
+        if (event.target == modal) closeReturnModal();
+    }
+
+    async function checkProduct(code) {
+        if (!code) return;
+        try {
+            const res = await fetch('/api/product/' + code);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('r_name').value = data.product.name;
+            } else {
+                document.getElementById('r_name').value = "❌ Product Not Found";
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    async function submitReturn() {
+        const data = {
+            code: document.getElementById('r_code').value,
+            qty: parseInt(document.getElementById('r_qty').value),
+            reason: document.getElementById('r_reason').value,
+            action: document.getElementById('r_action').value
+        };
+
+        try {
+            const res = await fetch('/api/inventory/return', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (e) { console.error(e); }
+    }
+</script>
+{% endblock %}

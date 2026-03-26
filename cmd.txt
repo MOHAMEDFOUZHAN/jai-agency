@@ -1,0 +1,21 @@
+def open_browser():
+    webbrowser.open_new('http://127.0.0.1:5009/')
+
+
+
+if __name__ == '__main__':
+    # Checking for DB instead of JSON
+    
+    # Automatically open browser in a separate thread
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        threading.Timer(1.25, open_browser).start()
+    app.run(debug=True, port=5009)
+
+
+    pyinstaller --onefile --noconsole `
+--name="Maple_Sales" `
+--add-data "templates;templates" `
+--add-data "static;static" `
+--hidden-import webview `
+--hidden-import waitress `
+app.py

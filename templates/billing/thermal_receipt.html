@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Bill #{{ sale.id }}</title>
+    <style>
+        /* Standalone Style to prevent Global CSS Interference */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f1f5f9;
+            font-family: Arial, sans-serif;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .no-print {
+            padding: 1rem;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-outline {
+            background: white;
+            border-color: #ddd;
+            color: #4b5563;
+        }
+
+        .receipt-container {
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+        }
+
+        /* STRICT 80MM LOCK */
+        .bill-box {
+            width: 80mm;
+            background: white;
+            padding: 10px;
+            box-sizing: border-box;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        th {
+            border-bottom: 1px dotted black;
+            padding: 5px 0;
+            text-align: left;
+        }
+
+        td {
+            padding: 5px 0;
+            vertical-align: top;
+        }
+
+        .divider {
+            border-top: 1px dotted #000;
+            margin: 10px 0;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .receipt-container {
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            .bill-box {
+                width: 80mm !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="no-print">
+        <a href="/billing" class="btn btn-outline">← Back to Billing</a>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" onclick="window.print()">Print Receipt</button>
+            <a href="/billing/navigation" class="btn btn-outline">Sales Menu</a>
+        </div>
+    </div>
+
+    <div class="receipt-container">
+        <div class="bill-box">
+            <div class="text-center" style="font-family: 'Courier New', Courier, monospace;">
+                <h1 style="margin: 0; font-size: 20px; font-weight: bold;">KOKKALATTY TEEA TRADERS</h1>
+                <p style="margin: 2px 0; font-size: 11px;">HOLMWOOD, NANKEM HOSPITAL PREMISES,</p>
+                <p style="margin: 2px 0; font-size: 11px;">COONOOR - 643 101.</p>
+                <p style="margin: 2px 0; font-size: 12px; font-weight: bold;">GSTIN: 33AAQFK2881H1Z2</p>
+                <p style="margin: 2px 0; font-size: 12px;">Contact: 8903642757</p>
+            </div>
+
+            <div class="divider" style="border-top: 1px dotted #000;"></div>
+
+            <div style="font-size: 13px; font-family: 'Courier New', Courier, monospace;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Bill No: {{ sale.id }}</span>
+                    <span>DT: {{ sale.date_only }} {{ sale.time_only }}</span>
+                </div>
+                {% if sale.customer_id %}
+                <div>Customer ID: {{ sale.customer_id }}</div>
+                {% endif %}
+            </div>
+
+            <div class="divider" style="border-top: 1px dotted #000;"></div>
+
+            <table style="font-family: 'Courier New', Courier, monospace; font-size: 13px;">
+                <thead>
+                    <tr style="border-bottom: 1px dotted black;">
+                        <th width="10%">S.no</th>
+                        <th width="35%">Description</th>
+                        <th width="15%" class="text-center">Rate</th>
+                        <th width="15%" class="text-center">Quantity</th>
+                        <th width="25%" class="text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sale.details %}
+                    <tr>
+                        <td class="text-center">{{ loop.index }}</td>
+                        <td>{{ item.name }}</td>
+                        <td class="text-center">{{ "%.2f"|format(item.price) }}</td>
+                        <td class="text-center">{{ item.qty }}</td>
+                        <td class="text-right">{{ "%.2f"|format(item.gross_amount) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="divider" style="border-top: 1px dotted #000; margin-left: 40%;"></div>
+
+            <div style="font-size: 13px; font-family: 'Courier New', Courier, monospace;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
+                    <div style="display: flex; width: 60%; justify-content: space-between;">
+                        <span>Subtotal:</span>
+                        <span>{{ "%.2f"|format(sale.subtotal) }}</span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
+                    <div style="display: flex; width: 60%; justify-content: space-between;">
+                        <span>Tax:</span>
+                        <span>{{ "%.2f"|format(sale.tax_total) }}</span>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
+                    <div style="display: flex; width: 60%; justify-content: space-between;">
+                        <span>Total:</span>
+                        <span>{{ "%.2f"|format(sale.subtotal + sale.tax_total) }}</span>
+                    </div>
+                </div>
+                {% if sale.discount_total > 0 %}
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 2px;">
+                    <div style="display: flex; width: 60%; justify-content: space-between;">
+                        <span>Discount:</span>
+                        <span>{{ "%.2f"|format(sale.discount_total) }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div
+                    style="display: flex; justify-content: flex-end; margin-top: 5px; border-top: 1px dotted black; padding-top: 5px;">
+                    <div
+                        style="display: flex; width: 60%; justify-content: space-between; font-weight: bold; font-size: 15px;">
+                        <span>Grand Total:</span>
+                        <span>{{ "%.2f"|format(sale.net_total) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider" style="border-top: 1px dotted #000;"></div>
+
+            <div style="font-size: 12px; font-family: 'Courier New', Courier, monospace;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Payment: {{ sale.payment_method }}</span>
+                </div>
+                <div style="display: flex; justify-content: flex-start; gap: 20px;">
+                    <span>CGST: {{ "%.2f"|format(sale.cgst_total) }}</span>
+                    <span>SGST: {{ "%.2f"|format(sale.sgst_total) }}</span>
+                </div>
+            </div>
+
+            <div class="divider" style="border-top: 1px dotted #000;"></div>
+
+            <div class="text-center" style="font-size: 12px; font-family: 'Courier New', Courier, monospace;">
+                <p>{{ t['Thank You'] }}</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function () {
+            setTimeout(() => {
+                window.print();
+            }, 500);
+        };
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,4 @@
+flask
+pywebview
+waitress
+pyinstaller

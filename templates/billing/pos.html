@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - POS{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-cash-register"></i>
+        <span>Maple Pro</span>
+    </div>
+    <div class="nav-links pill-tabs" style="margin: 0 auto;">
+        <a href="/billing/dashboard">Dashboard</a>
+        <a href="/billing" class="active">Billing</a>
+        <a href="/billing/navigation">Sales Menu</a>
+        <a href="/billing/expenses">Expenses</a>
+        <a href="/billing/reports">Reports</a>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <span style="color: var(--text-muted); font-size: 0.8rem;">V3.0</span>
+        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px; border-radius: 50px;">SIGN OUT</a>
+    </div>
+</nav>
+
+<div class="pos-layout"
+    style="display: flex; flex-direction: column; gap: 1rem; padding: 1rem; max-width: 1400px; margin: 0 auto;">
+
+    <div class="glass-panel"
+        style="padding: 1rem; background: #fff; overflow: visible !important; position: relative; z-index: 100;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+            <h2 style="font-size: 1.1rem; font-weight: 800; color: #1e293b; text-transform: uppercase;">
+                POINT OF SALE
+            </h2>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <span style="font-size: 0.65rem; font-weight: 800; color: #64748b;">DATE</span>
+                    <span
+                        style="font-weight: 800; color: #1e293b; font-size: 0.85rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">{{
+                        today }}</span>
+                </div>
+                <div class="badge"
+                    style="background: var(--primary-glow); color: var(--primary); font-family: monospace; font-size: 0.85rem; padding: 4px 12px;">
+                    BILL ID: MP-{{ "%05d"|format(next_bill_id) }}
+                </div>
+            </div>
+        </div>
+
+        <div
+            style="display: grid; grid-template-columns: 45px 120px 2fr 100px 80px 80px 80px 100px 120px; gap: 8px; align-items: end;">
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">#</label>
+                <div
+                    style="height: 38px; display: flex; align-items: center; justify-content: center; background: #1e293b; color: white; border-radius: 6px; font-weight: 800; font-size: 0.9rem;">
+                    1</div>
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">CODE</label>
+                <input type="text" id="codeSearch" class="form-input" placeholder="Code" autocomplete="off"
+                    style="height: 38px; border-color: var(--primary); font-size: 0.85rem; font-weight: 600; text-align: center;">
+            </div>
+            <div style="position: relative;">
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">PRODUCT
+                    NAME</label>
+                <input type="text" id="productSearch" class="form-input" placeholder="Search Product..."
+                    autocomplete="off"
+                    style="height: 38px; border-color: var(--primary); font-size: 0.85rem; font-weight: 600;">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">CATEGORY</label>
+                <input type="text" id="displayCategory" class="form-input" placeholder="Cat" disabled
+                    style="height: 38px; background: #f8fafc; font-size: 0.85rem;">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">STK</label>
+                <input type="text" id="displayStock" class="form-input" value="0" disabled
+                    style="height: 38px; background: #f8fafc; text-align: center; font-weight: 800; font-size: 0.85rem;">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">UNIT</label>
+                <input type="text" id="displayUnit" class="form-input" value="PCS" disabled
+                    style="height: 38px; background: #f8fafc; text-align: center; font-size: 0.85rem;">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">QTY</label>
+                <input type="number" id="inputQty" class="form-input" value="1"
+                    style="height: 38px; background: #f59e0b; color: #fff; font-weight: 800; border: none; text-align: center; font-size: 0.85rem;"
+                    oninput="updateLineAmount()">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">RATE</label>
+                <input type="text" id="displayRate" class="form-input" placeholder="0.00" disabled
+                    style="height: 38px; background: #f8fafc; text-align: right; font-weight: 800; font-size: 0.85rem;">
+            </div>
+            <div>
+                <label
+                    style="display: block; font-size: 0.6rem; font-weight: 800; color: #64748b; margin-bottom: 4px;">AMOUNT</label>
+                <input type="text" id="displayAmount" class="form-input" placeholder="0.00" disabled
+                    style="height: 38px; background: #f8fafc; text-align: right; font-weight: 800; font-size: 0.85rem;">
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-panel" style="min-height: 300px; background: #fff; padding: 0;">
+        <table class="pos-table" style="width: 100%;">
+            <thead style="background: #1e293b; color: #fff;">
+                <tr>
+                    <th style="padding: 12px; width: 50px; text-align: center;">#</th>
+                    <th style="padding: 12px;">PRODUCT NAME</th>
+                    <th style="padding: 12px;">CATEGORY</th>
+                    <th style="padding: 12px; text-align: center;">STK</th>
+                    <th style="padding: 12px; text-align: center;">UNIT</th>
+                    <th style="padding: 12px; text-align: center;">QTY</th>
+                    <th style="padding: 12px; text-align: right;">RATE</th>
+                    <th style="padding: 12px; text-align: right;">AMOUNT</th>
+                    <th style="padding: 12px; width: 40px;"></th>
+                </tr>
+            </thead>
+            <tbody id="cartItems">
+            </tbody>
+        </table>
+    </div>
+
+    <!-- BOTTOM BLOCK: Summary & Payment -->
+    <div class="glass-panel"
+        style="background: #fff; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+
+        <!-- Row 1: Totals & Discount -->
+        <div
+            style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid #eee; padding-bottom: 1rem;">
+            <div style="display: flex; gap: 3rem;">
+                <div style="display: flex; flex-direction: column;">
+                    <label
+                        style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">No.
+                        Items</label>
+                    <span id="totalItems" style="font-size: 1.4rem; font-weight: 800;">0</span>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label
+                        style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Gross
+                        Total</label>
+                    <span id="grossTotal" style="font-size: 1.4rem; font-weight: 800;">₹0.00</span>
+                </div>
+                <div style="display: flex; flex-direction: column;">
+                    <label
+                        style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Discount</label>
+                    <input type="number" id="discountInput" value="0" step="0.01" oninput="calculateTotals()"
+                        style="width: 100px; padding: 6px; border: 1px solid var(--primary); border-radius: 6px; font-weight: 800; color: var(--primary);">
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <label
+                    style="font-weight: 700; color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;">Total
+                    Payable</label>
+                <div id="netTotal" style="font-size: 2.5rem; font-weight: 900; color: var(--primary); line-height: 1;">
+                    ₹0.00</div>
+            </div>
+        </div>
+
+        <!-- Row 2: Customer Info & Payment -->
+        <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 150px;">
+                <label style="font-size: 0.7rem; font-weight: 800; color: var(--primary);">CUSTOMER ID (ENTER TO
+                    SEARCH)</label>
+                <input type="text" id="custId" placeholder="Enter ID" class="form-input"
+                    style="height: 42px; border-color: var(--primary); font-weight: 800; background: #f0f4ff;"
+                    onkeydown="if(event.key==='Enter') lookupCustomer()">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 180px;">
+                <label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">CUSTOMER NAME
+                    (OPTIONAL)</label>
+                <input type="text" id="custName" placeholder="Enter Name" class="form-input"
+                    style="height: 42px; border-color: #e2e8f0; font-weight: 600;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 180px;">
+                <label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">MOBILE NUMBER
+                    (OPTIONAL)</label>
+                <input type="text" id="custMobile" placeholder="Enter Mobile" class="form-input"
+                    style="height: 42px; border-color: #e2e8f0; font-weight: 600;">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 0.7rem; font-weight: 800; color: var(--text-muted);">PAYMENT MODE</label>
+                <select id="paymentMode" onchange="toggleCreditFields()"
+                    style="padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; background: #f8fafc; min-width: 140px; height: 42px;">
+                    <option value="CASH">CASH</option>
+                    <option value="UPI">UPI / QR</option>
+                    <option value="CARD">CARD</option>
+                    <option value="CREDIT">CREDIT</option>
+                </select>
+            </div>
+            <div id="creditFields" style="display: none; flex-direction: column; gap: 2px;">
+                <label style="font-size: 0.7rem; font-weight: 800; color: #22c55e;">AMOUNT PAID</label>
+                <input type="number" id="amountPaid" placeholder="0.00" class="form-input"
+                    style="height: 42px; width: 120px; border-color: #22c55e; font-weight: 800;">
+            </div>
+            <div style="flex: 1;"></div>
+            <button id="saveBtn" class="btn btn-primary"
+                style="height: 60px; padding: 0 2rem; font-size: 1.1rem; border-radius: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.25);">
+                <i class="fas fa-check-circle"></i> COMPLETE SALE
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // 1. Core State
+    const inventoryData = JSON.parse('{{ inventory | tojson | safe }}');
+    let cart = JSON.parse('{{ initial_cart | tojson | safe }}') || [];
+
+    // Auto-render if cart has items
+    window.onload = () => {
+        if (cart.length > 0) renderCart();
+    };
+    let currentProduct = null;
+
+    // Elements
+    const productSearch = document.getElementById('productSearch');
+    const codeSearch = document.getElementById('codeSearch');
+    const inputQty = document.getElementById('inputQty');
+    const displayRate = document.getElementById('displayRate');
+    const displayAmount = document.getElementById('displayAmount');
+    const displayStock = document.getElementById('displayStock');
+    const displayCategory = document.getElementById('displayCategory');
+    const displayUnit = document.getElementById('displayUnit');
+
+    const cartItems = document.getElementById('cartItems');
+    const totalItemsElem = document.getElementById('totalItems');
+    const grossTotalElem = document.getElementById('grossTotal');
+    const netTotalElem = document.getElementById('netTotal');
+    const discountInput = document.getElementById('discountInput');
+    const payModeSelect = document.getElementById('paymentMode');
+    const creditFields = document.getElementById('creditFields');
+
+    // 2. Search Logic
+    const searchResults = document.createElement('div');
+    searchResults.style.cssText = "position: absolute; top: 100%; left: 0; background: white; border: 1px solid #e2e8f0; width: 100%; max-height: 300px; overflow-y: auto; z-index: 999999; display: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); border-radius: 8px; margin-top: 5px; border-top: 4px solid var(--primary);";
+    productSearch.parentElement.style.position = "relative";
+    productSearch.parentElement.style.overflow = "visible";
+    productSearch.parentElement.appendChild(searchResults);
+
+    let selectedSearchIndex = -1;
+
+    productSearch.addEventListener('input', function (e) {
+        const query = e.target.value.toLowerCase().trim();
+        if (query.length < 1) {
+            searchResults.style.display = 'none';
+            selectedSearchIndex = -1;
+            return;
+        }
+
+        const matches = inventoryData
+            .filter(p => {
+                const combined = `[${p.code}] ${p.name}`.toLowerCase();
+                const combined_ta = p.name_ta ? `[${p.code}] ${p.name_ta}`.toLowerCase() : '';
+                return p.name.toLowerCase().includes(query) ||
+                    (p.name_ta && p.name_ta.toLowerCase().includes(query)) ||
+                    p.code.toLowerCase().includes(query) ||
+                    combined.includes(query) ||
+                    combined_ta.includes(query);
+            })
+            .sort((a, b) => {
+                // Priority: exact code match
+                if (a.code.toLowerCase() === query) return -1;
+                if (b.code.toLowerCase() === query) return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+        if (matches.length > 0) {
+            selectedSearchIndex = 0; // Pre-select first
+            searchResults.innerHTML = matches.map((p, idx) => `
+                <div onclick="selectProduct('${p.code}')" class="search-item ${idx === 0 ? 'selected' : ''}" data-code="${p.code}" style="padding: 10px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; ${idx === 0 ? 'background: #f1f5f9;' : ''}">
+                    <div style="font-weight: 700; color: #1e293b;">[${p.code}] ${p.name}</div>
+                    ${p.name_ta ? `<div style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 2px;">${p.name_ta}</div>` : ''}
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: #64748b; margin-top: 4px;">
+                        <span>Stk: ${p.stock}</span><span>Unit: ${p.unit || 'PCS'}</span><span>₹${p.price}</span>
+                    </div>
+                </div>
+            `).join('');
+            searchResults.style.display = 'block';
+        } else {
+            searchResults.style.display = 'none';
+            selectedSearchIndex = -1;
+        }
+    });
+
+    productSearch.addEventListener('keydown', function (e) {
+        const items = searchResults.querySelectorAll('.search-item');
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            selectedSearchIndex = (selectedSearchIndex + 1) % items.length;
+            updateSearchHighlight(items);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            selectedSearchIndex = (selectedSearchIndex - 1 + items.length) % items.length;
+            updateSearchHighlight(items);
+        } else if (e.key === 'Enter') {
+            if (searchResults.style.display === 'block' && items.length > 0 && selectedSearchIndex >= 0) {
+                e.preventDefault();
+                const code = items[selectedSearchIndex].getAttribute('data-code');
+                selectProduct(code);
+            }
+        }
+    });
+
+    function updateSearchHighlight(items) {
+        items.forEach((item, idx) => {
+            if (idx === selectedSearchIndex) {
+                item.style.background = '#f1f5f9';
+                item.scrollIntoView({ block: 'nearest' });
+            } else {
+                item.style.background = 'white';
+            }
+        });
+    }
+
+    function selectProduct(code) {
+        const product = inventoryData.find(p => p.code === code);
+        if (product) {
+            currentProduct = product;
+            codeSearch.value = product.code;
+            productSearch.value = product.name;
+            displayRate.value = product.price.toFixed(2);
+            displayStock.value = product.stock;
+            displayCategory.value = product.category || 'General';
+            displayUnit.value = product.unit || 'PCS';
+
+            searchResults.style.display = 'none';
+            inputQty.focus();
+            updateLineAmount();
+        }
+    }
+
+    // Code Search specifically for exact code input
+    codeSearch.addEventListener('input', function (e) {
+        const query = e.target.value.trim().toLowerCase();
+        if (query.length < 1) return;
+
+        // Try exact match immediately
+        const exact = inventoryData.find(p => p.code.toLowerCase() === query);
+        if (exact) {
+            // We don't auto-select on 'input' because user might still be typing
+            // but we can highlight it or wait for Enter
+        }
+
+        // Use the same search logic to show the dropdown under the name field or repurpose it
+        productSearch.value = query; // Sync to trigger the same search logic
+        productSearch.dispatchEvent(new Event('input'));
+    });
+
+    codeSearch.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            const query = e.target.value.trim().toLowerCase();
+            const exact = inventoryData.find(p => p.code.toLowerCase() === query);
+            if (exact) {
+                selectProduct(exact.code);
+            } else {
+                // If not exact, let the user move to name search or use the first result in dropdown
+                const items = searchResults.querySelectorAll('.search-item');
+                if (items.length > 0) {
+                    const code = items[0].getAttribute('data-code');
+                    selectProduct(code);
+                }
+            }
+        }
+    });
+
+    function updateLineAmount() {
+        const qty = parseFloat(inputQty.value) || 0;
+        const rate = currentProduct ? currentProduct.price : 0;
+        displayAmount.value = (qty * rate).toFixed(2);
+    }
+
+    // Close search results on outside click
+    document.addEventListener('click', (e) => {
+        if (!productSearch.contains(e.target) && !codeSearch.contains(e.target)) searchResults.style.display = 'none';
+    });
+
+    // 3. Cart Logic
+    function addToCart() {
+        if (!currentProduct) { alert("Please select a product first."); return; }
+        const qty = parseFloat(inputQty.value) || 0;
+        if (qty <= 0) { alert("Invalid quantity."); return; }
+        if (qty > currentProduct.stock) { alert("Insufficient stock!"); return; }
+
+        const existing = cart.find(item => item.id === currentProduct.id);
+        if (existing) {
+            if (existing.qty + qty > currentProduct.stock) { alert("Insufficient stock!"); return; }
+            existing.qty += qty;
+        } else {
+            cart.push({ ...currentProduct, qty: qty });
+        }
+
+        renderCart();
+        resetInputs();
+    }
+
+    function resetInputs() {
+        productSearch.value = '';
+        inputQty.value = 1;
+        displayRate.value = '';
+        displayAmount.value = '';
+        displayStock.value = '0';
+        displayCategory.value = '';
+        displayUnit.value = 'PCS';
+        currentProduct = null;
+        productSearch.focus();
+    }
+
+    function renderCart() {
+        cartItems.innerHTML = cart.map((item, index) => {
+            const lineTotal = item.price * item.qty;
+            return `
+                <tr>
+                    <td style="text-align: center; font-weight: 800; color: #64748b;">${index + 1}</td>
+                    <td style="padding: 12px; font-weight: 600; color: #1e293b;">${item.name} <br> <span style="font-size: 0.7rem; color: #94a3b8;">#${item.code}</span></td>
+                    <td style="padding: 12px; font-weight: 500; color: #64748b;">${item.category || 'General'}</td>
+                    <td style="text-align: center; font-weight: 500; color: #64748b;">${item.stock}</td>
+                    <td style="text-align: center; font-weight: 500; color: #64748b;">${item.unit || 'PCS'}</td>
+                    <td style="text-align: center; font-weight: 700;">${item.qty}</td>
+                    <td style="text-align: right; font-weight: 600;">₹${item.price.toFixed(2)}</td>
+                    <td style="text-align: right; font-weight: 800; color: var(--primary);">₹${lineTotal.toFixed(2)}</td>
+                    <td style="text-align: center;">
+                        <button onclick="cart.splice(${index}, 1); renderCart();" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.1rem;">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`;
+        }).join('');
+        calculateTotals();
+    }
+
+    async function lookupCustomer() {
+        const id = document.getElementById('custId').value.trim();
+        if (!id) return;
+
+        try {
+            const res = await fetch(`/api/customer/${id}`);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('custName').value = data.name;
+                document.getElementById('custMobile').value = data.mobile;
+                // Focus on Complete Sale button or mode for convenience
+                document.getElementById('saveBtn').focus();
+            } else {
+                console.log("New customer ID entered.");
+            }
+        } catch (err) {
+            console.error("Customer lookup failed:", err);
+        }
+    }
+
+    // 4. Financial Calculations
+    function calculateTotals() {
+        const gross = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        const discount = parseFloat(discountInput.value) || 0;
+        let net = gross - discount;
+        if (net < 0) net = 0;
+
+        totalItemsElem.innerText = cart.length;
+        grossTotalElem.innerText = '₹' + gross.toFixed(2);
+        netTotalElem.innerText = '₹' + net.toFixed(2);
+    }
+
+    // 5. Payment & Checkout
+    function toggleCreditFields() {
+        creditFields.style.display = payModeSelect.value === 'CREDIT' ? 'flex' : 'none';
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', async function () {
+        if (cart.length === 0) { alert("Cart is empty!"); return; }
+
+        const mode = payModeSelect.value;
+        const total = parseFloat(netTotalElem.innerText.replace('₹', ''));
+        const gross = parseFloat(grossTotalElem.innerText.replace('₹', ''));
+        const discount = parseFloat(discountInput.value) || 0;
+
+        let custName = document.getElementById('custName').value.trim();
+        let custMobile = document.getElementById('custMobile').value.trim();
+        let custId = document.getElementById('custId').value.trim();
+        let amtPaid = total;
+
+        if (mode === 'CREDIT') {
+            amtPaid = parseFloat(document.getElementById('amountPaid').value) || 0;
+            if (!custName || !custMobile) {
+                alert("Please enter Customer Name and Mobile for Credit Sales.");
+                return;
+            }
+        }
+
+        const payload = {
+            cart: cart.map(item => ({ ...item })), // Deep copy
+            total: total,
+            gross_total: gross,
+            discount: discount,
+            payment_method: mode,
+            customer_name: custName,
+            customer_mobile: custMobile,
+            customer_id: custId,
+            amount_paid: amtPaid,
+            send_offer_sms: document.getElementById('sendOfferSms').checked
+        };
+
+        try {
+            const res = await fetch('/api/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = `/billing/print-receipt/${data.sale_id}`;
+            } else {
+                alert("Error: " + data.message);
+            }
+        } catch (err) {
+            console.error("Checkout Error:", err);
+            alert("Connection error: The server might be busy or a database column is missing. Check your terminal for logs.");
+        }
+    });
+
+    // Handle Enter key on quantity input
+    inputQty.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addToCart();
+    });
+
+</script>
+{% endblock %}

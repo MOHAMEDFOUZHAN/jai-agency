@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - {{ title }}{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-wallet"></i>
+        <span>Maple Pro</span>
+    </div>
+    <div class="nav-links pill-tabs" style="margin: 0 auto;">
+        <a href="/billing/dashboard">Dashboard</a>
+        <a href="/billing">Billing</a>
+        <a href="/billing/navigation">Sales Menu</a>
+        <a href="/billing/expenses" class="active">Expenses</a>
+        <a href="/billing/reports">Reports</a>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <span
+            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
+            V3.0</span>
+        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in">
+    <div class="section-header">
+        <div>
+            <h1>Daily Expenses</h1>
+            <p style="color: var(--text-muted);">Manage and track shop expenses</p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <button onclick="window.print()" class="btn btn-outline"
+                style="padding: 10px 20px; border-radius: 12px; font-weight: 800;">
+                <i class="fas fa-print" style="margin-right: 8px;"></i> PRINT
+            </button>
+            <button class="btn btn-primary" onclick="openExpenseModal()">
+                <i class="fas fa-plus"></i> Add New Expense
+            </button>
+        </div>
+    </div>
+
+    <!-- Expenses Summary Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--primary);">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>₹{{ "%.2f"|format(expenses|sum(attribute='amount')) }}</h3>
+                <p>Total Expenses</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10b981;">
+                <i class="fas fa-calendar-day"></i>
+            </div>
+            <div class="stat-info">
+                {% set today = now.strftime('%Y-%m-%d') if now else '' %}
+                <h3>₹{{ "%.2f"|format(expenses | selectattr('date', 'string') | select('match', today) |
+                    map(attribute='amount') | sum) }}</h3>
+                <p>Today's Expenses</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-container shadow-sm" style="margin-top: 2rem;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Payment</th>
+                    <th style="text-align: right;">Amount</th>
+                    <th style="text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in expenses|reverse %}
+                <tr>
+                    <td style="color: var(--text-muted);">{{ e.date.split(' ')[0] }}</td>
+                    <td><span class="badge badge-primary">{{ e.category }}</span></td>
+                    <td style="font-weight: 600; color: var(--text-main);">{{ e.description }}</td>
+                    <td><span class="badge badge-success">{{ e.payment_method }}</span></td>
+                    <td style="text-align: right; font-weight: 800; color: var(--primary); font-size: 1.1rem;">₹{{
+                        "%.2f"|format(e.amount) }}</td>
+                    <td style="text-align: center;">
+                        <button class="btn btn-danger" style="padding: 5px 10px; font-size: 0.75rem;"
+                            onclick="deleteExpense({{ e.id }})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 5rem; color: var(--text-muted);">
+                        <i class="fas fa-wallet"
+                            style="font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 1.5rem;"></i>
+                        No expenses recorded yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div id="expenseModal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-plus-circle" style="color: var(--primary);"></i> Add New Expense</h2>
+            <span class="close" onclick="closeExpenseModal()">&times;</span>
+        </div>
+        <div class="modal-body" style="padding: 2rem;">
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Description</label>
+                <input type="text" id="expense-desc" placeholder="e.g. Electricity Bill, Coffee, Rent..."
+                    style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label
+                        style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Amount
+                        (₹)</label>
+                    <input type="number" id="expense-amount" placeholder="0.00"
+                        style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; font-weight: 800; color: var(--primary);">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Category</label>
+                    <select id="expense-cat"
+                        style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: white;">
+                        <option value="General">General</option>
+                        <option value="Bills">Bills & Utilities</option>
+                        <option value="Rent">Rent</option>
+                        <option value="Food">Food & Refreshments</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Salaries">Salaries</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                <div>
+                    <label
+                        style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Date</label>
+                    <input type="date" id="expense-date" value="{{ today }}"
+                        style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem;">
+                </div>
+                <div>
+                    <label
+                        style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-main);">Payment
+                        Mode</label>
+                    <select id="expense-method"
+                        style="width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 1rem; background: white;">
+                        <option value="CASH">CASH</option>
+                        <option value="UPI">UPI / ONLINE</option>
+                        <option value="CARD">CARD</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveExpense()"
+                style="width: 100%; padding: 16px; font-size: 1.1rem; border-radius: 12px;">
+                <i class="fas fa-check-circle"></i> SAVE EXPENSE
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openExpenseModal() {
+        document.getElementById('expense-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('expenseModal').style.display = 'block';
+    }
+
+    function closeExpenseModal() {
+        document.getElementById('expenseModal').style.display = 'none';
+    }
+
+    async function saveExpense() {
+        const desc = document.getElementById('expense-desc').value.trim();
+        const amount = parseFloat(document.getElementById('expense-amount').value);
+        const category = document.getElementById('expense-cat').value;
+        const date = document.getElementById('expense-date').value;
+        const method = document.getElementById('expense-method').value;
+
+        if (!desc || isNaN(amount) || amount <= 0) {
+            alert('Please enter a valid description and amount.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/expenses/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    description: desc,
+                    amount: amount,
+                    category: category,
+                    date: date + ' 00:00:00',
+                    payment_method: method
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        } catch (e) {
+            alert('Failed to save expense. Network error.');
+        }
+    }
+
+    async function deleteExpense(id) {
+        if (!confirm('Are you sure you want to delete this expense record?')) return;
+
+        try {
+            const res = await fetch(`/api/expenses/delete/${id}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                location.reload();
+            }
+        } catch (e) {
+            alert('Failed to delete.');
+        }
+    }
+
+    // Modal click handling
+    window.onclick = function (event) {
+        if (event.target == document.getElementById('expenseModal')) {
+            closeExpenseModal();
+        }
+    }
+</script>
+
+<style>
+    .badge {
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+
+    .badge-primary {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
+    }
+
+    .badge-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: 1px solid #f1f5f9;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-main);
+        margin-bottom: 4px;
+    }
+
+    .stat-info p {
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    @media print {
+
+        .navbar,
+        .btn,
+        .nav-links,
+        .section-header div:last-child {
+            display: none !important;
+        }
+
+        .dashboard-container {
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+    }
+</style>
+{% endblock %}

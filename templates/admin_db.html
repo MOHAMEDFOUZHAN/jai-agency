@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - Data Manager{% endblock %}
+
+{% block content %}
+<div class="container" style="padding: 2rem;">
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-weight: 800; color: var(--text-main);">DATABASE MANAGER</h1>
+        <p style="color: var(--text-muted);">Direct Access Control</p>
+    </div>
+
+    <!-- SQL Runner -->
+    <div class="glass-panel" style="margin-bottom: 2rem; padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Execute SQL</h3>
+        <form action="/admin/db/query" method="POST">
+            <textarea name="query" class="form-input" rows="4" placeholder="SELECT * FROM products..."
+                style="font-family: monospace;"></textarea>
+            <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">Run Query</button>
+        </form>
+        {% if result %}
+        <div style="margin-top: 1rem; overflow-x: auto;">
+            <h4>Result:</h4>
+            {% if error %}
+            <div style="color: red; padding: 1rem; background: rgba(255,0,0,0.1); border-radius: 8px;">{{ error }}</div>
+            {% else %}
+            <table class="table" style="width: 100%; border-collapse: collapse; margin-top: 1rem;">
+                <thead>
+                    <tr style="background: rgba(0,0,0,0.05);">
+                        {% for col in columns %}
+                        <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in result %}
+                    <tr>
+                        {% for col in columns %}
+                        <td style="padding: 8px; border: 1px solid #ddd;">{{ row[col] }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tables List -->
+    <div class="glass-panel" style="padding: 1.5rem;">
+        <h3 style="margin-bottom: 1rem;">Tables</h3>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a href="/admin/db/view/products" class="btn btn-outline">Products</a>
+            <a href="/admin/db/view/sales_log" class="btn btn-outline">Sales Log</a>
+            <a href="/admin/db/view/sale_items" class="btn btn-outline">Sale Items</a>
+            <a href="/admin/db/view/storage" class="btn btn-outline">Storage</a>
+            <a href="/admin/db/view/suppliers" class="btn btn-outline">Suppliers</a>
+            <a href="/admin/db/view/returns_log" class="btn btn-outline">Returns Log</a>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div
+        style="margin-top: 2rem; padding: 1.5rem; border: 1px solid var(--danger); border-radius: 8px; background: rgba(239, 68, 68, 0.05);">
+        <h3 style="color: var(--danger); margin-bottom: 0.5rem;">Danger Zone</h3>
+        <p style="margin-bottom: 1rem; color: var(--text-muted); font-size: 0.9rem;">Resetting the system will
+            permanently delete ALL data.</p>
+        <a href="/admin/reset-data" class="btn btn-danger"
+            onclick="return confirm('Are you strictly sure? This will delete EVERYTHING.');">
+            <i class="fas fa-trash-alt"></i> RESET SYSTEM DATA
+        </a>
+    </div>
+</div>
+{% endblock %}

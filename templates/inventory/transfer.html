@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Stock Transfer - Tea Packing Factory{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-random"></i>
+        <span>Tea Factory Transfer</span>
+    </div>
+    <div class="nav-links pill-tabs" style="margin: 0 auto;">
+        <a href="/inventory" {% if page=='dashboard' %}class="active" {% endif %}>Dashboard</a>
+        <a href="/inventory/transfer" {% if page=='transfer' %}class="active" {% endif %}>Transfer</a>
+        <a href="/inventory/storage" {% if page=='storage' %}class="active" {% endif %}>Storage</a>
+        <a href="/inventory/stock-list" {% if page=='stock_list' %}class="active" {% endif %}>Invoice</a>
+        <a href="/inventory/products" {% if page=='products' %}class="active" {% endif %}>Product Master</a>
+        <a href="/inventory/live-stock" {% if page=='live_stock' %}class="active" {% endif %}>Live</a>
+        <a href="/inventory/suppliers" {% if page=='suppliers' %}class="active" {% endif %}>Suppliers</a>
+        <a href="/inventory/payments" {% if page=='payments' %}class="active" {% endif %}>Payments</a>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in" style="max-width: 800px;">
+
+    <!-- Code Search Landing -->
+    {% if not request.args.get('source') %}
+    <div class="glass-panel" style="padding: 4rem 2rem; text-align: center; margin-top: 5rem;">
+        <h1 style="margin-bottom: 2rem; color: var(--primary);">Production Transfer Login</h1>
+        <p style="color: var(--text-muted); margin-bottom: 3rem;">Type the Material / SKU Code to start the transfer
+            process.</p>
+
+        <div style="position: relative; max-width: 500px; margin: 0 auto;">
+            <i class="fas fa-barcode"
+                style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; color: var(--primary);"></i>
+            <input type="text" id="initial_scan" class="form-control" placeholder="SOURCE CODE & ENTER"
+                style="padding: 20px 20px 20px 60px; font-size: 1.5rem; font-weight: 800; border: 3px solid var(--primary); border-radius: 15px; text-transform: uppercase;"
+                autofocus onkeydown="if(event.key==='Enter') window.location='?source='+this.value">
+        </div>
+        <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.9rem;">No dropdowns. Just Type and Enter.</p>
+    </div>
+    {% else %}
+
+    <div class="section-header">
+        <div>
+            <h1>Production Transfer Form</h1>
+            <p style="color: var(--text-muted);">Moving goods from loose stock to storage.</p>
+        </div>
+        <a href="/inventory/transfer" class="btn btn-outline" style="font-size: 0.8rem;">Change Source</a>
+    </div>
+
+    <div class="glass-panel" style="padding: 2rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1.5rem;">
+            <!-- Source Display -->
+            <div class="input-group">
+                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Source Material</label>
+                <div id="source_details"
+                    style="background: rgba(var(--primary-rgb), 0.05); padding: 1rem; border-radius: 8px; border: 1px solid var(--primary);">
+                    <div style="font-weight: 800; color: var(--primary); font-size: 1.1rem;">#{{
+                        request.args.get('source') }}</div>
+                    <div id="source_name" style="font-size: 0.9rem; color: var(--text-main); font-weight: 600;">
+                        Loading...</div>
+                    <div id="source_stock" style="font-size: 0.8rem; color: var(--text-muted);">Current Stock: --</div>
+                </div>
+                <input type="hidden" id="source_code" value="{{ request.args.get('source') }}">
+            </div>
+
+            <!-- Destination Input -->
+            <div class="input-group">
+                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Destination Product Code</label>
+                <input type="text" id="dest_code" class="form-control" placeholder="Type Code & Enter"
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--secondary);"
+                    onkeydown="if(event.key==='Enter') { event.preventDefault(); lookupDest(); }">
+                <div id="dest_details" style="margin-top: 0.5rem; font-size: 0.85rem; display: none;">
+                    <span id="dest_name" style="font-weight: 700; color: var(--success);"></span>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 1rem 0;">
+            <i class="fas fa-arrow-down" style="font-size: 1.2rem; color: var(--primary); opacity: 0.3;"></i>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+            <!-- Quantity -->
+            <div class="input-group">
+                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Transfer Qty (kg/units)</label>
+                <input type="number" id="qty" class="form-control" placeholder="0.00" step="0.01"
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid var(--primary); font-size: 1.2rem; font-weight: 700;">
+            </div>
+
+            <!-- Transfer Time -->
+            <div class="input-group">
+                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Production Time</label>
+                <input type="datetime-local" id="transfer_time" class="form-control"
+                    style="width: 100%; padding: 12px; border-radius: 8px;">
+                <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px;">Auto-fetched (Manual Allowed)
+                </p>
+            </div>
+        </div>
+
+        <div class="input-group" style="margin-top: 2rem;">
+            <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Production Remarks /
+                Description</label>
+            <input type="text" id="remarks" class="form-control" placeholder="e.g. Afternoon Production Shift"
+                style="width: 100%; padding: 12px; border-radius: 8px;">
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
+            <button class="btn btn-outline" onclick="window.location.href='/inventory/transfer'">Discard</button>
+            <button class="btn btn-primary" onclick="submitTransfer()" style="padding-left: 2rem; padding-right: 2rem;">
+                <i class="fas fa-check-circle"></i> EXECUTE TRANSFER
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    const inventory = JSON.parse('{{ inventory | tojson | safe }}');
+
+    // Auto-populate and lookup on load
+    window.onload = function () {
+        // Set Default Time
+        const timeInput = document.getElementById('transfer_time');
+        if (timeInput) {
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            const localForPicker = (new Date(now - offset)).toISOString().slice(0, 16);
+            timeInput.value = localForPicker;
+        }
+
+        // Lookup Source Details
+        const sourceCode = document.getElementById('source_code')?.value;
+        if (sourceCode) {
+            const prod = inventory.find(p => p.code === sourceCode);
+            if (prod) {
+                document.getElementById('source_name').innerText = prod.name;
+                document.getElementById('source_stock').innerText = `Current Stock: ${prod.stock} ${prod.unit || 'Kg'}`;
+                document.getElementById('dest_code').focus(); // Move to next step
+            } else {
+                document.getElementById('source_name').innerText = "Unknown Product";
+                alert("Source Code not found in master database.");
+            }
+        }
+    };
+
+    function lookupDest() {
+        const code = document.getElementById('dest_code').value.trim();
+        const details = document.getElementById('dest_details');
+        const name = document.getElementById('dest_name');
+
+        if (!code) return;
+
+        const prod = inventory.find(p => p.code === code);
+        if (prod) {
+            name.innerText = "Target: " + prod.name;
+            details.style.display = 'block';
+            document.getElementById('qty').focus(); // Move to next field
+        } else {
+            name.innerText = "Product Not Found";
+            details.style.display = 'block';
+            name.style.color = 'var(--danger)';
+        }
+    }
+
+    async function submitTransfer() {
+        const source = document.getElementById('source_code').value;
+        const dest = document.getElementById('dest_code').value;
+        const qty = document.getElementById('qty').value;
+        const remarks = document.getElementById('remarks').value;
+        const rawTime = document.getElementById('transfer_time').value;
+
+        if (!source || !dest || !qty) {
+            alert("Please fill all mandatory fields (Source, Destination, Qty)");
+            return;
+        }
+
+        let formattedTime = "";
+        if (rawTime) {
+            formattedTime = rawTime.replace('T', ' ') + ":00";
+        }
+
+        try {
+            const res = await fetch('/api/inventory/transfer', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    source_code: source,
+                    dest_code: dest,
+                    qty: parseFloat(qty),
+                    remarks: remarks,
+                    transfer_time: formattedTime
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert("Transfer Successful!");
+                window.location.href = '/inventory/storage';
+            } else {
+                alert("Error: " + result.message);
+            }
+        } catch (e) {
+            alert("Submission failed");
+        }
+    }
+</script>
+{% endblock %}

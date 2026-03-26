@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - Admin{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-chart-line"></i>
+        <span>MAPLE PRO <span
+                style="font-size: 0.8rem; opacity: 0.7; font-weight: 400; margin-left: 5px;">ADMIN</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="#" class="active">Overview</a>
+        <a href="#">Users</a>
+        <a href="#">Settings</a>
+        <a href="/logout" class="btn btn-danger" style="margin-left: 1rem;">Logout</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in">
+    <div class="section-header">
+        <div>
+            <h1>Dashboard Analytics</h1>
+            <p style="color: var(--text-muted); font-weight: 500;">Real-time business performance metrics</p>
+        </div>
+        <div
+            style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500; display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.05); padding: 8px 16px; border-radius: 20px;">
+            <i class="far fa-calendar-alt"></i> {{ current_time }}
+        </div>
+    </div>
+
+    <div class="stats-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-title">Gross Revenue</div>
+            <div class="stat-value" style="color: var(--success);">₹{{
+                "%.2f"|format(total_sales) }}</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--success); font-weight: 600;">
+                <i class="fas fa-arrow-up"></i> 12.5% from last month
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Transactions</div>
+            <div class="stat-value">{{ transactions }}</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-muted);">
+                Avg. ₹{{ "%.2f"|format(total_sales / transactions if transactions > 0 else 0) }} per bill
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-title">Active Terminals</div>
+            <div class="stat-value" style="color: var(--accent);">03</div>
+            <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--accent); font-weight: 600;">
+                <i class="fas fa-circle" style="font-size: 0.5rem;"></i> All systems operational
+            </div>
+        </div>
+    </div>
+
+    <!-- Visual Chart Block -->
+    <div class="glass-panel" style="margin-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h3 style="font-weight: 700; color: var(--text-main); font-size: 1.1rem;">Weekly Growth</h3>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <span
+                    style="width: 10px; height: 10px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 10px var(--shadow-strong);"></span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Sales Volume</span>
+            </div>
+        </div>
+
+        <div
+            style="display: flex; align-items: flex-end; height: 200px; gap: 1.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--glass-border);">
+            <!-- Simple CSS Bar Chart for aesthetics -->
+            {% for height in [40, 70, 50, 90, 60, 100, 55] %}
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: flex-end; height: 100%;">
+                <div style="background: linear-gradient(to top, rgba(79, 70, 229, 0.4), var(--primary)); opacity: 0.8; height: {{ height }}%; border-radius: 6px 6px 0 0; transition: all 0.3s ease; position: relative;"
+                    onmouseover="this.style.opacity='1'; this.style.boxShadow='0 0 20px var(--shadow-strong)'"
+                    onmouseout="this.style.opacity='0.8'; this.style.boxShadow='none'">
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <div
+            style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 0.75rem; margin-top: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 style="font-weight: 700; color: var(--text-main); font-size: 1.25rem;">Recent Transactions</h3>
+        <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 1rem;">View Full Report</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Timestamp</th>
+                    <th>Items Count</th>
+                    <th style="text-align: right;">Amount Paid</th>
+                    <th style="text-align: center;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td><code
+                            style="color: var(--primary); font-weight: 700; background: rgba(99, 102, 241, 0.1); padding: 2px 6px; border-radius: 4px;">#{{ sale.id }}</code>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.9rem;">{{ sale.date }}</td>
+                    <td><span style="font-weight: 600; color: var(--text-main);">{{ sale.items }}</span> items</td>
+                    <td style="text-align: right; font-weight: 700; color: var(--text-main); font-size: 1rem;">₹{{
+                        "%.2f"|format(sale.total) }}</td>
+                    <td style="text-align: center;">
+                        <span class="badge badge-success" style="font-size: 0.7rem;">COMPLETED</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 3rem; opacity: 0.7;">
+                        <i class="fas fa-inbox"
+                            style="display: block; font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                        No transactions recorded today
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

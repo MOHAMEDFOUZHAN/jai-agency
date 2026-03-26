@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - Accounts Development{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-file-invoice-dollar"></i>
+        <span>Maple Pro <span
+                style="font-size: 0.8rem; opacity: 0.7; font-weight: 400; margin-left: 5px;">ACCOUNTS</span></span>
+    </div>
+    <div class="nav-links">
+        <a href="/inventory">Overview</a>
+        <a href="/inventory/stock-list">Ledger</a>
+        <a href="/inventory/live-stock">Live</a>
+        <a href="/inventory/suppliers">Partners</a>
+        <a href="/logout" class="btn btn-danger" style="margin-left: 1rem;">Sign out</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in"
+    style="display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 150px); text-align: center;">
+    <div class="glass-panel" style="max-width: 600px; padding: 4rem; border-radius: var(--radius-xl);">
+        <div
+            style="font-size: 5rem; color: var(--primary); margin-bottom: 2rem; opacity: 0.8; filter: drop-shadow(0 0 20px var(--primary-glow));">
+            <i class="fas fa-microchip"></i>
+        </div>
+        <h1 style="font-size: 2.25rem; font-weight: 800; color: white; margin-bottom: 1rem; letter-spacing: -1px;">Core
+            Module Initializing</h1>
+        <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.7; margin-bottom: 2.5rem;">
+            The <strong>Accounts & Finance Enforcement</strong> system is currently in final verification phases.
+            We are synchronizing the encryption protocols and ledger tracking APIs.
+        </p>
+
+        <div
+            style="background: rgba(99, 102, 241, 0.05); padding: 1.5rem; border-radius: var(--radius-lg); border: 1px dashed var(--glass-border);">
+            <div
+                style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem;">
+                <span
+                    style="display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 2s infinite;"></span>
+                Status: System Synchronization
+            </div>
+            <p style="margin-top: 0.6rem; font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                Deployment sequence expected in next phase
+            </p>
+        </div>
+
+        <div style="margin-top: 3rem;">
+            <a href="/inventory" class="btn btn-primary"
+                style="width: 200px; height: 3.5rem; border-radius: var(--radius-full); display: inline-flex; align-items: center; justify-content: center;">
+                <i class="fas fa-arrow-left" style="margin-right: 10px;"></i> BACK TO HUB
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.5);
+            opacity: 0.5;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

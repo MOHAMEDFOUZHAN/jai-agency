@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Maple Pro - {{ title }}{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-ban"></i>
+        <span>Maple Pro</span>
+    </div>
+    <div class="nav-links pill-tabs" style="margin: 0 auto;">
+        <a href="/billing/dashboard">Dashboard</a>
+        <a href="/billing">Billing</a>
+        <a href="/billing/navigation">Sales Menu</a>
+        <a href="/billing/reports" class="active">Reports</a>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <span
+            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">INV-HUB
+            V3.0</span>
+        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in">
+    <div class="section-header">
+        <div>
+            <h1>{{ title }}</h1>
+            <p style="color: var(--text-muted);">Log of cancelled transactions</p>
+        </div>
+        <div style="display: flex; gap: 1rem; align-items: center;">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print
+            </button>
+            <a href="/billing/navigation" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr style="background: rgba(0,0,0,0.02);">
+                    <th class="print-date" style="padding: 1.25rem; font-size: 0.75rem;">DATE</th>
+                    <th class="print-time" style="padding: 1.25rem; font-size: 0.75rem;">TIME</th>
+                    <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">DOC ID</th>
+                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem;">STATUS</th>
+                    <th class="print-net" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in data|reverse %}
+                <tr>
+                    <td class="print-date" style="color: var(--text-muted); font-weight: 500;">{{ item.date_only }}</td>
+                    <td class="print-time" style="color: var(--text-muted); font-size: 0.9rem;">{{ item.time_only }}
+                    </td>
+                    <td class="print-bill-id">
+                        <code
+                            style="font-weight: 700; color: var(--danger); background: rgba(239, 68, 68, 0.1); padding: 2px 8px; border-radius: 4px;">#{{ item.id }}</code>
+                    </td>
+                    <td class="print-hide">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--danger);"></div>
+                            <span style="font-size: 0.8rem; font-weight: 600; color: var(--danger);">CANCELLED</span>
+                        </div>
+                    </td>
+                    <td class="print-net"
+                        style="text-align: right; font-weight: 800; font-size: 1.1rem; color: var(--text-muted); text-decoration: line-through;">
+                        ₹{{ "%.2f"|format(item.net_total) }}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
+                        <i class="fas fa-check-circle"
+                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
+                        No cancelled bills found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            {% if data %}
+            <tfoot>
+                <tr style="background: rgba(239, 68, 68, 0.05); border-top: 2px solid var(--glass-border);">
+                    <td colspan="4" class="print-hide"
+                        style="padding: 1.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 1rem;">
+                        TOTAL CANCELLED VALUE
+                    </td>
+                    <td class="print-only"
+                        style="display: none; padding: 1.5rem; text-align: right; font-weight: 700; color: #000; font-size: 10pt;">
+                        CANCELLED TOTAL:
+                    </td>
+                    <td class="print-net"
+                        style="text-align: right; font-weight: 800; color: var(--danger); font-size: 1.25rem; padding: 1.5rem; text-decoration: line-through;">
+                        ₹{{ "%.2f"|format(data | sum(attribute='net_total')) }}
+                    </td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+    </div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            margin: 0;
+            size: 80mm auto;
+        }
+
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 80mm !important;
+            background: white !important;
+            color: black !important;
+            font-family: 'monospace' !important;
+            font-size: 9pt !important;
+        }
+
+        .navbar,
+        .btn,
+        .nav-links,
+        .section-header div:last-child,
+        .pill-tabs {
+            display: none !important;
+        }
+
+        .dashboard-container {
+            width: 80mm !important;
+            padding: 2mm !important;
+            margin: 0 !important;
+        }
+
+        .section-header h1 {
+            font-size: 14pt !important;
+            text-align: center;
+            margin-bottom: 5mm !important;
+            color: black !important;
+        }
+
+        .table-container {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+        }
+
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+
+        th,
+        td {
+            padding: 1mm 0 !important;
+            border-bottom: 1px dashed #000 !important;
+            font-size: 8pt !important;
+            color: black !important;
+            background: white !important;
+        }
+
+        .print-hide {
+            display: none !important;
+        }
+
+        .print-only {
+            display: table-cell !important;
+        }
+
+        .print-date {
+            width: 20% !important;
+        }
+
+        .print-bill-id {
+            width: 20% !important;
+        }
+
+        .print-time {
+            width: 25% !important;
+            text-align: center !important;
+        }
+
+        .print-net {
+            width: 35% !important;
+            text-align: right !important;
+            font-weight: bold !important;
+            font-size: 10pt !important;
+        }
+
+        tfoot tr td {
+            font-size: 10pt !important;
+            border-top: 2px solid #000 !important;
+            background: white !important;
+            color: black !important;
+        }
+
+        code {
+            background: transparent !important;
+            color: black !important;
+            padding: 0 !important;
+        }
+
+        .text-decoration-line-through {
+            text-decoration: none !important;
+        }
+    }
+</style>
+{% endblock %}

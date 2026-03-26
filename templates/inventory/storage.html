@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Storage Management - Batch Tracking{% endblock %}
+
+{% block content %}
+<nav class="navbar fade-in">
+    <div class="logo">
+        <i class="fas fa-warehouse"></i>
+        <span>Kokkalatty Trades</span>
+    </div>
+    <div class="nav-links pill-tabs" style="margin: 0 auto;">
+        <a href="/inventory" {% if page=='dashboard' %}class="active" {% endif %}>Dashboard</a>
+        <a href="/inventory/live-stock" {% if page=='live_stock' %}class="active" {% endif %}>Live</a>
+        <a href="/inventory/storage" {% if page=='storage' %}class="active" {% endif %}>Storage</a>
+        <a href="/inventory/products" {% if page=='products' %}class="active" {% endif %}>Product Master</a>
+        <a href="/inventory/suppliers" {% if page=='suppliers' %}class="active" {% endif %}>Suppliers</a>
+    </div>
+    <div style="display: flex; gap: 1rem; align-items: center;">
+        <span
+            style="color: var(--text-muted); font-size: 0.8rem; border-right: 1px solid var(--glass-border); padding-right: 1rem;">
+            INV-HUB V3.1
+        </span>
+        <a href="/logout" class="btn btn-danger" style="padding: 8px 16px;">Sign out</a>
+    </div>
+</nav>
+
+<div class="dashboard-container fade-in" style="max-width: 1300px;">
+    <div class="section-header">
+        <div>
+            <h1>Storage Ledger <span
+                    style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted); margin-left: 10px;">(FIFO -
+                    First In First Out)</span></h1>
+            <p style="color: var(--text-muted);">Monitoring active material batches and tracking inward stock movement.
+            </p>
+        </div>
+        <div style="display: flex; gap: 0.75rem;">
+            <a href="/inventory/storage/add" class="btn btn-primary"
+                style="background: linear-gradient(135deg, var(--primary), #4f46e5);">
+                <i class="fas fa-plus"></i> QUICK ADD STOCK
+            </a>
+            <a href="/inventory/stock-entry" class="btn btn-outline">
+                <i class="fas fa-file-invoice"></i> STANDARD INVOICE
+            </a>
+        </div>
+    </div>
+
+    <div class="glass-panel" style="padding: 0; overflow: hidden; border: 1px solid var(--glass-border);">
+        <div
+            style="padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--glass-border);">
+            <h2
+                style="font-size: 1rem; color: var(--text-main); text-transform: uppercase; letter-spacing: 1.5px; margin: 0; font-weight: 700;">
+                <i class="fas fa-layer-group" style="color: var(--primary); margin-right: 12px;"></i> Active Cargo
+                Batches
+            </h2>
+            <div style="display: flex; gap: 1rem;">
+                <span class="badge"
+                    style="background: var(--primary-glow); color: var(--primary); padding: 8px 16px; border-radius: 50px;">
+                    <i class="fas fa-boxes" style="margin-right: 8px;"></i> {{ storage_view|length }} Active Lots
+                </span>
+            </div>
+        </div>
+
+        <div class="table-container" style="overflow-x: auto; margin: 0; border: none; background: white;">
+            <table style="width: 100%; border-collapse: separate; border-spacing: 0;">
+                <thead>
+                    <tr style="background: #1e293b; color: white;">
+                        <th style="color: #cbd5e1; padding: 20px 24px;">Batch ID</th>
+                        <th style="color: #cbd5e1;">Arrived</th>
+                        <th style="color: #cbd5e1;">Product Information</th>
+                        <th style="color: #cbd5e1;">Grading</th>
+                        <th style="color: #cbd5e1; text-align: center;">Stock Qty</th>
+                        <th style="color: #cbd5e1;">Reference</th>
+                        <th style="color: #cbd5e1; text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for b in storage_view %}
+                    <tr class="hover-row">
+                        <td style="padding: 18px 24px;">
+                            <div
+                                style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--primary); font-size: 0.95rem;">
+                                #{{ b.batch_no }}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-main);">{{ b.arrival_date }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">At {{ b.time_only }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: var(--text-main); font-size: 1rem;">{{ b.product_name
+                                }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); letter-spacing: 0.5px;">SKU: {{
+                                b.code }}</div>
+                        </td>
+                        <td>
+                            {% if b.grade %}
+                            <span
+                                style="background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; color: #475569; border: 1px solid #e2e8f0;">
+                                {{ b.grade }}
+                            </span>
+                            {% else %}
+                            <span style="color: #cbd5e1;">--</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="font-weight: 800; color: var(--text-main); font-size: 1.1rem;">{{ b.qty }}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">{{ b.unit or
+                                'PCS' }}</div>
+                        </td>
+                        <td>
+                            <div style="font-size: 0.85rem; font-weight: 500; color: var(--text-main);">{{ b.invoice_no
+                                }}</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">{{ b.remarks
+                                or 'No remarks' }}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="badge"
+                                style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.65rem; letter-spacing: 1px;">
+                                <i class="fas fa-check-circle" style="margin-right: 4px;"></i> LIVE STOCK
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 6rem 2rem; color: var(--text-muted);">
+                            <div
+                                style="background: #f8fafc; width: 100px; height: 100px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                                <i class="fas fa-box-open" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                            </div>
+                            <h3 style="color: var(--text-main); margin-bottom: 0.5rem;">Storage is Empty</h3>
+                            <p style="font-size: 0.9rem;">No active batches were found. Add stock to see them here.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-row {
+        transition: all 0.2s ease;
+    }
+
+    .hover-row:hover {
+        background: #f8fafc !important;
+        transform: scale(1.002);
+        box-shadow: inset 4px 0 0 var(--primary);
+    }
+
+    th {
+        font-weight: 600 !important;
+        text-transform: none !important;
+        letter-spacing: 0.5px !important;
+    }
+</style>
+{% endblock %}
