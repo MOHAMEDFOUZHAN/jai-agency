@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}Authentication Required | JAI AGENCIES{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+    <div class="pin-portal glass-panel">
+        <div class="portal-header">
+            <div class="lock-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2>Private Access</h2>
+            <p>Verification required to view profit margins and cost analysis.</p>
+        </div>
+
+        <div class="pin-inputs">
+            <input type="password" id="pin" maxlength="4" placeholder="••••" autofocus>
+            <div id="pin-error" class="error-msg" style="display: none;">ACCESS DENIED: INCORRECT PIN</div>
+        </div>
+
+        <div class="portal-actions">
+            <button onclick="handleVerify()" class="btn-premium primary" style="width: 100%;">
+                <i class="fas fa-shield-alt"></i> VERIFY IDENTITY
+            </button>
+            <a href="/billing/navigation" class="btn-premium secondary" style="width: 100%; text-align: center; display: block; margin-top: 1rem;">
+                CANCEL
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .pin-portal {
+        width: min(420px, 95%);
+        padding: 3rem;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 32px;
+        text-align: center;
+        backdrop-filter: blur(40px);
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+    }
+
+    .lock-icon {
+        width: 70px;
+        height: 70px;
+        background: linear-gradient(135deg, var(--dash-primary), #3b82f6);
+        color: white;
+        border-radius: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        margin: 0 auto 2rem;
+        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3);
+    }
+
+    .portal-header h2 {
+        font-size: 1.8rem;
+        font-weight: 900;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.02em;
+    }
+
+    .portal-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        margin-bottom: 2.5rem;
+    }
+
+    #pin {
+        width: 100%;
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        color: white;
+        font-size: 2.2rem;
+        text-align: center;
+        letter-spacing: 0.8rem;
+        padding: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #pin:focus {
+        outline: none;
+        border-color: var(--dash-primary);
+        background: rgba(15, 23, 42, 0.9);
+        box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.1);
+    }
+
+    .error-msg {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        padding: 10px;
+        border-radius: 12px;
+        font-size: 0.68rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        margin-bottom: 1.5rem;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-premium {
+        height: 60px;
+        font-size: 0.9rem;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        border-radius: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .btn-premium.primary {
+        background: white;
+        color: var(--obsidian-950);
+        box-shadow: 0 15px 35px rgba(255,255,255,0.2);
+    }
+
+    .btn-premium.primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 45px rgba(255,255,255,0.3);
+    }
+
+    .btn-premium.secondary {
+        background: rgba(255,255,255,0.05);
+        color: white;
+        line-height: 60px;
+        text-decoration: none;
+    }
+
+    .btn-premium.secondary:hover {
+        background: rgba(255,255,255,0.1);
+    }
+</style>
+
+<script>
+    async function handleVerify() {
+        const pin = document.getElementById('pin').value;
+        const error = document.getElementById('pin-error');
+        
+        try {
+            const res = await fetch('/api/billing/verify-pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pin })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                window.location.reload();
+            } else {
+                error.style.display = 'block';
+                document.getElementById('pin').value = '';
+                document.getElementById('pin').focus();
+                
+                // Shake effect
+                const portal = document.querySelector('.pin-portal');
+                portal.classList.add('shake');
+                setTimeout(() => portal.classList.remove('shake'), 500);
+            }
+        } catch (e) {
+            alert('Security connection failed.');
+        }
+    }
+
+    document.getElementById('pin').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleVerify();
+    });
+</script>
+
+<style>
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-10px); }
+        75% { transform: translateX(10px); }
+    }
+    .shake { animation: shake 0.2s ease-in-out 0s 2; }
+</style>
+{% endblock %}

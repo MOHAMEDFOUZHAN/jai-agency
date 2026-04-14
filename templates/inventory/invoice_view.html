@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}View Invoice #{{ invoice_data.invoice_no }} | JAI AGENCIES{% endblock %}
+
+{% block nav_links %}
+<a href="/inventory">Dashboard</a>
+<a href="/inventory/live-stock">Live</a>
+<a href="/inventory/invoices" class="active">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
+<a href="/inventory/products">Product Master</a>
+<a href="/inventory/suppliers">Suppliers</a>
+<a href="/inventory/stock-return">Return Stock</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper print-container">
+    <div class="dash-hero no-print">
+        <div class="hero-main">
+            <h1>Invoice Summary</h1>
+            <p>Detailed breakdown of stock arrival and financial valuation.</p>
+        </div>
+        <div class="hero-actions">
+            <button class="btn-neural" onclick="window.print()" style="background: white; color: black;">
+                <i class="fas fa-print"></i> PRINT INVOICE
+            </button>
+            <a href="/inventory/invoice/edit/{{ invoice_data.invoice_no }}" class="btn-neural primary" style="background: var(--dash-primary); color: white;">
+                <i class="fas fa-edit"></i> EDIT ENTRY
+            </a>
+        </div>
+    </div>
+
+    <!-- Professional Corporate Header (Print Only) -->
+    <div class="print-only header-strip" style="display: none; border-bottom: 2px solid #111; padding-bottom: 20px; margin-bottom: 30px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+                <h1 style="font-size: 2.5rem; font-weight: 950; margin: 0; color: #000;">JAI AGENCIES</h1>
+                <p style="margin: 5px 0 0; color: #444; font-weight: 700; letter-spacing: 1px;">INVENTORY PURCHASE SLIP</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="margin: 0; font-weight: 800;">Date: {{ invoice_data.arrival_date }}</p>
+                <h3 style="margin: 5px 0 0; font-weight: 900;">INV #{{ invoice_data.invoice_no }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="neural-panel" style="padding: 3rem; margin-bottom: 3rem;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4rem;">
+            <div>
+                <label style="font-size: 0.65rem; color: var(--text-tertiary); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Supplier Name</label>
+                <h2 style="margin: 10px 0 0; font-weight: 900; color: white;">{{ invoice_data.supplier_name }}</h2>
+            </div>
+            <div>
+                <label style="font-size: 0.65rem; color: var(--text-tertiary); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Payment Status</label>
+                <div style="margin-top: 10px;">
+                    {% if invoice_data.is_credit %}
+                        <span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; font-size: 0.7rem;">CREDIT INVOICE</span>
+                        <div style="margin-top: 10px; font-weight: 800; color: var(--text-tertiary); font-size: 0.8rem;">
+                            Amount Paid: ₹{{ "%.2f"|format(invoice_data.amount_paid) }}
+                        </div>
+                    {% else %}
+                        <span class="badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; font-size: 0.7rem;">PAID ({{ invoice_data.payment_mode }})</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <label style="font-size: 0.65rem; color: var(--text-tertiary); font-weight: 800; letter-spacing: 2px; text-transform: uppercase;">Arrival Date</label>
+                <h2 style="margin: 10px 0 0; font-weight: 900; color: var(--dash-primary); font-family: 'DM Mono';">{{ invoice_data.arrival_date }}</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Table -->
+    <div class="neural-panel" style="padding: 0; overflow: hidden; margin-bottom: 3rem;">
+        <table class="neural-table">
+            <thead>
+                <tr>
+                    <th style="padding-left: 2.5rem;">ITEM CODE</th>
+                    <th>PRODUCT NAME</th>
+                    <th>BATCH #</th>
+                    <th style="text-align: right;">QTY</th>
+                    <th style="text-align: right;">PURCHASE PRICE</th>
+                    <th style="text-align: right;">RETAIL</th>
+                    <th style="text-align: right;">WHOLESALE</th>
+                    <th style="text-align: right;">GST %</th>
+                    <th style="text-align: right; padding-right: 2.5rem;">TOTAL (₹)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td style="padding-left: 2.5rem; font-family: 'DM Mono'; font-weight: 700; color: var(--dash-primary);">{{ item.product_code }}</td>
+                    <td style="font-weight: 800; color: white;">{{ item.product_name }}</td>
+                    <td style="font-family: 'DM Mono'; color: var(--text-tertiary);">{{ item.batch_id.split('-')[0] }}</td>
+                    <td style="text-align: right; font-weight: 900; color: white;">{{ "%.2f"|format(item.qty) }} {{ item.unit }}</td>
+                    <td style="text-align: right; color: var(--text-tertiary);">₹{{ "%.2f"|format(item.cost) }}</td>
+                    <td style="text-align: right; color: var(--dash-success); font-weight: 700;">₹{{ "%.2f"|format(item.retail_price) }}</td>
+                    <td style="text-align: right; color: var(--dash-warning); font-weight: 700;">₹{{ "%.2f"|format(item.wholesale_price) }}</td>
+                    <td style="text-align: right; color: var(--text-tertiary);">{{ item.gst_percent }}%</td>
+                    <td style="text-align: right; font-weight: 900; color: white; padding-right: 2.5rem;">₹{{ "%.2f"|format(item.total) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Financial Breakdown -->
+    <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 3rem;">
+        <div class="neural-panel" style="padding: 2.5rem;">
+            <h3 style="margin-bottom: 2rem; font-size: 0.8rem; letter-spacing: 2px; font-weight: 900;">TAX VALUATION BREAKDOWN</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div class="sub-stat">
+                    <label>TAXABLE VALUE</label>
+                    <p>₹{{ "%.2f"|format(invoice_data.total_taxable) }}</p>
+                </div>
+                <div class="sub-stat">
+                    <label>CGST (50% Tax)</label>
+                    <p>₹{{ "%.2f"|format(invoice_data.cgst) }}</p>
+                </div>
+                <div class="sub-stat">
+                    <label>SGST (50% Tax)</label>
+                    <p>₹{{ "%.2f"|format(invoice_data.sgst) }}</p>
+                </div>
+                <div class="sub-stat">
+                    <label>ROUND OFF</label>
+                    <p style="color: {{ 'var(--dash-danger)' if invoice_data.round_off < 0 else 'var(--dash-success)' }}">
+                        {{ '+' if invoice_data.round_off > 0 }}{{ "%.2f"|format(invoice_data.round_off) }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="neural-panel" style="background: var(--dash-primary); border: none; padding: 2.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 32px; box-shadow: 0 20px 40px rgba(0, 210, 255, 0.2);">
+            <label style="color: white; font-weight: 800; letter-spacing: 3px; font-size: 0.75rem; text-transform: uppercase;">Net Invoice Value</label>
+            <h1 style="font-size: 4rem; margin: 10px 0 0; font-weight: 950; color: white; text-shadow: 0 5px 15px rgba(0,0,0,0.2);">₹{{ "%.2f"|format(invoice_data.grand_total) }}</h1>
+            <div style="background: rgba(255,255,255,0.1); width: 100%; height: 1px; margin: 2rem 0;"></div>
+            <div style="display: flex; gap: 3rem; color: rgba(255,255,255,0.8); font-weight: 800; font-size: 0.8rem;">
+                <span>QTY: {{ "%.2f"|format(invoice_data.total_qty) }}</span>
+                <span>ITEMS: {{ items|length }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .sub-stat label {
+        display: block;
+        font-size: 0.6rem;
+        font-weight: 850;
+        color: var(--text-tertiary);
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .sub-stat p {
+        font-size: 1.3rem;
+        font-weight: 950;
+        color: white;
+        margin: 0;
+        font-family: 'DM Mono';
+    }
+
+    @media print {
+        .no-print { display: none !important; }
+        body { background: white !important; color: black !important; }
+        .neural-panel { border: 1px solid #ddd !important; background: white !important; box-shadow: none !important; margin-bottom: 20px !important; color: black !important; }
+        .neural-table th { background: #f0f0f0 !important; color: black !important; border-bottom: 1px solid #ccc !important; }
+        .neural-table td { color: black !important; border-bottom: 1px solid #eee !important; }
+        h1, h2, h3, h4, p, label { color: black !important; }
+        .dashboard-wrapper { padding: 0 !important; max-width: 100% !important; margin: 0 !important; width: 100% !important; }
+        .print-only { display: block !important; }
+        .print-only.header-strip { display: block !important; }
+        .grand-total-box { background: #eee !important; color: black !important; border: 2px solid black !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}

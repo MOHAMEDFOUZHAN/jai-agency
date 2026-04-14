@@ -1,39 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}Sales Nexus | Jai Agency{% endblock %}
+{% block title %}Sales Nexus | JAI AGENCIES{% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper sales-menu-page">
     <section class="sales-hero">
-        <div class="sales-hero-copy">
-            <span class="hero-kicker">Sales Menu</span>
-            <h1>Sales operations</h1>
-        </div>
-
-        <div class="sales-hero-search">
-            <label class="sales-search-label" for="previewBillId">Bill Preview</label>
-            <div class="sales-search-shell">
-                <i class="fas fa-search sales-search-icon"></i>
-                <input type="text" id="previewBillId" placeholder="Enter bill reference (e.g. 1001)" autocomplete="off">
-                <button onclick="previewBill()" class="btn-intelligence primary sales-search-btn">Preview</button>
+        <div class="sales-hero-copy" style="grid-column: span 2; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 1.5rem 0;">
+            <span class="hero-kicker">Sales Console</span>
+            <div class="sales-hero-search" style="background: transparent; border: none; padding: 0; backdrop-filter: none; width: 100%; display: flex; flex-direction: column; align-items: center;">
+                <label class="sales-search-label" for="previewBillId">Bill Intelligence Preview</label>
+                <div class="sales-search-shell" style="width: 100%; max-width: 540px;">
+                    <i class="fas fa-search sales-search-icon"></i>
+                    <input type="text" id="previewBillId" placeholder="Enter bill reference (e.g. 1001)" autocomplete="off">
+                    <button onclick="previewBill()" class="btn-intelligence primary sales-search-btn" style="min-width: 130px;">Preview</button>
+                </div>
             </div>
         </div>
     </section>
 
-    <section class="sales-strip">
-        <div class="sales-strip-item">
-            <span class="hero-strip-label">Workspace</span>
-            <strong>Billing reports</strong>
-        </div>
-        <div class="sales-strip-item">
-            <span class="hero-strip-label">Quick action</span>
-            <strong>Search any bill instantly</strong>
-        </div>
-        <div class="sales-strip-item">
-            <span class="hero-strip-label">Coverage</span>
-            <strong>11 report paths</strong>
-        </div>
-    </section>
+
 
     <section class="sales-grid">
         <a href="/billing/reports/sales-bill" class="neural-card sales-card">
@@ -43,7 +28,6 @@
             </div>
             <div class="sales-card-body">
                 <span class="card-label">Billwise Sales</span>
-                <p>Open itemized bill history and settlement-level sales records.</p>
             </div>
         </a>
         <a href="/billing/reports/detail-bill" class="neural-card sales-card">
@@ -53,7 +37,6 @@
             </div>
             <div class="sales-card-body">
                 <span class="card-label">Sales Analysis</span>
-                <p>Review bill detail patterns, value movement, and transaction trends.</p>
             </div>
         </a>
         <a href="/billing/reports/profit" class="neural-card sales-card">
@@ -63,7 +46,6 @@
             </div>
             <div class="sales-card-body">
                 <span class="card-label">Profit Analysis</span>
-                <p>Track net margins by comparing purchase costs and sale prices.</p>
             </div>
         </a>
         <a href="/billing/reports/cancelled" class="neural-card sales-card">
@@ -72,8 +54,7 @@
                 <span class="badge badge-soft">Audit</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Cancelled Logs</span>
-                <p>Track voided bills and verify reversed billing activity.</p>
+                <span class="card-label">Cancelled Bill</span>
             </div>
         </a>
         <a href="/billing/reports/correction" class="neural-card sales-card">
@@ -82,8 +63,7 @@
                 <span class="badge badge-soft">Review</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Correction Hub</span>
-                <p>Inspect amended bills and manage correction workflows.</p>
+                <span class="card-label">Correction Bill</span>
             </div>
         </a>
         <a href="/billing/reports/credit-bills" class="neural-card sales-card">
@@ -92,8 +72,7 @@
                 <span class="badge badge-soft">Payments</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Card Terminal</span>
-                <p>View all card-based bill records and payment totals.</p>
+                <span class="card-label">Card Sales</span>
             </div>
         </a>
         <a href="/billing/reports/cash-bills" class="neural-card sales-card">
@@ -102,8 +81,7 @@
                 <span class="badge badge-soft">Payments</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Cash Ledger</span>
-                <p>Check cash-mode bills and daily cash-heavy movement.</p>
+                <span class="card-label">Cash Sales</span>
             </div>
         </a>
         <a href="/billing/reports/upi-bills" class="neural-card sales-card">
@@ -112,8 +90,7 @@
                 <span class="badge badge-soft">Payments</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Digital Matrix</span>
-                <p>Review UPI bill activity and digital settlement flow.</p>
+                <span class="card-label">UPI Sales</span>
             </div>
         </a>
         <a href="/billing/reports/credit-sales" class="neural-card sales-card">
@@ -122,8 +99,7 @@
                 <span class="badge badge-soft">Recovery</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Credit Assets</span>
-                <p>Track open customer balances and credit-led sales.</p>
+                <span class="card-label">Credit Sales</span>
             </div>
         </a>
         <a href="/billing/reports/returns" class="neural-card sales-card">
@@ -132,8 +108,7 @@
                 <span class="badge badge-soft">Returns</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Returns Console</span>
-                <p>Browse return bills and related billing adjustments.</p>
+                <span class="card-label">Returns Bill</span>
             </div>
         </a>
         <a href="/billing/reports/final" class="neural-card sales-card">
@@ -143,7 +118,6 @@
             </div>
             <div class="sales-card-body">
                 <span class="card-label">Final Report</span>
-                <p>Open the consolidated end-of-period billing summary.</p>
             </div>
         </a>
         <a href="/billing/reports/compliments" class="neural-card sales-card">
@@ -152,8 +126,7 @@
                 <span class="badge badge-soft">Free</span>
             </div>
             <div class="sales-card-body">
-                <span class="card-label">Complimentary Gifts</span>
-                <p>Track all zero-value distributions and business give-away records.</p>
+                <span class="card-label">Complimentary sales</span>
             </div>
         </a>
         <a href="/billing/customers" class="neural-card sales-card">
@@ -163,7 +136,6 @@
             </div>
             <div class="sales-card-body">
                 <span class="card-label">Customer Directory</span>
-                <p>Navigate the registered debtors and customer report paths.</p>
             </div>
         </a>
     </section>
@@ -303,9 +275,9 @@
     }
 
     .sales-card {
-        min-height: 220px;
-        padding: 1.6rem;
-        justify-content: space-between;
+        min-height: 110px;
+        padding: 1.2rem;
+        justify-content: center;
     }
 
     .sales-card-top {
@@ -724,3 +696,4 @@
     };
 </script>
 {% endblock %}
+

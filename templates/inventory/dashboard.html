@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Inventory Intelligence | Jai Agency{% endblock %}
+{% block title %}Inventory Intelligence | JAI AGENCIES{% endblock %}
 
 {% block nav_links %}
 <a href="/inventory" class="active">Dashboard</a>
 <a href="/inventory/live-stock">Live</a>
-<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
 <a href="/inventory/products">Product Master</a>
 <a href="/inventory/suppliers">Suppliers</a>
 <a href="/inventory/stock-return">Return Stock</a>
@@ -13,6 +14,19 @@
 
 {% block content %}
 <div class="dashboard-wrapper">
+    {% if stats.expired_count > 0 %}
+    <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--dash-danger); padding: 1.5rem; border-radius: 24px; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem; animation: pulseGlow 2s infinite;">
+        <div style="width: 50px; height: 50px; background: var(--dash-danger); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; flex-shrink: 0;">
+            <i class="fas fa-biohazard"></i>
+        </div>
+        <div>
+            <h4 style="margin: 0; color: white;">Critical System Alert: Expiry Detected</h4>
+            <p style="margin: 5px 0 0; color: var(--dash-secondary); font-size: 0.85rem; font-weight: 700;">You have <strong>{{ stats.expired_count }}</strong> batches that have already passed their expiry date. Immediate action required.</p>
+        </div>
+        <a href="/inventory/live-stock" class="btn-neural" style="margin-left: auto; background: var(--dash-danger); border: none;">RECONCILE NOW</a>
+    </div>
+    {% endif %}
+
     <div class="dash-hero">
         <div class="hero-main">
             <span class="hero-kicker">Inventory Command</span>
@@ -36,8 +50,20 @@
             <strong>{{ stats.low_stock_count }} items</strong>
         </div>
         <div class="hero-strip-item">
+            <span class="hero-strip-label">Already Expired</span>
+            <strong style="color: var(--dash-danger);">{{ stats.expired_count }} batches</strong>
+        </div>
+        <div class="hero-strip-item">
             <span class="hero-strip-label">Expiring Soon</span>
-            <strong>{{ stats.expiring_count }} batches</strong>
+            <strong style="color: var(--dash-warning);">{{ stats.expiring_soon_count }} batches</strong>
+        </div>
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Credit Due (7d+)</span>
+            <strong style="color: var(--dash-warning);">{{ stats.credit_overdue }} invoices</strong>
+        </div>
+        <div class="hero-strip-item">
+            <span class="hero-strip-label">Credit Overdue (14d+)</span>
+            <strong style="color: var(--dash-danger); animation: blink 1s infinite;">{{ stats.credit_critical }} critical</strong>
         </div>
     </div>
 
@@ -136,7 +162,7 @@
                             </td>
                             <td style="text-align: right;">
                                 <div style="font-weight: 800; color: white; font-family: 'Outfit';">{{ item.date }}</div>
-                                <div style="font-size: 0.7rem; color: {{ 'var(--dash-danger)' if item.days_remaining < 0 else 'var(--dash-warning)' }}; font-weight: 900; letter-spacing: 1px;">
+                                <div class="{% if item.days_remaining < 0 %}text-danger{% else %}text-warning{% endif %} overdue-label">
                                     {{ item.days_remaining }} DAYS REMAINING
                                 </div>
                             </td>
@@ -155,6 +181,84 @@
                 </table>
             </div>
         </div>
+
+        <div class="insight-card">
+            <div class="panel-heading panel-heading-row">
+                <span class="card-label"><i class="fas fa-money-bill-wave" style="color: var(--dash-success); margin-right: 8px;"></i> Credit Watchlist</span>
+                <span class="badge badge-success">Payments</span>
+            </div>
+
+            <div class="neural-table-container">
+                <table class="neural-table">
+                    <thead>
+                        <tr>
+                            <th>INV / SUPPLIER</th>
+                            <th style="text-align: right;">BALANCE DUE</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in outstanding_credits %}
+                        <tr>
+                            <td>
+                                <div style="font-weight: 700; color: white;">{{ item.supplier_name }}</div>
+                                <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: 'DM Mono';">#{{ item.invoice_no }}</div>
+                            </td>
+                            <td style="text-align: right;">
+                                <div class="balance-due {% if item.is_critical %}text-danger blink-crit{% endif %}">
+                                    ₹ {{ "{:,.2f}".format(item.balance) }}
+                                </div>
+                                <div class="overdue-label {% if item.is_critical %}text-danger{% else %}text-secondary-label{% endif %}">
+                                    {{ item.age }} DAYS OVERDUE
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" style="padding: 0;">
+                                <div class="table-empty-state">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                    <span>All credits cleared</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if outstanding_credits %}
+            <div style="margin-top: 1.5rem; text-align: right;">
+                <a href="/inventory/credit-purchase" style="font-size: 0.7rem; font-weight: 900; color: var(--dash-primary); text-transform: uppercase; letter-spacing: 2px; text-decoration: none;">
+                    VIEW CREDIT LOG <i class="fas fa-arrow-right" style="margin-left: 5px;"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
     </div>
-</div>
+<style>
+    @keyframes pulseGlow {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    
+    .text-danger { color: var(--dash-danger) !important; }
+    .text-warning { color: var(--dash-warning) !important; }
+    .text-secondary-label { color: var(--dash-secondary) !important; }
+    .blink-crit { animation: blink 1s infinite; }
+    
+    .overdue-label {
+        font-size: 0.7rem; 
+        font-weight: 900; 
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .balance-due {
+        font-weight: 950;
+        color: white;
+        font-size: 1.1rem;
+        font-family: 'Outfit';
+    }
+</style>
 {% endblock %}
+

@@ -4,7 +4,7 @@
 
 
 
-{% block title %}Terminal Alpha | Jai Agency{% endblock %}
+{% block title %}Terminal Alpha | JAI AGENCIES{% endblock %}
 
 
 
@@ -45,15 +45,8 @@
 
                     <div class="scanner-title-block">
 
-
-                        <h2 class="card-title"><i class="fas fa-barcode"></i> Billing</h2>
-
-
-                        <p class="scanner-subtitle">Fast counter billing with live product lookup and settlement control.</p>
-
-
+                        <div class="bill-ref-badge">ID:-{{ "%05d"|format(next_bill_id) }}</div>
                     </div>
-
 
                     <div class="shortcut-ribbon">
                         <span><b>F2</b> Code</span>
@@ -63,17 +56,13 @@
                         <span><b>F9</b> Settle</span>
                     </div>
 
-                    <div style="display: flex; align-items: center; gap: 12px; margin-right: 15px; padding: 6px 16px; background: rgba(59, 130, 246, 0.1); border-radius: 999px; border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);">
-                        <span style="font-size: 0.7rem; font-weight: 900; color: #60a5fa; letter-spacing: 0.1em; text-transform: uppercase;">Mode</span>
-                        <select id="billingMode" onchange="toggleBillingMode()" style="background: transparent; border: none; color: #fff; font-size: 0.9rem; font-weight: 900; cursor: pointer; outline: none; padding-right: 5px; appearance: none; -webkit-appearance: none;">
-                            <option value="retail" style="background: #1e293b; color: white;">RETAIL</option>
-                            <option value="wholesale" style="background: #1e293b; color: white;">WHOLESALE</option>
+                    <div id="modeWrapper" class="billing-mode-toggle">
+                        <span class="mode-label">Billing Mode</span>
+                        <select id="billingMode" class="form-input mode-select" onchange="toggleBillingMode()">
+                            <option value="retail">Retail</option>
+                            <option value="wholesale">Wholesale</option>
                         </select>
-                        <i class="fas fa-chevron-down" style="font-size: 0.6rem; color: #60a5fa; pointer-events: none; margin-left: -5px;"></i>
                     </div>
-
-                    <div class="bill-ref-badge">REF: MP-{{ "%05d"|format(next_bill_id) }}</div>
-
 
                 </div>
 
@@ -84,7 +73,7 @@
                 <div class="scanner-inputs">
 
 
-                    <div class="form-group" style="margin-bottom: 0;">
+                    <div class="form-group scanner-field scanner-field-code">
 
 
                         <label class="form-label">Code</label>
@@ -96,13 +85,13 @@
                     </div>
 
 
-                    <div class="form-group relative" style="flex: 1; margin-bottom: 0;">
+                    <div class="form-group relative scanner-field scanner-field-search">
 
 
                         <label class="form-label">Search Product</label>
 
 
-                        <input type="text" id="productSearch" placeholder="Name or Barcode..." autocomplete="off" class="form-input">
+                        <input type="text" id="productSearch" placeholder="Code or Product Name..." autocomplete="off" class="form-input mono">
 
 
                         <div id="searchResults" class="search-dropdown" style="display: none; position: absolute; left: 0; right: 0; top: 100%; z-index: 9999; background: white;"></div>
@@ -111,7 +100,7 @@
                     </div>
 
 
-                    <div class="form-group" style="margin-bottom: 0; width: 88px;">
+                    <div class="form-group scanner-field scanner-field-qty">
 
 
                         <label class="form-label">Qty</label>
@@ -121,15 +110,6 @@
 
 
                     </div>
-
-
-                    <button onclick="addToCart()" class="btn btn-primary btn-add" style="height: 48px; min-width: 120px; align-self: flex-end;">
-
-
-                        <i class="fas fa-plus"></i> ADD
-
-
-                    </button>
 
 
                 </div>
@@ -168,15 +148,20 @@
             <div class="card queue-card">
 
 
-                <div class="queue-header">
-
-
-                    <span class="card-title"><i class="fas fa-list-ol"></i> Transaction Logs</span>
-
-
-                    <span id="cartCountChip" class="queue-chip">0 items</span>
-
-
+                <div class="queue-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="queue-header-main">
+                        <span class="card-title" style="margin: 0;"><i class="fas fa-list-ol"></i> Transaction Logs</span>
+                        <span id="cartCountChip" class="queue-chip">0 items</span>
+                    </div>
+                    <div class="queue-header-actions">
+                        <div class="queue-search-wrap">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="cartSearch" class="queue-search-input" placeholder="Search cart by code or name">
+                        </div>
+                        <button onclick="clearCart()" class="btn btn-refresh" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 5px 12px; font-size: 0.72rem; font-weight: 850; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.02em;">
+                            <i class="fas fa-redo-alt"></i> Refresh
+                        </button>
+                    </div>
                 </div>
 
 
@@ -379,26 +364,14 @@
 
 
                             <input type="text" id="custCode" placeholder="Customer ID (Enter to Fill)" class="form-input sm" style="background: rgba(21, 28, 56, 0.03); font-weight: 700; border: 1px solid var(--border-light);">
-
-
                             <div class="relative">
-
-
                                 <input type="text" id="custName" placeholder="Search or Enter Name" class="form-input sm" autocomplete="off">
-
-
                                 <div id="custSearchResults" class="search-dropdown card"></div>
-
-
                             </div>
-
-
                             <input type="text" id="custMobile" placeholder="Contact Mobile" class="form-input sm">
-
-
+                            <input type="text" id="custAddress" placeholder="Customer Address" class="form-input sm">
+                            <input type="text" id="custGstn" placeholder="Customer GSTN" class="form-input sm">
                             <input type="hidden" id="custId" value="">
-
-
                         </div>
 
 
@@ -474,6 +447,9 @@
     const codeSearch = document.getElementById('codeSearch');
 
 
+    const cartSearch = document.getElementById('cartSearch');
+
+
     const inputQty = document.getElementById('inputQty');
 
 
@@ -498,9 +474,6 @@
             const pMaster = masterData.find(x => String(x.code) === codeMatch);
 
 
-            
-
-
             if (pMaster) {
 
 
@@ -516,16 +489,8 @@
                 }
 
 
-                // Heal Name if missing or generic
-
-
-                if (!item.name || item.name === 'Unknown' || item.name === 'Stock Entry' || item.name === 'undefined') {
-
-
-                    item.name = pMaster.name;
-
-
-                }
+                // Heal Name to always use Product Name instead of Category
+                item.name = pMaster.name;
 
 
                 // Heal ID if missing
@@ -565,8 +530,7 @@
 
 
         renderCart();
-
-
+        toggleBillingMode();
         codeSearch.focus();
 
 
@@ -763,6 +727,20 @@
             selectProduct(code);
 
 
+        } else if (e.key === 'Enter') {
+
+
+            const exactMatch = inventoryData.find(p =>
+                p.code.toLowerCase() === productSearch.value.toLowerCase().trim()
+            );
+
+
+            if (exactMatch) {
+                e.preventDefault();
+                selectProduct(exactMatch.code);
+            }
+
+
         }
 
 
@@ -790,39 +768,32 @@
 
 
 
-    custCode.addEventListener('keypress', (e) => {
-
-
+    custCode.addEventListener('keypress', async (e) => {
         if (e.key === 'Enter') {
-
-
             const codeInput = e.target.value.trim();
-
-
             if (!codeInput) return;
 
-
-            const match = customersData.find(c => String(c.customer_id) === codeInput || String(c.customer_mobile) === codeInput);
-
-
-            if (match) {
-
-
-                selectCustomer(match.customer_id, match.customer_name, match.customer_mobile);
-
-
-            } else {
-
-
-                custName.focus();
-
-
+            // First check local customers data
+            const localMatch = customersData.find(c => String(c.customer_id) === codeInput);
+            if (localMatch) {
+                // If local match has address/gstn attributes (some might not if data was legacy)
+                selectCustomer(localMatch.customer_id, localMatch.customer_name, localMatch.customer_mobile, localMatch.customer_address || '', localMatch.customer_gstn || '');
+                return;
             }
 
-
+            // If not found locally, fetch from API for deep history
+            try {
+                const res = await fetch(`/api/customer/${codeInput}`);
+                const data = await res.json();
+                if (data.success) {
+                    selectCustomer(codeInput, data.name, data.mobile, data.address, data.gstn);
+                } else {
+                    custName.focus();
+                }
+            } catch (err) {
+                custName.focus();
+            }
         }
-
-
     });
 
 
@@ -857,84 +828,47 @@
 
 
         const matches = customersData.filter(c => 
-
-
             c.customer_name.toLowerCase().includes(query) || 
-
-
             (c.customer_mobile && c.customer_mobile.includes(query))
-
-
-        ).slice(0, 5);
-
-
-
-
+        ).slice(0, 10);
 
         if (matches.length > 0) {
-
-
-            custResults.innerHTML = matches.map(c => `
-
-
-                <div onclick="selectCustomer('${c.customer_id}', '${c.customer_name}', '${c.customer_mobile}')" class="search-item" 
-
-
-                     style="padding: 10px 15px; border-bottom: 1px solid var(--border-light); cursor: pointer;">
-
-
-                    <div style="font-weight: 700; color: var(--navy-900);">${c.customer_name} <span style="color: var(--text-tertiary); font-size: 0.7rem; font-weight: 400;">(${c.customer_id})</span></div>
-
-
-                    <div style="font-size: 0.7rem; color: var(--text-tertiary);">${c.customer_mobile || 'No Mobile'}</div>
-
-
+            custResults.innerHTML = matches.map((c, idx) => `
+                <div onclick="selectAndFetchCustomer('${c.customer_name}')" class="cust-item ${idx === 0 ? 'active' : ''}" 
+                     style="padding: 10px; border-bottom: 1px solid #eee; cursor: pointer;">
+                    <div style="font-weight: 700;">${c.customer_name}</div>
+                    <div style="font-size: 0.75rem; color: #666;">${c.customer_mobile || 'No Mobile'}</div>
                 </div>
-
-
             `).join('');
-
-
             custResults.style.display = 'block';
-
-
         } else {
-
-
             custResults.style.display = 'none';
-
-
         }
-
-
     });
 
-
-
-
-
-    function selectCustomer(id, name, mobile) {
-
-
+    async function selectAndFetchCustomer(name) {
         custName.value = name;
-
-
-        custMobile.value = mobile || '';
-
-
-        custId.value = id || '';
-
-
-        custCode.value = id || '';
-
-
         custResults.style.display = 'none';
-
-
+        
+        try {
+            const res = await fetch(`/api/customer/name/${encodeURIComponent(name)}`);
+            const data = await res.json();
+            if (data.success) {
+                selectCustomer(data.id, name, data.mobile, data.address, data.gstn);
+            }
+        } catch (e) { console.error('Fetch error', e); }
     }
 
-
-
+    function selectCustomer(id, name, mobile, address = '', gstn = '') {
+        custId.value = id || '';
+        custCode.value = id || '';
+        custName.value = name || '';
+        custMobile.value = mobile || '';
+        if (document.getElementById('custAddress')) document.getElementById('custAddress').value = address || '';
+        if (document.getElementById('custGstn')) document.getElementById('custGstn').value = gstn || '';
+        custResults.style.display = 'none';
+        inputQty.focus();
+    }
 
 
     // Close dropdowns on outside click
@@ -943,7 +877,7 @@
     document.addEventListener('click', function(e) {
 
 
-        if (!productSearch.contains(e.target)) searchResults.style.display = 'none';
+        if (!productSearch.contains(e.target) && !searchResults.contains(e.target)) searchResults.style.display = 'none';
 
 
         if (!custName.contains(e.target)) custResults.style.display = 'none';
@@ -991,21 +925,36 @@
     function toggleBillingMode() {
         const modeInput = document.getElementById('billingMode');
         const parent = modeInput.parentElement;
+        const modeLabel = parent.querySelector('.mode-label');
         const mode = modeInput.value;
         
         if (mode === 'wholesale') {
-            parent.style.background = 'rgba(139, 92, 246, 0.2)'; 
-            parent.style.borderColor = 'rgba(139, 92, 246, 0.4)';
-            parent.style.boxShadow = '0 0 15px rgba(139, 92, 246, 0.2)';
-            parent.querySelector('span').style.color = '#a78bfa';
-            parent.querySelector('i').style.color = '#a78bfa';
+            parent.style.background = '#8b5cf6'; // Vivid Violet for Wholesale 
+            parent.style.borderColor = 'rgba(255,255,255,0.2)';
+            parent.style.boxShadow = '0 0 15px rgba(139, 92, 246, 0.4)';
+            if (modeLabel) modeLabel.style.color = 'rgba(255,255,255,0.9)';
+            
+            // Compulsory Customer Ask
+            setTimeout(() => {
+                alert("WHOLESALE_PROTOCOL: Wholesale mode requires detailed customer assignment.");
+                document.getElementById('custName').focus();
+            }, 100);
         } else {
-            parent.style.background = 'rgba(59, 130, 246, 0.1)'; 
-            parent.style.borderColor = 'rgba(59, 130, 246, 0.3)';
-            parent.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.1)';
-            parent.querySelector('span').style.color = '#60a5fa';
-            parent.querySelector('i').style.color = '#60a5fa';
+            parent.style.background = '#0f172a'; // Restore deep dark 
+            parent.style.borderColor = 'rgba(255,255,255,0.1)';
+            parent.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
+            if (modeLabel) modeLabel.style.color = 'rgba(255,255,255,0.72)';
         }
+
+        // Update entire cart if mode changes
+        cart.forEach(item => {
+            const pMaster = masterData.find(x => String(x.code) === String(item.code || item.id));
+            if (pMaster) {
+                // If switching to wholesale, use wholesale price if available (>0), otherwise fallback to retail
+                item.price = (mode === 'wholesale' && pMaster.wholesale_price > 0) ? pMaster.wholesale_price : pMaster.price;
+            }
+        });
+        renderCart();
 
         if (currentProduct) {
             updateProductDisplayPrice();
@@ -1034,11 +983,12 @@
     }
 
     function selectProduct(code) {
+        if (!code) return;
         const p = inventoryData.find(x => x.code === code);
         if (p) {
             currentProduct = p;
-            productSearch.value = (p.grade && p.grade !== 'N/A') ? p.grade : p.name;
             codeSearch.value = p.code;
+            productSearch.value = `${p.code} - ${p.name}`;
             document.getElementById('displayCategory').innerText = p.category || 'GENERAL';
             document.getElementById('displayStock').innerText = p.stock;
             document.getElementById('displayUnit').innerText = p.unit || 'PCS';
@@ -1048,6 +998,13 @@
             searchResults.style.display = 'none';
             inputQty.focus();
             inputQty.select();
+        } else {
+            // New logic for unassigned codes
+            alert("INVENTORY_MANIFEST_ERROR: This product code is not assigned to any inventory record.");
+            codeSearch.value = '';
+            productSearch.value = '';
+            codeSearch.focus();
+            resetInputs();
         }
     }
 
@@ -1055,7 +1012,7 @@
 
 
 
-    codeSearch.addEventListener('change', () => selectProduct(codeSearch.value));
+    codeSearch.addEventListener('change', () => selectProduct(codeSearch.value.trim()));
 
 
     codeSearch.addEventListener('keypress', (e) => {
@@ -1064,7 +1021,7 @@
         if(e.key === 'Enter') {
 
 
-            selectProduct(codeSearch.value);
+            selectProduct(codeSearch.value.trim());
 
 
             inputQty.focus();
@@ -1109,9 +1066,6 @@
             // Apply the price determined by the Billing Mode (Retail/Wholesale)
             const resolvedPrice = currentProduct.active_price || currentProduct.price;
             const itemToPush = {...currentProduct, qty, price: resolvedPrice};
-            if (currentProduct.grade && currentProduct.grade !== 'N/A') {
-                itemToPush.name = currentProduct.grade;
-            }
             cart.push(itemToPush);
         }
 
@@ -1134,10 +1088,10 @@
         currentProduct = null;
 
 
-        productSearch.value = '';
-
-
         codeSearch.value = '';
+
+
+        productSearch.value = '';
 
 
         inputQty.value = 1;
@@ -1171,6 +1125,12 @@
 
 
         const chip = document.getElementById('cartCountChip');
+        const cartQuery = (cartSearch ? cartSearch.value : '').toLowerCase().trim();
+        const filteredCart = cart.filter(item => {
+            if (!cartQuery) return true;
+            return (item.name || '').toLowerCase().includes(cartQuery) ||
+                String(item.code || '').toLowerCase().includes(cartQuery);
+        });
 
 
         chip.innerText = `${cart.length} item${cart.length === 1 ? '' : 's'}`;
@@ -1221,7 +1181,46 @@
 
 
 
-        tbody.innerHTML = cart.map((item, idx) => `
+        if (filteredCart.length === 0) {
+
+
+            tbody.innerHTML = `
+
+
+            <tr>
+
+
+                <td colspan="7" class="queue-empty">
+
+
+                    <div class="queue-empty-icon"><i class="fas fa-search"></i></div>
+
+
+                    <div class="queue-empty-title">No matching product</div>
+
+
+                    <div class="queue-empty-text">Try searching by product code or item name from the current bill.</div>
+
+
+                </td>
+
+
+            </tr>
+
+
+            `;
+
+
+            calculateTotals();
+
+
+            return;
+
+
+        }
+
+
+        tbody.innerHTML = filteredCart.map((item, idx) => `
 
 
             <tr class="fade-in">
@@ -1233,7 +1232,7 @@
                 <td class="queue-col-item">
 
 
-                    <div class="queue-item-name">${item.grade && item.grade !== 'N/A' ? item.grade : item.name}</div>
+                    <div class="queue-item-name">${item.name}</div>
 
 
                     <div class="queue-item-code">REF_${item.code}</div>
@@ -1263,7 +1262,7 @@
                 <td class="queue-col-action" style="text-align: center;">
 
 
-                    <button onclick="removeFromCart(${idx})" class="queue-remove-btn" aria-label="Remove item">
+                    <button onclick="removeFromCart(${cart.indexOf(item)})" class="queue-remove-btn" aria-label="Remove item">
 
 
                         <i class="fas fa-trash-alt"></i>
@@ -1299,6 +1298,30 @@
         renderCart();
 
 
+    }
+
+
+    function clearCart() {
+        if (cart.length === 0) return;
+        if (confirm("Are you sure you want to clear the entire cart?")) {
+            cart = [];
+            renderCart();
+            resetInputs();
+            // Reset additional fields for a clean state
+            document.getElementById('discountInput').value = 0;
+            const custFields = ['custName', 'custMobile', 'custAddress', 'custGstn', 'custId', 'custCode'];
+            custFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            document.getElementById('paymentMode').value = 'CASH';
+            toggleCreditFields();
+        }
+    }
+
+
+    if (cartSearch) {
+        cartSearch.addEventListener('input', renderCart);
     }
 
 
@@ -1397,6 +1420,18 @@
         if (cart.length === 0) return;
 
 
+        const billingMode = document.getElementById('billingMode').value;
+        const customerName = document.getElementById('custName').value.trim();
+
+        if (billingMode === 'wholesale' && (!customerName || customerName === 'GENERAL')) {
+            const goToFill = confirm("WHOLESALE_VALIDATION: Customer details are missing. Do you want to fill them now to properly record this trade?");
+            if (goToFill) {
+                document.getElementById('custName').focus();
+                return;
+            }
+        }
+
+
         const mode = document.getElementById('paymentMode').value;
 
 
@@ -1426,20 +1461,12 @@
 
 
             payment_method: mode,
-
-
-            customer_name: document.getElementById('custName').value || 'Walk-in',
-
-
+            customer_name: document.getElementById('custName').value || 'GENERAL',
             customer_mobile: document.getElementById('custMobile').value || '',
-
-
             customer_id: document.getElementById('custId') ? document.getElementById('custId').value : '',
-
-
+            customer_address: document.getElementById('custAddress').value || '',
+            customer_gstn: document.getElementById('custGstn').value || '',
             amount_paid: (mode === 'CREDIT') ? (parseFloat(document.getElementById('amountPaid').value) || 0) : net
-
-
         };
 
 
@@ -1498,5 +1525,6 @@
 
 
 {% endblock %}
+
 
 

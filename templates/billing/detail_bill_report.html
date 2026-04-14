@@ -1,9 +1,16 @@
 {% extends "base.html" %}
 
-{% block title %}Jai Agency - {{ title }}{% endblock %}
+{% block title %}JAI AGENCIES - {{ title }}{% endblock %}
 
 {% block content %}
-<div class="dashboard-container fade-in report-shell thermal-report">
+<div class="dashboard-container fade-in report-shell">
+    <div class="print-only">
+        <div class="print-report-header">
+            <h2 class="title-sm">Detailed Bill Report</h2>
+            <p class="date-range">Terminal: Main Store Hub | Period: {{ from_date }} to {{ to_date }}</p>
+        </div>
+    </div>
+    
     <div class="section-header no-print">
         <div>
             <h1>{{ title }}</h1>
@@ -19,131 +26,89 @@
         </div>
     </div>
 
-    <div class="print-report-header print-only">
-        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
-        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">{{ title|upper }}</p>
-        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    <!-- Standardized Filter Nexus -->
+    <div class="filter-nexus glass-panel no-print">
+        <div class="filter-group">
+            <label>FROM DATE</label>
+            <input type="date" id="fromDate" value="{{ from_date_raw or '' }}">
+        </div>
+        <div class="filter-group">
+            <label>TO DATE</label>
+            <input type="date" id="toDate" value="{{ to_date_raw or '' }}">
+        </div>
+        <div class="filter-group">
+            <label>BILL #</label>
+            <input type="text" id="billId" placeholder="Search ID..." value="{{ bill_id or '' }}">
+        </div>
+        <div class="action-group">
+            <button class="btn-cyber" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply Matrix
+            </button>
+        </div>
     </div>
 
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr style="background: var(--surface-light);">
-                    <th class="print-date" style="padding: 1rem; font-size: 0.75rem;">DATE</th>
-                    <th class="print-bill-id" style="padding: 1rem; font-size: 0.75rem;">BILL</th>
-                    <th class="print-item" style="padding: 1rem; font-size: 0.75rem;">ITEM NAME</th>
-                    <th class="print-net" style="padding: 1rem; font-size: 0.75rem; text-align: right;">AMOUNT</th>
-                    <th class="print-hide" style="padding: 1rem; font-size: 0.75rem;">CUSTOMER</th>
-                    <th class="print-hide" style="padding: 1rem; font-size: 0.75rem;">STATUS</th>
-                    <th class="print-hide" style="padding: 1rem; font-size: 0.75rem; text-align: right;">QTY</th>
-                    <th class="print-hide" style="padding: 1rem; font-size: 0.75rem; text-align: right;">RATE</th>
+    <script>
+        function applyFilters() {
+            const from = document.getElementById('fromDate').value;
+            const to = document.getElementById('toDate').value;
+            const billId = document.getElementById('billId').value;
+            let url = window.location.pathname + `?from=${from}&to=${to}`;
+            if (billId) url += `&bill_id=${billId}`;
+            window.location.href = url;
+        }
+        document.getElementById('billId').addEventListener('keypress', (e) => { if(e.key === 'Enter') applyFilters(); });
+    </script>
 
+    <div class="table-container">
+        <table class="a4-report-table">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">DATE</th>
+                    <th style="width: 8%;">BILL</th>
+                    <th style="width: 30%;">ITEM NAME</th>
+                    <th style="width: 10%; text-align: right;">QTY</th>
+                    <th style="width: 12%; text-align: right;">RATE</th>
+                    <th style="width: 12%; text-align: right;">AMOUNT</th>
+                    <th style="width: 15%;">STATUS</th>
                 </tr>
             </thead>
             <tbody>
                 {% for sale in data %}
                 {% set row_status = sale.status or 'ACTIVE' %}
-                {% set outer_loop = loop %}
-
-                {# Items rows #}
                 {% for item in sale.details %}
-                <tr class="item-row {% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %}"
-                    style="{% if loop.first %}border-top: 2px solid var(--navy-900);{% endif %}">
-
-                    {# Only show Bill Header info on the first item row of the bill #}
-                    {% if loop.first %}
-                    <td class="print-date" style="color: var(--navy-900); font-weight: 700;">
-                        <div>{{ sale.date_only }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-tertiary);" class="print-hide">{{ sale.time_only
-                            }}</div>
+                <tr class="{% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %}">
+                    <td>{{ sale.date_only }}</td>
+                    <td style="font-weight: bold;">#{{ sale.id }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ item.name }}</div>
+                        <div style="font-size: 0.75rem; color: #666;">{{ item.category }}</div>
                     </td>
-                    <td class="print-bill-id">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <code style="font-weight: 800; color: var(--navy-900); font-size: 1rem; background: var(--surface-light); padding: 4px 8px; border-radius: 6px;">#{{ sale.id }}</code>
-                            <a href="/billing/print-receipt/{{ sale.id }}" class="btn btn-outline no-print" style="padding: 4px 8px; font-size: 0.75rem;" title="Print Bill">
-                                <i class="fas fa-print"></i>
-                            </a>
-                        </div>
+                    <td style="text-align: right;">{{ item.qty }}</td>
+                    <td style="text-align: right;">{{ "%.2f"|format(item.price) }}</td>
+                    <td style="text-align: right; font-weight: bold;">
+                        ₹{{ "%.2f"|format(item.gross_amount if item.gross_amount else (item.qty * item.price)) }}
                     </td>
-                    {% else %}
-                    <td class="print-date"></td>
-                    <td class="print-bill-id"></td>
-                    {% endif %}
-
-                    <td class="print-item">
-                        <div style="font-weight: 700; color: var(--navy-900);">{{ item.name }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600;">{{
-                            item.category }}</div>
-                    </td>
-
-                    <td class="print-net" style="text-align: right; font-weight: 800; color: var(--navy-900);">
-                        ?{{ "%.2f"|format(item.gross_amount if item.gross_amount else (item.qty * item.price)) }}
-                    </td>
-
-                    <td class="print-hide">
-                        <div style="font-weight: 700; color: var(--navy-900);">{{ sale.customer_name }}</div>
-                        <div style="font-size: 0.7rem; color: var(--text-secondary); font-weight: 500;">
-                            {{ sale.customer_mobile }}
-                            {% if sale.customer_id %}<span style="margin-left: 8px;">ID: {{ sale.customer_id }}</span>{%
-                            endif %}
-                        </div>
-                    </td>
-                    <td class="print-hide">
-                        {% if sale.status == 'CANCELLED' %}
-                        <span class="badge badge-danger">CANCELLED</span>
-                        {% elif sale.status == 'RETURNED' %}
-                        <span class="badge"
-                            style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);">RETURNED</span>
-                        {% elif sale.status == 'CORRECTION' %}
-                        <span class="badge"
-                            style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139, 92, 246, 0.2);">CORRECTION</span>
-                        {% else %}
-                        <span class="badge badge-success">ACTIVE</span>
+                    <td>
+                        <span class="status-text">{{ row_status }}</span>
+                        {% if loop.last %}
+                        <div style="font-size: 0.65rem; color: #888;">(Paid: {{ sale.payment_method }})</div>
                         {% endif %}
                     </td>
-                    <td class="print-hide" style="text-align: right; font-weight: 800; color: var(--navy-900);">{{ item.qty }}</td>
-                    <td class="print-hide" style="text-align: right; color: var(--navy-900); font-weight: 800;">{{
-                        "%.2f"|format(item.price) }}</td>
                 </tr>
                 {% endfor %}
-
-                {# Bill Summary Row #}
-                <tr class="{% if row_status == 'CANCELLED' %}cancelled-row{% elif row_status == 'RETURNED' %}returned-row{% endif %} summary-row"
-                    style="background: var(--surface-light); border-bottom: 2px solid var(--border-light);">
-                    <td colspan="4"
-                        style="text-align: right; font-size: 0.8rem; color: var(--text-secondary); vertical-align: middle; font-weight: 600;">
-                        Payment: <strong style="color: var(--navy-900);">{% if sale.payment_method == 'COMPLIMENT' %}COMPLIMENTARY{% else %}{{ sale.payment_method }}{% endif %}</strong>
-                    </td>
-                    <td colspan="3"
-                        style="text-align: right; font-weight: 800; color: var(--text-secondary); font-size: 0.85rem; padding: 0.75rem;">
-                        BILL TOTAL:</td>
-                    <td
-                        style="text-align: right; font-weight: 900; font-size: 1.1rem; color: var(--navy-900); padding-right: 1.25rem;">
-                        ?{{ "%.2f"|format(sale.total) }}
-                    </td>
-                </tr>
                 {% else %}
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 4rem; color: var(--text-tertiary); opacity: 0.7;">
-                        <i class="fas fa-list-alt"
-                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
-                        No transaction details found.
-                    </td>
+                    <td colspan="7" style="text-align: center; padding: 4rem;">No transaction details found.</td>
                 </tr>
                 {% endfor %}
             </tbody>
             {% if data %}
-            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto',
-            'RETURNED') | list %}
+            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto', 'RETURNED') | list %}
             <tfoot>
-                <tr style="background: var(--surface-light) !important; border-top: 2px solid var(--navy-900);">
-                    <td colspan="7"
-                        style="padding: 1.5rem; text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1rem;">
-                        GRAND TOTAL (ALL BILLS)
-                    </td>
-                    <td colspan="2"
-                        style="text-align: right; font-weight: 900; color: var(--navy-900); font-size: 1.25rem; padding: 1.5rem; padding-right: 1.25rem;">
-                        ?{{ "%.2f"|format(active_sales | sum(attribute='total')) }}
+                <tr>
+                    <td colspan="5" style="text-align: right; font-weight: 800; font-size: 11pt; border-top: 1.5pt solid black;">GRAND TOTAL ({{ active_sales|length }} BILLS)</td>
+                    <td colspan="2" style="text-align: right; font-weight: 900; font-size: 13pt; border-top: 1.5pt solid black; color: #000;">
+                        ₹{{ "%.2f"|format(active_sales | sum(attribute='total')) }}
                     </td>
                 </tr>
             </tfoot>
@@ -153,117 +118,105 @@
 </div>
 
 <style>
-    .cancelled-row {
-        background: rgba(239, 68, 68, 0.05) !important;
-        color: var(--danger) !important;
+    .a4-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
     }
     
-    .cancelled-row td { color: var(--danger) !important; }
-    .cancelled-row code { color: var(--danger) !important; background: rgba(239, 68, 68, 0.1) !important; }
-
-    .returned-row {
-        background: rgba(245, 158, 11, 0.05) !important;
-        color: #f59e0b !important;
+    .a4-report-table th, .a4-report-table td {
+        padding: 10px 12px;
+        border: 1px solid var(--border-light);
+        text-align: left;
     }
-    .returned-row td { color: #f59e0b !important; }
 
-    .item-row:hover td {
-        background: var(--surface-light) !important;
-    }
+    .cancelled-row { color: var(--danger); text-decoration: line-through; opacity: 0.7; }
+    .returned-row { color: #f59e0b; font-style: italic; }
 
     @media print {
         @page {
-            size: A5;
-            margin: 5mm;
+            size: A4 portrait;
+            margin: 10mm;
         }
 
         body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: Arial, sans-serif !important;
-            font-size: 10pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 9pt !important;
         }
 
-        .navbar, .btn, .nav-links, .section-header div:last-child, .pill-tabs, .print-hide, .no-print, .print-only-header {
+        .no-print, .navbar, .site-footer, .header-actions, .filter-box, .btn, .print-only-header {
             display: none !important;
         }
 
+        /* Re-enable our custom print header if we want to hide the base.html one */
         .print-only {
             display: block !important;
         }
 
-        .dashboard-container {
-            width: 138mm !important;
-            padding: 2mm !important;
-            margin: 0 auto !important;
-        }
-
         .print-report-header {
-            text-align: center;
-            border-bottom: 2px solid #000;
-            margin-bottom: 3mm;
-            padding-bottom: 2mm;
+            text-align: center !important;
+            margin-bottom: 5mm !important;
+            border-bottom: 1pt solid black !important;
+            padding-bottom: 3mm !important;
+        }
+        
+        /* Ensure JAI AGENCIES is big in the header */
+        .print-report-header::before {
+            content: "JAI AGENCIES";
+            display: block;
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 1mm;
+            text-transform: uppercase;
         }
 
-        .table-container {
+        .title-sm { font-size: 10pt !important; font-weight: 600 !important; margin: 0 !important; color: #333 !important; }
+        .date-range { font-size: 8.5pt !important; margin: 2mm 0 0 0 !important; color: #555 !important; }
+
+        .dashboard-container, .report-shell, .table-container {
             width: 100% !important;
+            max-width: none !important;
             margin: 0 !important;
             padding: 0 !important;
-            border: none !important;
         }
 
-        table {
+        .a4-report-table {
             width: 100% !important;
-            border-collapse: collapse !important;
+            border: 1pt solid #000 !important;
         }
 
-        th {
-            border-bottom: 1px solid #000 !important;
-            text-align: left !important;
-            padding: 1mm 0 !important;
-            font-size: 7pt !important;
-        }
-
-        td {
-            padding: 1mm 0 !important;
-            border-bottom: 1px dotted #ccc !important;
-            font-size: 8pt !important;
+        .a4-report-table th, .a4-report-table td {
+            border: 0.5pt solid #000 !important;
+            padding: 6pt !important;
+            font-size: 9pt !important;
             color: black !important;
-            background: white !important;
         }
 
-        .print-date { width: 15% !important; font-size: 7pt !important; }
-        .print-bill-id { width: 12% !important; font-weight: bold; font-size: 7pt !important; }
-        .print-item { width: 48% !important; white-space: normal !important; overflow: visible !important; }
-        .print-net { width: 25% !important; text-align: right !important; font-weight: bold !important; font-size: 8pt !important; }
-
-        .summary-row td {
-            border-top: 1px solid #000 !important;
-            border-bottom: 1px solid #000 !important;
-            background: #eee !important;
+        .a4-report-table th {
+            background: #f0f0f0 !important;
+            -webkit-print-color-adjust: exact;
             font-weight: bold !important;
+            text-transform: uppercase !important;
         }
 
-        tfoot tr td {
-            font-size: 10pt !important;
-            border-top: 2px solid #000 !important;
-            background: white !important;
-            color: black !important;
-            padding-top: 2mm !important;
+        tr {
+            page-break-inside: avoid !important;
         }
 
-        .print-footer {
-            text-align: center;
-            margin-top: 5mm;
-            border-top: 1px dashed #000;
-            padding-top: 2mm;
-            font-size: 7pt;
+        tfoot td {
+            background: #eee !important;
+            -webkit-print-color-adjust: exact;
         }
+
+        .cancelled-row td { color: #888 !important; text-decoration: line-through !important; }
+        .returned-row td { color: #666 !important; }
     }
 </style>
 {% endblock %}
+
 
 

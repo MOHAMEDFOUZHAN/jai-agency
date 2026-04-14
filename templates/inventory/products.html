@@ -4,7 +4,7 @@
 
 
 
-{% block title %}Product Master | Jai Agency{% endblock %}
+{% block title %}Product Master | JAI AGENCIES{% endblock %}
 
 
 
@@ -19,9 +19,8 @@
 <a href="/inventory/live-stock">Live</a>
 
 
-<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
-
-
+<a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
 <a href="/inventory/products" class="active">Product Master</a>
 
 
@@ -62,14 +61,8 @@
 
 
             <div class="neural-search">
-
-
                 <i class="fas fa-search"></i>
-
-
-                <input type="text" id="productSearch" placeholder="Search Grade..." onkeyup="filterProducts()">
-
-
+                <input type="text" id="productSearch" placeholder="Search Product Name / Category..." onkeyup="filterProducts()">
             </div>
 
 
@@ -172,7 +165,7 @@
                         <td class="product-grade-cell">
 
 
-                            <div class="product-grade">{{ item.grade or item.name }}</div>
+                            <div class="product-grade">{{ item.name }}</div>
 
 
                             <div class="product-category">{{ item.category or 'CATEGORY' }}</div>
@@ -1665,6 +1658,21 @@
                 </div>
             </div>
 
+            <div class="modal-form-grid">
+                <div class="f-group">
+                    <label>Product Name</label>
+                    <input type="text" id="edit-name" class="modal-input">
+                </div>
+                <div class="f-group">
+                    <label>Category</label>
+                    <input type="text" id="edit-category" class="modal-input">
+                </div>
+                <div class="f-group">
+                    <label>HSN Code</label>
+                    <input type="text" id="edit-hsn" class="modal-input" placeholder="HSN Code">
+                </div>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
                 <div class="f-group-modal">
                     <label>PURCHASE COST (₹)</label>
@@ -1789,6 +1797,9 @@
 
         document.getElementById('edit_code').value = code;
         document.getElementById('modal-product-name').innerText = `${name} [${code}]`;
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-category').value = d.category || '';
+        document.getElementById('edit-hsn').value = d.hsnCode || '';
         document.getElementById('edit_name').value = name;
         document.getElementById('edit_name_ta').value = name_ta || '';
         
@@ -1818,7 +1829,9 @@
     async function updateProductPrice() {
         const code = document.getElementById('edit_code').value;
         const data = {
-            name: document.getElementById('edit_name').value,
+            name: document.getElementById('edit-name').value,
+            category: document.getElementById('edit-category').value,
+            hsn_code: document.getElementById('edit-hsn').value,
             name_ta: document.getElementById('edit_name_ta').value,
             is_loose: document.getElementById('edit_is_loose').value === 'true',
             price: parseFloat(document.getElementById('edit_price').value) || 0,
@@ -1843,5 +1856,6 @@
 
 
 {% endblock %}
+
 
 

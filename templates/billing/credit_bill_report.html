@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Jai Agency - {{ title }}{% endblock %}
+{% block title %}JAI AGENCIES - {{ title }}{% endblock %}
 
 {% block content %}
-<div class="dashboard-container fade-in report-shell thermal-report">
+<div class="dashboard-container fade-in report-shell">
     <div class="section-header no-print">
         <div>
             <h1>{{ title }}</h1>
@@ -19,71 +19,86 @@
         </div>
     </div>
 
-    <div class="print-report-header print-only">
-        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
-        <p style="margin: 2px 0; font-size: 9pt; font-weight: bold;">{{ title|upper }}</p>
-        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    <!-- Standardized Filter Nexus -->
+    <div class="filter-nexus glass-panel no-print">
+        <div class="filter-group">
+            <label>FROM DATE</label>
+            <input type="date" id="fromDate" value="{{ from_date_raw or '' }}">
+        </div>
+        <div class="filter-group">
+            <label>TO DATE</label>
+            <input type="date" id="toDate" value="{{ to_date_raw or '' }}">
+        </div>
+        <div class="filter-group">
+            <label>BILL #</label>
+            <input type="text" id="billId" placeholder="Search ID..." value="{{ bill_id or '' }}">
+        </div>
+        <div class="action-group">
+            <button class="btn-cyber" onclick="applyFilters()">
+                <i class="fas fa-filter"></i> Apply Matrix
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function applyFilters() {
+            const from = document.getElementById('fromDate').value;
+            const to = document.getElementById('toDate').value;
+            const billId = document.getElementById('billId').value;
+            let url = window.location.pathname + `?from=${from}&to=${to}`;
+            if (billId) url += `&bill_id=${billId}`;
+            window.location.href = url;
+        }
+        document.getElementById('billId').addEventListener('keypress', (e) => { if(e.key === 'Enter') applyFilters(); });
+    </script>
+
+    <div class="print-only">
+        <div class="print-report-header">
+            <h2 class="title-sm">{{ title }} Report</h2>
+            <p class="date-range">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+        </div>
     </div>
 
     <div class="table-container">
-        <table>
+        <table class="a4-report-table">
             <thead>
-                <tr style="background: rgba(0,0,0,0.02);">
-                    <th class="print-date" style="padding: 1.25rem; font-size: 0.75rem;">DATE</th>
-                    <th class="print-time" style="padding: 1.25rem; font-size: 0.75rem;">TIME</th>
-                    <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">BILL</th>
-                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem;">NAME</th>
-                    <th class="print-hide" style="padding: 1.25rem; font-size: 0.75rem;">MOBILE NUMBER</th>
-                    <th class="print-net" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">AMOUNT</th>
+                <tr>
+                    <th style="width: 15%;">DATE</th>
+                    <th style="width: 10%;">TIME</th>
+                    <th style="width: 12%;">BILL</th>
+                    <th style="width: 43%;">DESCRIPTION / CUSTOMER</th>
+                    <th style="width: 20%; text-align: right;">AMOUNT</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in data %}
                 <tr>
-                    <td class="print-date" style="color: var(--navy-900); font-weight: 500;">{{ item.date_only }}</td>
-                    <td class="print-time" style="color: var(--text-secondary); font-size: 0.9rem;">{{ item.time_only }}
+                    <td>{{ item.date_only }}</td>
+                    <td>{{ item.time_only }}</td>
+                    <td style="font-weight: bold;">#{{ item.id }}</td>
+                    <td>
+                        {{ item.customer_name if item.customer_name else 'Walk-in' }}
                     </td>
-                    <td class="print-bill-id">
-                        <code
-                            style="font-weight: 700; color: var(--white); background: var(--navy-900); padding: 4px 10px; border-radius: 6px;">#{{ item.id }}</code>
-                    </td>
-                    <td class="print-hide" style="font-weight: 600; color: var(--navy-900);">
-                        {{ item.customer_name if item.customer_name else '-' }}
-                        {% if item.is_partial %}<span class="badge" style="background: rgba(99, 102, 241, 0.1); color: var(--primary); font-size: 0.65rem; padding: 2px 6px; margin-left: 5px;">CREDIT PMT</span>{% endif %}
-                    </td>
-                    <td class="print-hide" style="color: var(--text-secondary);">
-                        {{ item.customer_mobile if item.customer_mobile else '-' }}
-                    </td>
-                    <td class="print-net"
-                        style="text-align: right; font-weight: 800; font-size: 1.1rem; color: var(--navy-900);">
+                    <td style="text-align: right; font-weight: bold;">
                         ₹{{ "%.2f"|format(item.net_total) }}
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
-                        <i class="fas fa-credit-card"
-                            style="font-size: 3rem; opacity: 0.3; display: block; margin-bottom: 1.5rem;"></i>
+                    <td colspan="5" style="text-align: center; padding: 4rem;">
                         No credit transactions found.
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
             {% if data %}
-            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto',
-            'RETURNED') | list %}
+            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto', 'RETURNED') | list %}
             <tfoot>
-                <tr style="background: var(--surface-light) !important; border-top: 2px solid var(--navy-900);">
-                    <td colspan="5" class="print-hide"
-                        style="padding: 1.5rem; text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1rem;">
-                        TOTAL CARD SALES
+                <tr>
+                    <td colspan="4" style="text-align: right; font-weight: 800; font-size: 11pt; border-top: 1.5pt solid black; background: #eee !important;">
+                        TOTAL CREDIT SALES
                     </td>
-                    <td class="print-only"
-                        style="display: none; padding: 1.5rem; text-align: right; font-weight: 700; color: #000; font-size: 10pt;">
-                        CARD TOTAL:
-                    </td>
-                    <td class="print-net"
-                        style="text-align: right; font-weight: 800; color: var(--navy-900); font-size: 1.25rem; padding: 1.5rem;">
+                    <td style="text-align: right; font-weight: 900; font-size: 13pt; border-top: 1.5pt solid black; background: #eee !important; color: #000;">
                         ₹{{ "%.2f"|format(active_sales | sum(attribute='net_total')) }}
                     </td>
                 </tr>
@@ -94,48 +109,95 @@
 </div>
 
 <style>
+    .a4-report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+    
+    .a4-report-table th, .a4-report-table td {
+        padding: 10px 12px;
+        border: 1px solid var(--border-light);
+        text-align: left;
+    }
+
     @media print {
         @page {
-            size: A5;
-            margin: 5mm;
+            size: A4 portrait;
+            margin: 10mm;
         }
 
         body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: Arial, sans-serif !important;
-            font-size: 10pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 9pt !important;
         }
+
+        .no-print, .navbar, .site-footer, .header-actions, .filter-box, .btn, .print-hide, .nav-links, .nav-badge, .avatar, .print-only-header {
+            display: none !important;
+        }
+
+        .print-only {
+            display: block !important;
+        }
+
         .print-report-header {
-            text-align: center;
-            border-bottom: 2px solid #000;
-            margin-bottom: 3mm;
-            padding-bottom: 2mm;
+            text-align: center !important;
+            margin-bottom: 5mm !important;
+            border-bottom: 1pt solid black !important;
+            padding-bottom: 3mm !important;
+        }
+        
+        .print-report-header::before {
+            content: "JAI AGENCIES";
+            display: block;
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 1mm;
+            text-transform: uppercase;
         }
 
-        .print-date { width: 22% !important; }
-        .print-bill-id { width: 20% !important; font-weight: bold; }
-        .print-time { width: 23% !important; text-align: center !important; }
-        .print-net { width: 35% !important; text-align: right !important; font-weight: bold !important; font-size: 9pt !important; }
+        .title-sm { font-size: 10pt !important; font-weight: 600 !important; margin: 0 !important; }
+        .date-range { font-size: 9pt !important; margin: 2mm 0 0 0 !important; }
 
-        tfoot tr td {
-            font-size: 10pt !important;
-            border-top: 2px solid #000 !important;
-            padding-top: 2mm !important;
+        .dashboard-container, .report-shell, .table-container {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
 
-        .print-footer {
-            text-align: center;
-            margin-top: 5mm;
-            border-top: 1px dashed #000;
-            padding-top: 2mm;
-            font-size: 7pt;
+        .a4-report-table {
+            width: 100% !important;
+            border: 1pt solid #000 !important;
+        }
+
+        .a4-report-table th, .a4-report-table td {
+            border: 0.5pt solid #000 !important;
+            padding: 6pt !important;
+            font-size: 9pt !important;
+            color: black !important;
+        }
+
+        .a4-report-table th {
+            background: #eee !important;
+            -webkit-print-color-adjust: exact;
+            background-clip: padding-box;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+        }
+
+        tr {
+            page-break-inside: avoid !important;
+        }
+
+        tfoot td {
+            background: #eee !important;
+            -webkit-print-color-adjust: exact;
         }
     }
 </style>
 {% endblock %}
-
-

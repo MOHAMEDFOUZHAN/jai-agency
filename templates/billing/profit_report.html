@@ -1,55 +1,30 @@
 {% extends "base.html" %}
 
-{% block title %}Jai Agency - Profit Analysis{% endblock %}
+{% block title %}Profit Analysis | JAI AGENCIES{% endblock %}
 
 {% block content %}
-<div class="dashboard-container fade-in report-shell">
-    <!-- Header Section -->
-    <div class="report-nexus-header no-print">
-        <div class="header-main">
-            <h1>Profit Analysis</h1>
-            <p>Intelligence-driven margin tracking</p>
+<div class="report-wrapper profit-page fade-in">
+    <!-- Header -->
+    <div class="report-header no-print">
+        <div class="header-content">
+            <span class="kicker">Business Intelligence</span>
+            <h1>Profit Report</h1>
+            <p>Real-time margin analysis and revenue intelligence.</p>
         </div>
         <div class="header-actions">
-            <button class="btn-intelligence primary" onclick="window.print()">
-                <i class="fas fa-print"></i> Print
+             <button class="btn-premium secondary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Manifest
             </button>
-            <a href="/billing/navigation" class="btn-intelligence secondary">
-                <i class="fas fa-arrow-left"></i> Back
+            <a href="/logout-profit-pin" class="btn-premium danger-ghost" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
+                <i class="fas fa-shield-slash"></i> Lock Analytics
+            </a>
+            <a href="/billing/navigation" class="btn-premium ghost">
+                <i class="fas fa-times"></i> Close Hub
             </a>
         </div>
     </div>
 
-    <!-- Summary Stats -->
-    <div class="neural-grid no-print" style="margin-bottom: 2rem;">
-        <div class="neural-card summary-card">
-            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;"><i class="fas fa-shopping-cart" style="color: var(--neon-blue);"></i></div>
-            <span class="card-label">TOTAL REVENUE</span>
-            <div class="card-value" id="valRevenue">₹0.00</div>
-            <span class="card-sub" style="color: #94a3b8;">Gross income (after discounts)</span>
-        </div>
-        <div class="neural-card summary-card">
-            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;"><i class="fas fa-truck-loading" style="color: var(--neon-purple);"></i></div>
-            <span class="card-label">TOTAL COST</span>
-            <div class="card-value" id="valCost">₹0.00</div>
-            <span class="card-sub" style="color: #94a3b8;">Total purchase value of sold units</span>
-        </div>
-        <div class="neural-card summary-card">
-            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;"><i class="fas fa-chart-line" style="color: var(--neon-emerald);"></i></div>
-            <span class="card-label">NET PROFIT</span>
-            <div class="card-value" id="valProfit" style="color: #10b981;">₹0.00</div>
-            <span class="card-sub" style="color: #94a3b8;" id="valMargin">Calculated margin: 0%</span>
-        </div>
-        <div class="neural-card summary-card" id="cardDynamic">
-            <!-- This card switches between PERIOD and QTY depending on filter -->
-            <div class="card-icon" style="top: 1.5rem; right: 1.5rem;" id="dynIcon"><i class="fas fa-calendar-alt" style="color: var(--neon-cyan);"></i></div>
-            <span class="card-label" id="dynLabel">PERIOD</span>
-            <div class="card-value" id="dynValue" style="font-size: 1.5rem; margin-top: 1.5rem;">{{ date_from }} - {{ date_to }}</div>
-            <span class="card-sub" style="color: #94a3b8;" id="dynSub">Reporting window</span>
-        </div>
-    </div>
-
-    <!-- Filter Bar -->
+    <!-- Standardized Filter Nexus -->
     <div class="filter-nexus glass-panel no-print">
         <div class="filter-group">
             <label>FROM DATE</label>
@@ -59,338 +34,360 @@
             <label>TO DATE</label>
             <input type="date" id="toDate" value="{{ to_date_raw }}">
         </div>
+        <div class="filter-group">
+            <label>MATRIX SEARCH</label>
+            <input type="text" id="productSearch" onkeyup="searchProducts()" placeholder="Search products or code...">
+        </div>
+        <div class="action-group">
+            <button class="btn-premium primary" onclick="applyFilters()">
+                <i class="fas fa-sync-alt"></i> Recompute
+            </button>
+        </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid-shell no-print">
+        <div class="section-title">
+            <i class="fas fa-cubes"></i>
+            <h2>Product Wise Performance</h2>
+        </div>
+        <div class="grid-container" id="productGrid">
+            {% for p in summary %}
+            <div class="product-card" data-name="{{ p.name|lower }}" data-code="{{ p.code|lower }}">
+                <div class="card-status-dot {% if (p.profit / p.revenue * 100) > 20 %}good{% elif (p.profit / p.revenue * 100) > 10 %}fair{% else %}risk{% endif %}"></div>
+                <div class="card-header">
+                    <span class="p-name">{{ p.name }}</span>
+                    <span class="p-code">NODE ID: #{{ p.code }}</span>
+                </div>
+                <div class="card-stats-list">
+                    <div class="stat-line p-performance-box">
+                        <span class="p-performance-label">{% if p.profit < 0 %}NET LOSS:{% else %}NET PROFIT:{% endif %}</span>
+                        <div class="val p-performance-val {% if p.profit < 0 %}text-danger{% else %}positive{% endif %}">
+                            ₹{{ "{:,.2f}".format(p.profit | abs) }}
+                        </div>
+                    </div>
+                </div>
+                {% set p_margin = (p.profit / p.revenue * 100) if p.revenue > 0 else 0 %}
+                <div class="card-footer-viz">
+                    <div class="viz-label">Efficiency: {{ "%.1f"|format(p_margin) }}%</div>
+                    <div class="viz-bar-bg">
+                        <div class="viz-bar-fill {% if p_margin > 20 %}bg-emerald{% elif p_margin > 10 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ p_margin|round }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Overall Report -->
+    <div class="overall-report-shell no-print">
+        <div class="section-title">
+            <i class="fas fa-chart-pie"></i>
+            <h2>Consolidated Summary</h2>
+        </div>
+        <div class="overall-card glass-panel">
+            <div class="overall-meta" style="display: none;">
+                <!-- Hidden Metrics -->
+            </div>
+            <div class="overall-stats-grid simple-view">
+                <div class="big-stat" style="display: none;">
+                    <label>Total Revenue</label>
+                    <div class="val">₹{{ "{:,.2f}".format(total_revenue) }}</div>
+                    <div class="sub-label">Gross Sales volume</div>
+                </div>
+                <div class="big-stat highlight">
+                    <label>{% if total_profit < 0 %}Overall Loss{% else %}Overall Profit{% endif %}</label>
+                    <div class="val {% if total_profit < 0 %}text-danger{% else %}text-emerald{% endif %}">₹{{ "{:,.2f}".format(total_profit) }}</div>
+                    <div class="sub-label">Consolidated Margin</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Only Content (Modern Manifest View) -->
+    <div class="print-content print-only">
+        <div class="print-report-header">
+            <h1 class="store-name-print">JAI AGENCIES</h1>
+            <h2 class="title-sm">{{ title or 'Profit Analysis Report' }}</h2>
+            <p class="date-range" style="display: none;">Period: {{ date_from }} to {{ date_to }}</p>
+        </div>
         
-        <div class="filter-group" style="flex: 1.5;">
-            <label>SELECT PRODUCT</label>
-            <select id="productFilter" class="modern-select" onchange="applyProductFilter()">
-                <option value="ALL">All Products (Global View)</option>
-                {% for p in summary %}
-                <option value="{{ p.name }}">{{ p.name }} ({{ p.qty }} units)</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="filter-group action-group">
-            <button class="btn-cyber" onclick="applyFilters()">
-                <i class="fas fa-sync-alt"></i> Update Report
-            </button>
-        </div>
-    </div>
-        <div class="filter-group action-group">
-            <button class="btn-cyber" onclick="applyFilters()">
-                <i class="fas fa-sync-alt"></i> Update Report
-            </button>
-            <button class="btn-intelligence secondary" onclick="window.location.href='/billing/reports/profit'" title="Reset">
-                <i class="fas fa-history"></i>
-            </button>
-        </div>
-    </div>
-
-    <div class="tab-scaffold no-print" style="margin-bottom: 2rem; display: flex; gap: 1rem;">
-        <button class="tab-btn active" onclick="switchTab('product-wise')">Product Performance</button>
-        <button class="tab-btn" onclick="switchTab('detailed-log')" id="tabDetailedLog">General Profit Log</button>
-    </div>
-
-    <!-- Product Performance Table -->
-    <div id="product-wise" class="table-vessel glass-panel no-print report-section active" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 24px; padding: 1.5rem;">
-        <h3 style="margin-bottom: 1.5rem; letter-spacing: 1px; color: var(--neon-blue);">PRODUCT ANALYSIS</h3>
-        <table class="nexus-table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
-            <thead>
-                <tr style="text-align: left;">
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">PRODUCT NAME</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: center;">UNITS SOLD</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">REVENUE</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">PURCHASE COST</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">NET PROFIT</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: center;">MARGIN %</th>
-                </tr>
-            </thead>
-            <tbody id="summaryTableBody">
-                <!-- Dynamically populated -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Detailed Profit Log -->
-    <div id="detailed-log" class="table-vessel glass-panel no-print report-section" style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border-radius: 24px; padding: 1.5rem; display: none;">
-        <h3 id="logTitle" style="margin-bottom: 1.5rem; letter-spacing: 1px; color: var(--neon-purple);">TRANSACTION MARGIN LOG</h3>
-        <table class="nexus-table" style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
-            <thead id="logTableHeader">
-                <!-- Dynamically Populated Header -->
-            </thead>
-            <tbody id="logTableBody">
-                <!-- Dynamically populated -->
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Print Layout (Consolidated Style) -->
-    <div class="print-layout print-only" style="display: none;">
-        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 15px;">
-            <h1 style="margin: 0; font-size: 22pt;">Profit Analysis Report</h1>
-            <h2 style="margin: 5px 0; font-size: 18pt; font-weight: 900;">JAI AGENCY</h2>
-            <p style="margin: 5px 0; font-weight: bold; font-size: 12pt;">Period: {{ date_from }} to {{ date_to }}</p>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
-                <label style="display: block; font-size: 10pt; color: #666;">Total Revenue</label>
-                <div style="font-size: 16pt; font-weight: 800;">₹{{ "%.2f"|format(total_revenue) }}</div>
+        <div class="manifest-summary-grid simple-print">
+            <div class="summary-node" style="display: none;">
+                <label>TOTAL REVENUE</label>
+                <strong>₹{{ "{:,.2f}".format(total_revenue) }}</strong>
             </div>
-            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px;">
-                <label style="display: block; font-size: 10pt; color: #666;">Total Purch. Cost</label>
-                <div style="font-size: 16pt; font-weight: 800;">₹{{ "%.2f"|format(total_cost) }}</div>
-            </div>
-            <div style="border: 1px solid #ccc; padding: 15px; border-radius: 8px; background: #f0fdf4;">
-                <label style="display: block; font-size: 10pt; color: #666;">Net Profit</label>
-                <div style="font-size: 16pt; font-weight: 800; color: #166534;">₹{{ "%.2f"|format(total_profit) }}</div>
+            <div class="summary-node">
+                <label>{% if total_profit < 0 %}NET LOSS{% else %}NET PROFIT{% endif %}</label>
+                <strong class="total-profit-print {% if total_profit < 0 %}print-text-danger{% else %}print-text-emerald{% endif %}">₹{{ "{:,.2f}".format(total_profit | abs) }}</strong>
             </div>
         </div>
 
-        <h3 style="margin: 20px 0 10px; font-size: 14pt;">PRODUCT PERFORMANCE</h3>
-        <table style="width: 100%; border-collapse: collapse;">
+        <table class="manifest-table">
             <thead>
                 <tr>
-                    <th style="border: 1px solid #000; padding: 8px; text-align: left;">Product Name</th>
-                    <th style="border: 1px solid #000; padding: 8px; text-align: center;">Qty Sold</th>
-                    <th style="border: 1px solid #000; padding: 8px; text-align: right;">Revenue</th>
-                    <th style="border: 1px solid #000; padding: 8px; text-align: right;">Margin</th>
+                    <th style="text-align: left;">Product Performance Matrix</th>
+                    <th>Code</th>
+                    <th style="text-align: right;">Units</th>
+                    <th style="text-align: right;">Total Net Profit</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in summary %}
                 <tr>
-                    <td style="border: 1px solid #000; padding: 6px;">{{ p.name }}</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: center;">{{ p.qty }}</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right;">{{ "%.2f"|format(p.revenue) }}</td>
-                    <td style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;">{{ "%.2f"|format(p.profit) }}</td>
+                    <td>{{ p.name }}</td>
+                    <td>#{{ p.code }}</td>
+                     <td style="text-align: right;">{{ p.qty }}</td>
+                     <td class="cell-profit-print {% if p.profit < 0 %}print-text-danger{% else %}print-text-emerald{% endif %}">
+                         ₹{{ "{:,.2f}".format(p.profit | abs) }}
+                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
-            <tfoot>
-                <tr style="background: #eee;">
-                    <td colspan="3" style="border: 1px solid #000; padding: 10px; font-weight: bold;">Grand Total Profit</td>
-                    <td style="border: 1px solid #000; padding: 10px; text-align: right; font-weight: bold;">{{ "%.2f"|format(total_profit) }}</td>
-                </tr>
-            </tfoot>
         </table>
+        
+        <div class="manifest-footer">
+            <p>Generated on: <span id="printTime"></span> | Page 1 of 1</p>
+            <p>Confidential Business Intelligence Document</p>
+        </div>
     </div>
 </div>
 
 <style>
-    .report-shell { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
-    .report-nexus-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2.5rem; }
-    .report-nexus-header h1 { font-size: 3rem; margin-bottom: 0.2rem; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -2px; }
-    .report-nexus-header p { color: #94a3b8; font-weight: 600; font-size: 1.1rem; }
+    :root {
+        --accent-blue: #3b82f6;
+        --accent-emerald: #10b981;
+        --text-dim: #94a3b8;
+        --bg-glass: rgba(15, 23, 42, 0.6);
+        --border-glass: rgba(255, 255, 255, 0.08);
+    }
+
+    .profit-page { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+    /* Header */
+    .report-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
+    .kicker { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; color: var(--accent-blue); display: block; margin-bottom: 0.5rem; }
+    .report-header h1 { font-size: 2.2rem; letter-spacing: -2px; margin: 0; line-height: 1; }
+    .report-header p { color: var(--text-dim); margin-top: 0.5rem; font-size: 1.1rem; }
+    .header-actions { display: flex; gap: 1rem; }
+
+    /* Filters - Replaced by Global Filter Nexus */
     
-    .filter-nexus { display: flex; gap: 1.5rem; padding: 1.5rem 2rem; border-radius: 20px; align-items: flex-end; margin-bottom: 2rem; }
-    .filter-group { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
-    .modern-select {
+    /* Section Titles */
+    .section-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; color: #fff; }
+    .section-title i { font-size: 1.2rem; color: var(--accent-blue); }
+    .section-title h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; opacity: 0.9; }
+
+    /* Product Grid */
+    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 4rem; }
+    .product-card { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 28px; padding: 2rem; position: relative; backdrop-filter: blur(12px); overflow: hidden; transition: 0.3s; }
+    .product-card:hover { transform: translateY(-8px); border-color: var(--accent-blue); background: rgba(15, 23, 42, 0.8); }
+
+    .card-status-dot { position: absolute; top: 1.5rem; right: 1.5rem; width: 10px; height: 10px; border-radius: 50%; }
+    .card-status-dot.good { background: var(--accent-emerald); box-shadow: 0 0 15px var(--accent-emerald); }
+    .card-status-dot.fair { background: #f59e0b; }
+    .card-status-dot.risk { background: #ef4444; }
+
+    .card-header { margin-bottom: 1.75rem; }
+    .p-name { display: block; font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem; }
+    .p-code { font-size: 0.7rem; font-weight: 900; color: var(--accent-blue); }
+
+    .stat-line { display: flex; justify-content: space-between; margin-bottom: 0.75rem; border-bottom: 1px dotted rgba(255,255,255,0.05); padding-bottom: 0.5rem; }
+    .stat-line .label { font-size: 0.85rem; color: var(--text-dim); }
+    .stat-line .val { font-weight: 700; color: #fff; }
+    .stat-line.highlight { margin-top: 1rem; border: none; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 12px; }
+    
+    .stat-calc-detail { font-size: 0.75rem; color: #475569; font-weight: 700; margin-top: 0.5rem; text-align: center; background: rgba(0,0,0,0.2); padding: 0.4rem; border-radius: 8px; font-family: 'Space Grotesk', monospace; }
+    .calc-res { color: var(--accent-emerald); }
+    
+    .card-footer-viz { margin-top: 2rem; }
+    .viz-label { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-dim); }
+    .viz-bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
+    .viz-bar-fill { height: 100%; border-radius: 10px; transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+    /* Overall Summary */
+    .overall-card { padding: 3rem; border-radius: 36px; }
+    .overall-meta { display: flex; gap: 3rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-glass); }
+    .meta-item label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: #475569; margin-bottom: 0.5rem; }
+    .meta-item .val { font-weight: 800; color: #fff; }
+
+    .overall-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; }
+    .overall-stats-grid.simple-view { grid-template-columns: repeat(2, 1fr); max-width: 900px; margin: 0 auto; }
+    .big-stat label { display: block; font-size: 0.8rem; font-weight: 800; color: var(--text-dim); margin-bottom: 0.5rem; }
+    .text-emerald { color: #10b981 !important; }
+
+    .p-performance-box {
+        margin-top: 0; 
+        padding: 1.5rem; 
         background: rgba(255,255,255,0.05); 
-        border: 1px solid rgba(255,255,255,0.1); 
-        border-radius: 12px; 
-        padding: 10px 15px; 
-        color: #fff; 
-        font-weight: 700;
-        width: 100%;
-        outline: none;
-        cursor: pointer;
-        appearance: none;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        border-bottom: none;
     }
-    .modern-select option {
-        background: #0d1122;
-        color: white;
+    .p-performance-label {
+        font-size: 1.1rem; 
+        color: var(--text-dim); 
+        text-transform: uppercase; 
+        font-weight: 800;
+    }
+    .p-performance-val {
+        font-size: 1.8rem; 
+        font-weight: 950; 
+        letter-spacing: -1px; 
+        margin-top: 5px;
     }
 
-    .select-wrapper {
-        position: relative;
-        flex: 1;
-    }
+    .bg-emerald { background: #10b981; }
+    .bg-warning { background: #f59e0b; }
+    .bg-danger { background: #ef4444; }
 
-    .summary-card { min-height: 180px; text-align: left; align-items: flex-start; padding: 2rem; transition: 0.3s; }
-    .summary-card:hover { transform: translateY(-5px); background: rgba(255, 255, 255, 0.05); }
-
-    .td-styled {
-        padding: 1.25rem 1.5rem; 
-        background: rgba(255, 255, 255, 0.02); 
-        border-top: 1px solid rgba(255, 255, 255, 0.03); 
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    }
-    .td-left { border-left: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px 0 0 12px; }
-    .td-right { border-right: 1px solid rgba(255, 255, 255, 0.03); border-radius: 0 12px 12px 0; }
-
+    /* PRINT STYLES */
     @media print {
-        @page { size: A4 portrait; margin: 10mm; }
-        body { background: white !important; color: black !important; padding: 0 !important; }
-        .no-print, .navbar, .site-footer { display: none !important; }
-        .print-only { display: block !important; }
-        .dashboard-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        body {
+            background: white !important;
+            color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 9pt !important;
+        }
+
+        .no-print, .navbar, .site-footer, .header-actions, .report-filters, .product-grid-shell, .overall-report-shell, .print-only-header {
+            display: none !important;
+        }
+
+        .print-only {
+            display: block !important;
+        }
+
+        .store-name-print {
+            font-size: 24pt; 
+            font-weight: 900; 
+            margin-bottom: 2mm;
+            text-align: center;
+        }
+
+        .print-report-header {
+            text-align: center !important;
+            margin-bottom: 5mm !important;
+            border-bottom: 1pt solid black !important;
+            padding-bottom: 3mm !important;
+        }
+
+        .title-sm { font-size: 14pt !important; font-weight: 700 !important; margin: 0 !important; }
+        .date-range { font-size: 9pt !important; margin: 2mm 0 0 0 !important; }
+
+        .report-wrapper, .print-content {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .manifest-summary-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10mm;
+            margin-bottom: 5mm;
+            border: 1.5pt solid black !important;
+            padding: 4mm !important;
+            background: #f9f9f9 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .summary-node {
+            text-align: center;
+        }
+
+        .summary-node label { font-size: 8.5pt; display: block; margin-bottom: 4pt; color: #000; font-weight: bold; text-transform: uppercase; }
+        .summary-node strong { font-size: 16pt; display: block; }
+        
+        .total-profit-print { font-size: 24pt; }
+        .print-text-danger { color: #ef4444 !important; }
+        .print-text-emerald { color: #10b981 !important; }
+
+        .manifest-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border: 1pt solid black !important;
+        }
+
+        .manifest-table thead {
+            display: table-header-group !important;
+        }
+
+        .manifest-table th {
+            padding: 8pt;
+            border: 0.5pt solid #000 !important;
+            background: #eee !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-size: 9.5pt;
+            text-transform: uppercase;
+        }
+
+        .manifest-table td {
+            padding: 8pt;
+            border: 0.5pt solid #000 !important;
+            font-size: 9pt;
+        }
+
+        .cell-profit-print {
+            text-align: right; 
+            font-weight: bold;
+        }
+
+        .manifest-table tr {
+            page-break-inside: avoid !important;
+        }
+
+        .manifest-footer {
+            margin-top: 10mm;
+            border-top: 0.5pt solid #ccc;
+            padding-top: 4mm;
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 8.5pt;
+        }
+
+        .text-emerald { color: black !important; font-weight: bold !important; }
     }
 </style>
 
 <script>
-    const serverData = {
-        profitData: {{ data | tojson }},
-        summaryData: {{ summary | tojson }},
-        itemLogData: {{ item_log | tojson }},
-        globalTotals: {
-            revenue: {{ total_revenue }},
-            cost: {{ total_cost }},
-            profit: {{ total_profit }}
-        },
-        dateFrom: "{{ date_from }}",
-        dateTo: "{{ date_to }}"
-    };
-
-    function formatMoney(num) {
-        return '₹' + parseFloat(num).toFixed(2);
-    }
-
-    function calculateMargin(profit, revenue) {
-        if (revenue <= 0) return 0;
-        return ((profit / revenue) * 100).toFixed(1);
-    }
-
-    function applyProductFilter() {
-        const filterVal = document.getElementById('productFilter').value;
-        const sumBody = document.getElementById('summaryTableBody');
-        const logBody = document.getElementById('logTableBody');
-        const logHead = document.getElementById('logTableHeader');
-        let rev = 0, cost = 0, prof = 0;
-
-        if (filterVal === 'ALL') {
-            rev = serverData.globalTotals.revenue;
-            cost = serverData.globalTotals.cost;
-            prof = serverData.globalTotals.profit;
-            
-            // Render All Summary
-            document.getElementById('dynIcon').innerHTML = '<i class="fas fa-calendar-alt" style="color: var(--neon-cyan);"></i>';
-            document.getElementById('dynLabel').innerText = 'PERIOD';
-            document.getElementById('dynValue').innerText = `${serverData.dateFrom} - ${serverData.dateTo}`;
-            document.getElementById('dynValue').style.fontSize = '1.5rem';
-            document.getElementById('dynSub').innerText = 'Reporting window';
-            
-            document.getElementById('logTitle').innerHTML = 'TRANSACTION MARGIN LOG (GLOBAL)';
-            document.getElementById('tabDetailedLog').innerText = 'General Profit Log';
-
-            renderSummaryTable(serverData.summaryData);
-            renderLogTableHeader(false);
-            renderLogTableGeneral(serverData.profitData);
-
-        } else {
-            // Filter specific product
-            const pStats = serverData.summaryData.find(p => p.name === filterVal);
-            if (pStats) {
-                rev = pStats.revenue;
-                cost = pStats.cost;
-                prof = pStats.profit;
-            }
-            
-            document.getElementById('dynIcon').innerHTML = '<i class="fas fa-cubes" style="color: var(--neon-cyan);"></i>';
-            document.getElementById('dynLabel').innerText = 'UNITS SOLD';
-            document.getElementById('dynValue').innerText = pStats ? pStats.qty : 0;
-            document.getElementById('dynValue').style.fontSize = '2.5rem';
-            document.getElementById('dynSub').innerText = 'For selected period';
-
-            document.getElementById('logTitle').innerHTML = `ITEM LOG: ${filterVal}`;
-            document.getElementById('tabDetailedLog').innerText = 'Product Profit Log';
-
-            renderSummaryTable(pStats ? [pStats] : []);
-            renderLogTableHeader(true);
-            const filteredLogs = serverData.itemLogData.filter(i => i.product_name === filterVal);
-            renderLogTableSpecific(filteredLogs);
-        }
-
-        document.getElementById('valRevenue').innerText = formatMoney(rev);
-        document.getElementById('valCost').innerText = formatMoney(cost);
-        document.getElementById('valProfit').innerText = formatMoney(prof);
-        document.getElementById('valMargin').innerText = `Calculated margin: ${calculateMargin(prof, rev)}%`;
-    }
-
-    function renderSummaryTable(dataArr) {
-        document.getElementById('summaryTableBody').innerHTML = dataArr.map(p => `
-            <tr style="transition:all 0.3s">
-                <td class="td-styled td-left" style="font-weight: 800;">${p.name}</td>
-                <td class="td-styled" style="text-align: center; color: var(--neon-cyan); font-weight: 700;">${p.qty}</td>
-                <td class="td-styled" style="text-align: right;">${formatMoney(p.revenue)}</td>
-                <td class="td-styled" style="text-align: right; color: var(--text-tertiary);">${formatMoney(p.cost)}</td>
-                <td class="td-styled" style="text-align: right; font-weight: 900; color: #10b981;">${formatMoney(p.profit)}</td>
-                <td class="td-styled td-right" style="text-align: center;">
-                    <span style="font-size: 0.7rem; font-weight: 950; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 8px; border-radius: 6px;">${calculateMargin(p.profit, p.revenue)}%</span>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    function renderLogTableHeader(isSpecific) {
-        if (!isSpecific) {
-            document.getElementById('logTableHeader').innerHTML = `
-                <tr style="text-align: left;">
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">SALE DATE</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">BILL #</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">CUSTOMER</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">BILL REVENUE</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">PURCHASE COST</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">NET PROFIT</th>
-                </tr>
-            `;
-        } else {
-            document.getElementById('logTableHeader').innerHTML = `
-                <tr style="text-align: left;">
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">SALE DATE</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase;">BILL #</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: center;">UNITS</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">ITEM REVENUE</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">PURCHASE COST</th>
-                    <th style="padding: 1rem 1.5rem; color: #94a3b8; font-size: 0.75rem; letter-spacing: 0.1em; font-weight: 800; text-transform: uppercase; text-align: right;">NET PROFIT</th>
-                </tr>
-            `;
-        }
-    }
-
-    function renderLogTableGeneral(dataArr) {
-        document.getElementById('logTableBody').innerHTML = dataArr.map(item => `
-            <tr>
-                <td class="td-styled td-left">${item.date}</td>
-                <td class="td-styled" style="font-weight: 800; color: var(--neon-blue);">#${item.id}</td>
-                <td class="td-styled">${item.customer}</td>
-                <td class="td-styled" style="text-align: right;">${formatMoney(item.revenue)}</td>
-                <td class="td-styled" style="text-align: right; color: var(--text-tertiary);">${formatMoney(item.cost)}</td>
-                <td class="td-styled td-right" style="text-align: right; font-weight: 900; color: #10b981;">${formatMoney(item.profit)}</td>
-            </tr>
-        `).join('');
-    }
-
-    function renderLogTableSpecific(dataArr) {
-        document.getElementById('logTableBody').innerHTML = dataArr.map(item => `
-            <tr>
-                <td class="td-styled td-left">${item.date}</td>
-                <td class="td-styled" style="font-weight: 800; color: var(--neon-blue);">#${item.id}</td>
-                <td class="td-styled" style="text-align: center; font-weight: 800; color: var(--neon-cyan);">${item.qty}</td>
-                <td class="td-styled" style="text-align: right;">${formatMoney(item.revenue)}</td>
-                <td class="td-styled" style="text-align: right; color: var(--text-tertiary);">${formatMoney(item.cost)}</td>
-                <td class="td-styled td-right" style="text-align: right; font-weight: 900; color: #10b981;">${formatMoney(item.profit)}</td>
-            </tr>
-        `).join('');
-    }
-
     function applyFilters() {
         const from = document.getElementById('fromDate').value;
         const to = document.getElementById('toDate').value;
         window.location.href = `/billing/reports/profit?from=${from}&to=${to}`;
     }
 
-    function switchTab(tabId) {
-        document.querySelectorAll('.report-section').forEach(s => s.style.display = 'none');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    function searchProducts() {
+        const query = document.getElementById('productSearch').value.toLowerCase();
+        const cards = document.querySelectorAll('.product-card');
         
-        document.getElementById(tabId).style.display = 'block';
-        event.currentTarget.classList.add('active');
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            const code = card.getAttribute('data-code');
+            if (name.includes(query) || code.includes(query)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
     }
 
-    // Initialize View
     document.addEventListener('DOMContentLoaded', () => {
-        applyProductFilter(); 
+        document.getElementById('printTime').innerText = new Date().toLocaleString();
     });
 </script>
 {% endblock %}
+

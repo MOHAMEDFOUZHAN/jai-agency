@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Quick Stock Entry | Jai Agency{% endblock %}
+{% block title %}Quick Stock Entry | JAI AGENCIES{% endblock %}
 
 {% block nav_links %}
 <a href="/inventory">Dashboard</a>
-<a href="/inventory/live-stock">Live</a>
-<a href="/inventory/storage" class="active">Storage</a>
+<a href="/inventory/live-stock" class="active">Live</a>
+<a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
 <a href="/inventory/products">Product Master</a>
 <a href="/inventory/suppliers">Suppliers</a>
 <a href="/inventory/stock-return">Return Stock</a>
@@ -33,7 +34,7 @@
                 <strong>{{ time_only }}</strong>
             </div>
         </div>
-        <a href="/inventory/storage" class="btn-neural-compact">
+        <a href="/inventory" class="btn-neural-compact">
             <i class="fas fa-times"></i>
         </a>
     </div>
@@ -55,6 +56,10 @@
                     <div class="f-group-compact">
                         <label>PRODUCT NAME</label>
                         <input type="text" id="name" placeholder="Enter Product Name" required>
+                    </div>
+                    <div class="f-group-compact">
+                        <label>HSN CODE</label>
+                        <input type="text" id="hsn" placeholder="Enter HSN Code">
                     </div>
 
                     <div class="form-row-compact">
@@ -263,6 +268,7 @@
         const prod = products.find(p => p.code === code);
         if (prod) {
             document.getElementById('name').value = prod.name;
+            document.getElementById('hsn').value = prod.hsn_code || '';
             document.getElementById('unit').value = prod.unit || 'Kg';
             document.getElementById('qty').focus();
         } else {
@@ -277,6 +283,7 @@
         const payload = {
             code: document.getElementById('code').value,
             name: document.getElementById('name').value,
+            hsn_code: document.getElementById('hsn').value,
             unit: document.getElementById('unit').value,
             grade: document.getElementById('grade').value,
             cost: 0,
@@ -299,7 +306,7 @@
             const data = await res.json();
             if (data.success) {
                 alert("Stock Added Successfully!");
-                window.location.href = '/inventory/storage';
+                window.location.href = '/inventory/live-stock';
             } else {
                 alert("Error: " + data.message);
             }
@@ -309,3 +316,4 @@
     }
 </script>
 {% endblock %}
+

@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Maple Pro - {{ title }}{% endblock %}
+{% block title %}JAI AGENCIES - {{ title }}{% endblock %}
 
 {% block content %}
 <div class="dashboard-container fade-in report-shell">
-    <div class="section-header">
+    <div class="section-header no-print">
         <div>
             <h1>{{ title }}</h1>
             <p style="color: var(--text-muted);">Credit history for {{ customer_name }}</p>
@@ -19,107 +19,94 @@
         </div>
     </div>
 
-    <div class="print-report-header print-only" style="display: none; text-align: center; border-bottom: 2px solid #000; margin-bottom: 5mm; padding-bottom: 3mm;">
-        <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
-        <p style="margin: 2px 0; font-size: 10pt; font-weight: bold;">{{ title|upper }}</p>
-        <p style="margin: 2px 0; font-size: 8pt;">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+    <div class="print-only">
+        <div class="print-report-header">
+            <h1 class="store-name">JAI AGENCIES</h1>
+            <h2 class="report-title">{{ title|upper }}</h2>
+            <p class="export-date">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+        </div>
+        
+        <div class="ledger-customer-info">
+            <div class="info-group">
+                <span class="label">CUSTOMER NAME</span>
+                <span class="value">{{ customer_name }}</span>
+            </div>
+            <div class="info-group" style="text-align: right;">
+                <span class="label">MOBILE NUMBER</span>
+                <span class="value">{{ customer_mobile }}</span>
+            </div>
+        </div>
     </div>
-    <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--glass-border);">
+
+    <div class="glass-panel no-print" style="padding: 1.5rem; margin-bottom: 2rem; border: 1px solid var(--border-light); background: var(--bg-card); border-radius: 12px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-                <div
-                    style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">
-                    CUSTOMER NAME</div>
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">CUSTOMER NAME</div>
                 <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-main);">{{ customer_name }}</div>
             </div>
             <div style="text-align: right;">
-                <div
-                    style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">
-                    MOBILE NUMBER</div>
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">MOBILE NUMBER</div>
                 <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);">{{ customer_mobile }}</div>
             </div>
         </div>
     </div>
 
     <div class="table-container">
-        <table>
+        <table class="a4-report-table ledger-table">
             <thead>
-                <tr style="background: rgba(0,0,0,0.02);">
-                    <th class="print-bill-id" style="padding: 1.25rem; font-size: 0.75rem;">B#</th>
-                    <th class="print-time" style="padding: 1.25rem; font-size: 0.75rem;">D/T</th>
-                    <th class="print-net" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">AMT</th>
-                    <th class="print-paid" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">PD</th>
-                    <th class="print-os" style="padding: 1.25rem; font-size: 0.75rem; text-align: right;">O/S</th>
+                <tr>
+                    <th style="width: 10%;">BILL</th>
+                    <th style="width: 15%;">DATE/TIME</th>
+                    <th style="width: 35%;">BILL DETAILS</th>
+                    <th style="width: 14%; text-align: right;">NET AMT</th>
+                    <th style="width: 13%; text-align: right;">PAID</th>
+                    <th style="width: 13%; text-align: right;">O/S BAL</th>
                 </tr>
             </thead>
             <tbody>
                 {% for item in data %}
                 <tr>
-                    <td class="print-bill-id">
-                        <code
-                            style="font-weight: 700; color: var(--primary); background: rgba(99, 102, 241, 0.1); padding: 2px 8px; border-radius: 4px;">#{{ item.id }}</code>
+                    <td style="font-weight: 700;">#{{ item.id }}</td>
+                    <td>
+                        <div style="font-weight: 600;">{{ item.date_only }}</div>
+                        <div style="font-size: 0.75rem; opacity: 0.8;">{{ item.time_only }}</div>
                     </td>
-                    <td class="print-time">
-                        <div style="font-weight: 600; color: var(--text-main);">{{ item.date_only }}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.time_only }}</div>
-                    </td>
-                    <td colspan="3" class="ledger-details">
-                        <div
-                            style="font-size: 0.8rem; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                            <div
-                                style="font-weight: 800; color: #64748b; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-                                BILL ITEMS</div>
+                    <td class="ledger-details-cell">
+                        <div class="bill-items-summary">
                             {% for detail in item.details %}
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                                <span style="font-weight: 600;">{{ detail.product_name }} (x{{ detail.qty }})</span>
-                                <span style="font-weight: 700; color: var(--primary);">&#8377;{{
-                                    "%.2f"|format(detail.gross_amount) }}</span>
+                            <div class="item-line">
+                                <span class="item-name">{{ detail.product_name }} (x{{ detail.qty }})</span>
+                                <span class="item-amt">₹{{ "%.2f"|format(detail.gross_amount) }}</span>
                             </div>
                             {% endfor %}
-                            <div
-                                style="margin-top: 8px; padding-top: 5px; border-top: 2px dashed #cbd5e1; display: flex; justify-content: space-between; font-weight: 800;">
-                                <span>NET TOTAL</span>
-                                <span>&#8377;{{ "%.2f"|format(item.net_total) }}</span>
-                            </div>
-                            <div
-                                style="display: flex; justify-content: space-between; color: var(--success); font-size: 0.75rem;">
-                                <span>PAID: ₹{{ "%.2f"|format(item.amount_paid) }}</span>
-                                <span style="color: var(--danger);">O/S: ₹{{ "%.2f"|format(item.balance) }}</span>
-                            </div>
                         </div>
                     </td>
+                    <td style="text-align: right; font-weight: 700;">₹{{ "%.2f"|format(item.net_total) }}</td>
+                    <td style="text-align: right; color: #050; font-weight: 600;">₹{{ "%.2f"|format(item.amount_paid) }}</td>
+                    <td style="text-align: right; color: #d00; font-weight: 800;">₹{{ "%.2f"|format(item.balance) }}</td>
                 </tr>
-                <tr style="height: 10px;">
-                    <td colspan="5"></td>
-                </tr>
-
                 {% else %}
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
+                    <td colspan="6" style="text-align: center; padding: 4rem; color: var(--text-muted); opacity: 0.7;">
                         No transaction history found for this customer.
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
             {% if data %}
-            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto',
-            'RETURNED') | list %}
+            {% set active_sales = data | rejectattr('status', 'equalto', 'CANCELLED') | rejectattr('status', 'equalto', 'RETURNED') | list %}
             <tfoot>
-                <tr style="background: rgba(var(--primary-rgb), 0.05); border-top: 2px solid var(--glass-border);">
-                    <td colspan="2"
-                        style="padding: 1.5rem; text-align: right; font-weight: 700; color: var(--text-main); font-size: 1rem;">
-                        TOTALS
+                <tr>
+                    <td colspan="3" style="text-align: right; font-weight: 800; font-size: 11pt; border-top: 1.5pt solid black; background: #eee !important;">
+                        CUMULATIVE TOTALS
                     </td>
-                    <td
-                        style="text-align: right; font-weight: 800; color: var(--text-main); font-size: 1.1rem; padding: 1.5rem;">
+                    <td style="text-align: right; font-weight: 700; background: #eee !important; border-top: 1.5pt solid black;">
                         ₹{{ "%.2f"|format(active_sales | sum(attribute='net_total')) }}
                     </td>
-                    <td
-                        style="text-align: right; font-weight: 800; color: var(--success); font-size: 1.1rem; padding: 1.5rem;">
+                    <td style="text-align: right; font-weight: 700; background: #eee !important; border-top: 1.5pt solid black; color: #050;">
                         ₹{{ "%.2f"|format(active_sales | sum(attribute='amount_paid')) }}
                     </td>
-                    <td
-                        style="text-align: right; font-weight: 800; color: var(--danger); font-size: 1.25rem; padding: 1.5rem;">
+                    <td style="text-align: right; font-weight: 900; font-size: 13pt; border-top: 1.5pt solid black; background: #eee !important; color: #d00;">
                         ₹{{ "%.2f"|format(active_sales | sum(attribute='balance')) }}
                     </td>
                 </tr>
@@ -130,136 +117,79 @@
 </div>
 
 <style>
+    .a4-report-table {
+        width: 100%; border-collapse: collapse; margin-top: 1rem;
+    }
+    .a4-report-table th, .a4-report-table td {
+        padding: 10px 12px; border: 1px solid var(--border-light); text-align: left;
+    }
+    .bill-items-summary { font-size: 0.85rem; }
+    .item-line { display: flex; justify-content: space-between; margin-bottom: 2px; border-bottom: 1px dashed #eee; padding-bottom: 2px; }
+
     @media print {
         @page {
-            size: A5;
-            margin: 5mm;
+            size: A4 portrait;
+            margin: 10mm;
         }
 
         body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 138mm !important;
-            background: white !important;
-            color: black !important;
-            font-family: Arial, sans-serif !important;
-            font-size: 10pt !important;
+            background: white !important; color: black !important;
+            margin: 0 !important; padding: 0 !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 9pt !important;
         }
 
-        .navbar,
-        .btn,
-        .nav-links,
-        .section-header div:last-child,
-        .pill-tabs,
-        .ledger-details {
+        .no-print, .navbar, .site-footer, .header-actions, .btn, .nav-links, .nav-badge, .avatar {
             display: none !important;
         }
 
-        .dashboard-container {
-            width: 80mm !important;
-            padding: 2mm !important;
-            margin: 0 !important;
-        }
-
-        .section-header h1 {
-            display: none !important;
+        .print-only {
+            display: block !important;
         }
 
         .print-report-header {
-            display: block !important;
             text-align: center !important;
-            border-bottom: 2px solid #000;
-            margin-bottom: 3mm;
-            padding-bottom: 2mm;
-        }
-
-        .section-header p {
-            display: none !important;
-        }
-
-        .glass-panel {
-            border: none !important;
-            border-bottom: 2px solid #000 !important;
-            border-top: 2px solid #000 !important;
-            border-radius: 0 !important;
-            padding: 2mm 0 !important;
+            border-bottom: 1pt solid black !important;
             margin-bottom: 5mm !important;
+            padding-bottom: 3mm !important;
+        }
+        
+        .store-name { font-size: 18pt !important; font-weight: bold !important; margin: 0 0 1mm 0 !important; text-transform: uppercase !important; }
+        .report-title { font-size: 11pt !important; font-weight: 600 !important; margin: 0 !important; }
+        .export-date { font-size: 9pt !important; margin: 2mm 0 0 0 !important; }
+
+        .ledger-customer-info {
+            display: flex !important; justify-content: space-between !important;
+            margin-bottom: 5mm !important; border-bottom: 1pt solid #000 !important; padding-bottom: 2mm !important;
+        }
+        .info-group .label { display: block; font-size: 7pt; font-weight: 800; color: #666; }
+        .info-group .value { display: block; font-size: 12pt; font-weight: bold; }
+
+        .dashboard-container, .report-shell, .table-container {
+            width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important;
         }
 
-        .glass-panel>div {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 1mm !important;
+        .a4-report-table {
+            width: 100% !important; border: 1pt solid #000 !important;
         }
 
-        .glass-panel div div:first-child {
-            font-size: 8pt !important;
-            font-weight: normal !important;
+        .a4-report-table th, .a4-report-table td {
+            border: 0.5pt solid #000 !important; padding: 6pt !important;
+            font-size: 9pt !important; color: black !important;
         }
 
-        .glass-panel div div:last-child {
-            font-size: 11pt !important;
+        .a4-report-table th {
+            background: #eee !important; -webkit-print-color-adjust: exact;
+            font-weight: bold !important; text-transform: uppercase !important;
         }
 
-        .table-container {
-            width: 100% !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border: none !important;
+        tr {
+            page-break-inside: avoid !important;
         }
 
-        table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-        }
-
-        th,
-        td {
-            padding: 1mm 0 !important;
-            border-bottom: 1px dashed #000 !important;
-            font-size: 8pt !important;
-            color: black !important;
-            background: white !important;
-        }
-
-        .print-bill-id {
-            width: 15% !important;
-        }
-
-        .print-time {
-            width: 30% !important;
-        }
-
-        .print-net {
-            width: 18% !important;
-            text-align: right !important;
-        }
-
-        .print-paid {
-            width: 18% !important;
-            text-align: right !important;
-        }
-
-        .print-os {
-            width: 19% !important;
-            text-align: right !important;
-            font-weight: bold !important;
-        }
-
-        tfoot tr td {
-            font-size: 9pt !important;
-            border-top: 2px solid #000 !important;
-            background: white !important;
-            color: black !important;
-        }
-
-        code {
-            background: transparent !important;
-            color: black !important;
-            padding: 0 !important;
+        tfoot td {
+            background: #eee !important; -webkit-print-color-adjust: exact;
         }
     }
 </style>
 {% endblock %}
-
-

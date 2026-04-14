@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}Vendor Directory | Jai Agency{% endblock %}
+{% block title %}Vendor Directory | JAI AGENCIES{% endblock %}
 
 {% block nav_links %}
 <a href="/inventory">Dashboard</a>
 <a href="/inventory/live-stock">Live</a>
-<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
 <a href="/inventory/products">Product Master</a>
 <a href="/inventory/suppliers" class="active">Suppliers</a>
 <a href="/inventory/stock-return">Return Stock</a>
@@ -34,17 +35,17 @@
             <h3 style="margin: 0; font-size: 0.9rem; font-weight: 800; letter-spacing: 0.1em; color: white;">
                 <i class="fas fa-truck-loading" style="color: var(--dash-secondary); margin-right: 12px;"></i> SUPPLIERS
             </h3>
-            <div class="badge" style="background: var(--dash-primary); color: white;">{{ suppliers | length }} REGISTERED_VENDORS</div>
+            <div class="badge" style="background: var(--dash-primary); color: white;">{{ suppliers | length }} Total Suppliers</div>
         </div>
 
         <div class="neural-table-container" style="border: none; border-radius: 0;">
             <table class="neural-table">
                 <thead>
                     <tr>
-                        <th style="padding-left: 2.5rem;">PARTNER_INFORMATION</th>
-                        <th>CONTACT_LIAISON</th>
-                        <th>CHANNELS</th>
-                        <th style="text-align: right; padding-right: 2.5rem;">COMMAND</th>
+                        <th style="padding-left: 2.5rem;">Supplier Details</th>
+                        <th>Contact Person</th>
+                        <th>Communication</th>
+                        <th style="text-align: right; padding-right: 2.5rem;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,7 +58,6 @@
                                 </div>
                                 <div>
                                     <div style="font-weight: 800; color: white; font-size: 1.05rem;">{{ s.name }}</div>
-                                    <div style="font-size: 0.7rem; color: var(--dash-secondary); font-family: 'DM Mono';">VN_UID_{{ s.id }}</div>
                                 </div>
                             </div>
                         </td>
@@ -92,7 +92,7 @@
                     <tr>
                         <td colspan="4" style="text-align: center; padding: 8rem; color: var(--text-tertiary);">
                             <i class="fas fa-users-slash" style="font-size: 3rem; opacity: 0.1; display: block; margin-bottom: 2rem;"></i>
-                            NO_PARTNERS_REGISTERED_IN_CLUSTER
+                            No suppliers registered yet.
                         </td>
                     </tr>
                     {% endfor %}
@@ -107,28 +107,28 @@
     <div class="modal-content neural-panel">
         <div class="modal-header">
             <div>
-                <h2 id="modalTitle">Register Partner</h2>
-                <p id="modalSub">SUPPLY_CHAIN_LIAISON_V1.0</p>
+                <h2 id="modalTitle">Add New Supplier</h2>
+                <p id="modalSub">Enter supplier details below</p>
             </div>
             <button class="close-btn" onclick="closeModal()">&times;</button>
         </div>
         <form id="addSupplierForm" onsubmit="event.preventDefault(); submitSupplier();">
             <div class="f-group">
-                <label>LEGAL_ENTITY_NAME</label>
-                <input type="text" id="s_name" placeholder="e.g. Maple Logistics Group" required>
+                <label>Supplier Name</label>
+                <input type="text" id="s_name" placeholder="e.g. ABC Trading Co." required>
             </div>
             <div class="f-group">
-                <label>LIAISON_PERSONNEL</label>
-                <input type="text" id="s_contact" placeholder="Designated representative">
+                <label>Contact Person</label>
+                <input type="text" id="s_contact" placeholder="Name of person to contact">
             </div>
             <div class="form-row">
                 <div class="f-group">
-                    <label>TELE_COMMUNICATION</label>
-                    <input type="text" id="s_phone" placeholder="+91 00000 00000">
+                    <label>Phone Number</label>
+                    <input type="text" id="s_phone" placeholder="Contact number">
                 </div>
                 <div class="f-group">
-                    <label>DIGITAL_MAIL</label>
-                    <input type="email" id="s_email" placeholder="liaison@cluster.com">
+                    <label>Email Address</label>
+                    <input type="email" id="s_email" placeholder="email@example.com">
                 </div>
             </div>
             <div class="form-actions">
@@ -162,7 +162,7 @@
     }
 
     .hero-main h1 {
-        font-size: 3.5rem;
+        font-size: 2.5rem;
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
         color: white;
         line-height: 1;
@@ -202,7 +202,7 @@
         transform: translateY(-2px);
     }
 
-    .btn-neural.primary { background: white; color: var(--navy-900); }
+    .btn-neural.primary { background: white; color: #0a0e1c; }
 
     .control-btn {
         background: rgba(255,255,255,0.03);
@@ -299,8 +299,8 @@
     function openModal() {
         currentEditId = null;
         document.getElementById('addSupplierForm').reset();
-        document.getElementById('modalTitle').innerText = "Register Partner";
-        document.getElementById('modalSub').innerText = "SUPPLY_CHAIN_LIAISON_V1.0";
+        document.getElementById('modalTitle').innerText = "Add New Supplier";
+        document.getElementById('modalSub').innerText = "Enter supplier details below";
         modal.style.display = "flex";
     }
 
@@ -312,8 +312,8 @@
         document.getElementById('s_contact').value = supplier.contact || '';
         document.getElementById('s_phone').value = supplier.phone || '';
         document.getElementById('s_email').value = supplier.email || '';
-        document.getElementById('modalTitle').innerText = "Update Partner Profile";
-        document.getElementById('modalSub').innerText = "VN_UID_" + currentEditId;
+        document.getElementById('modalTitle').innerText = "Update Supplier Details";
+        document.getElementById('modalSub').innerText = "Edit the supplier information below";
         modal.style.display = "flex";
     }
 
@@ -343,3 +343,4 @@
     }
 </script>
 {% endblock %}
+

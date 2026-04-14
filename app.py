@@ -71,7 +71,8 @@ def init_db_if_missing():
         gst_percent REAL DEFAULT 0,
         reorder_level INTEGER DEFAULT 10,
         last_cost REAL DEFAULT 0,
-        wholesale_price REAL DEFAULT 0
+        wholesale_price REAL DEFAULT 0,
+        hsn_code TEXT
     )''')
 
     # Suppliers Table
@@ -100,8 +101,22 @@ def init_db_if_missing():
         grade TEXT,
         product_name TEXT,
         unit TEXT,
+        category TEXT,
+        retail_price REAL DEFAULT 0,
+        wholesale_price REAL DEFAULT 0,
         FOREIGN KEY(product_code) REFERENCES products(code)
     )''')
+    try:
+        c.execute('ALTER TABLE storage ADD COLUMN category TEXT;')
+    except sqlite3.OperationalError: pass
+    
+    try:
+        c.execute('ALTER TABLE storage ADD COLUMN retail_price REAL DEFAULT 0;')
+    except sqlite3.OperationalError: pass
+
+    try:
+        c.execute('ALTER TABLE storage ADD COLUMN wholesale_price REAL DEFAULT 0;')
+    except sqlite3.OperationalError: pass
 
     # Sales Log (Bills) Table
     c.execute('''CREATE TABLE IF NOT EXISTS sales_log (
@@ -112,9 +127,11 @@ def init_db_if_missing():
         payment_method TEXT,
         status TEXT DEFAULT 'ACTIVE',
         prev_total REAL DEFAULT 0,
-        customer_name TEXT DEFAULT 'Walk-in',
+        customer_name TEXT DEFAULT 'GENERAL',
         customer_mobile TEXT DEFAULT '',
         customer_id TEXT DEFAULT '',
+        customer_address TEXT DEFAULT '',
+        customer_gstn TEXT DEFAULT '',
         amount_paid REAL DEFAULT 0,
         balance REAL DEFAULT 0,
         source_bill_id INTEGER
@@ -132,7 +149,9 @@ def init_db_if_missing():
         qty REAL,
         bizz REAL DEFAULT 0,
         gst_percent REAL DEFAULT 0,
+        gst_percent REAL DEFAULT 0,
         igst_percent REAL DEFAULT 0,
+        hsn_code TEXT,
         FOREIGN KEY(bill_id) REFERENCES sales_log(id)
     )''')
 
@@ -248,6 +267,7 @@ def load_data():
                 # Map product_name to name for report/preview consistency
                 d['name'] = d.get('product_name', 'Unknown')
                 d['name_ta'] = d.get('product_name_ta', '')
+                d['hsn_code'] = d.get('hsn_code', '')
                 formatted_details.append(d)
             
             sale['details'] = formatted_details
@@ -295,6 +315,10 @@ def run_migrations():
             cur.execute('ALTER TABLE sales_log ADD COLUMN gross_total REAL DEFAULT 0')
         if 'source_bill_id' not in columns:
             cur.execute('ALTER TABLE sales_log ADD COLUMN source_bill_id INTEGER')
+        if 'customer_address' not in columns:
+            cur.execute('ALTER TABLE sales_log ADD COLUMN customer_address TEXT DEFAULT ""')
+        if 'customer_gstn' not in columns:
+            cur.execute('ALTER TABLE sales_log ADD COLUMN customer_gstn TEXT DEFAULT ""')
             
         # sale_items migrations
         columns = [info[1] for info in cur.execute("PRAGMA table_info(sale_items)").fetchall()]
@@ -304,6 +328,8 @@ def run_migrations():
             cur.execute('ALTER TABLE sale_items ADD COLUMN gst_percent REAL DEFAULT 0')
         if 'igst_percent' not in columns:
             cur.execute('ALTER TABLE sale_items ADD COLUMN igst_percent REAL DEFAULT 0')
+        if 'hsn_code' not in columns:
+            cur.execute('ALTER TABLE sale_items ADD COLUMN hsn_code TEXT')
         if 'bizz' not in columns:
             cur.execute('ALTER TABLE sale_items ADD COLUMN bizz REAL DEFAULT 0')
 
@@ -317,6 +343,8 @@ def run_migrations():
             cur.execute('ALTER TABLE products ADD COLUMN last_cost REAL DEFAULT 0')
         if 'name_ta' not in columns:
             cur.execute('ALTER TABLE products ADD COLUMN name_ta TEXT')
+        if 'hsn_code' not in columns:
+            cur.execute('ALTER TABLE products ADD COLUMN hsn_code TEXT')
         if 'price_per_gram' not in columns:
             cur.execute('ALTER TABLE products ADD COLUMN price_per_gram REAL DEFAULT 0')
         if 'unit' not in columns:
@@ -327,6 +355,8 @@ def run_migrations():
             cur.execute('ALTER TABLE products ADD COLUMN gst_percent REAL DEFAULT 5')
         if 'igst_percent' not in columns:
             cur.execute('ALTER TABLE products ADD COLUMN igst_percent REAL DEFAULT 0')
+        if 'hsn_code' not in columns:
+            cur.execute('ALTER TABLE products ADD COLUMN hsn_code TEXT')
         # Force existing 0s to 5 if the user just confirmed 5%
         cur.execute('UPDATE products SET gst_percent = 5 WHERE gst_percent == 0 OR gst_percent IS NULL')
 
@@ -342,6 +372,22 @@ def run_migrations():
             cur.execute('ALTER TABLE storage ADD COLUMN unit TEXT')
         if 'supplier_id' not in storage_columns:
             cur.execute('ALTER TABLE storage ADD COLUMN supplier_id INTEGER')
+        if 'payment_mode' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN payment_mode TEXT')
+        if 'is_credit' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN is_credit INTEGER DEFAULT 0')
+        if 'amount_paid' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN amount_paid REAL DEFAULT 0')
+        if 'discount' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN discount REAL DEFAULT 0')
+        if 'gst_percent' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN gst_percent REAL DEFAULT 0')
+        if 'gst_value' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN gst_value REAL DEFAULT 0')
+        if 'reorder_level' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN reorder_level REAL DEFAULT 0')
+        if 'round_off' not in storage_columns:
+            cur.execute('ALTER TABLE storage ADD COLUMN round_off REAL DEFAULT 0')
         
         # credit_payments table migration
         cur.execute('''CREATE TABLE IF NOT EXISTS credit_payments (
@@ -351,6 +397,18 @@ def run_migrations():
             payment_method TEXT,
             date TEXT,
             FOREIGN KEY(bill_id) REFERENCES sales_log(id)
+        )''')
+        
+        # supplier_payments table migration
+        cur.execute('''CREATE TABLE IF NOT EXISTS supplier_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            supplier_id INTEGER,
+            invoice_no TEXT,
+            amount REAL,
+            payment_mode TEXT,
+            date TEXT,
+            remarks TEXT,
+            FOREIGN KEY(supplier_id) REFERENCES suppliers(id)
         )''')
         
         conn.commit()
@@ -377,10 +435,10 @@ def get_aggregated_inventory():
         code = str(p['code'])
         stock = stock_map.get(code, 0)
         
-        # Latest cost and grade if available
-        batches = [b for b in STORAGE if str(b.get('code')) == code]
+        # Latest cost and category if available
+        # Sort batches by entry_time to support FIFO visualization
+        batches = sorted([b for b in STORAGE if str(b.get('code')) == code], key=lambda x: x['entry_time'])
         last_cost = p.get('last_cost', 0)
-        grade = batches[-1].get('grade', 'N/A') if batches else 'N/A'
         
         # Attach batches with stock > 0 for the expanded view in Product Master
         item_batches = []
@@ -400,7 +458,6 @@ def get_aggregated_inventory():
                 
                 # Extract clean Batch No for display (Day of Year format: DDD)
                 if '-' in b['batch_id']:
-                    # Extract the first part which we will now set as %j
                     b_fmt['batch_no'] = b['batch_id'].split('-')[0]
                 else:
                     b_fmt['batch_no'] = b['batch_id']
@@ -409,7 +466,7 @@ def get_aggregated_inventory():
         agg.append({
             'code': code,
             'name': p['name'],
-            'grade': grade,
+            'grade': p.get('category', 'General'), # Using Category as the primary descriptor
             'name_ta': p.get('name_ta', ''),
             'category': p.get('category', 'General'),
             'unit': p.get('unit', 'Nos'),
@@ -422,13 +479,14 @@ def get_aggregated_inventory():
             'reorder_level': p.get('reorder_level', 10),
             'gst_percent': p.get('gst_percent', 0),
             'igst_percent': p.get('igst_percent', 0),
+            'hsn_code': p.get('hsn_code', ''),
             'batches': item_batches
         })
     return agg
 
 
 def save_data():
-    load_data()
+    load_data() 
 
 @app.route('/')
 def login():
@@ -576,9 +634,58 @@ def inventory_dashboard():
     stats = {
         'total_skus': len(PRODUCTS),
         'low_stock_count': len(low_stock_items),
-        'expiring_count': len(expiring_batches),
+        'expired_count': len([b for b in expiring_batches if b['status'] == 'Expired']),
+        'expiring_soon_count': len([b for b in expiring_batches if b['status'] == 'Expiring Soon']),
         'total_stock_value': sum(item['stock'] * item['price'] for item in inventory)
     }
+    # For backward compatibility or if template uses expiring_count
+    stats['expiring_count'] = stats['expired_count'] + stats['expiring_soon_count']
+
+    # 5. Credit Purchase Alerts
+    conn = get_db_connection()
+    # Pull specific credit invoices needing attention
+    credit_rows = conn.execute('''
+        SELECT s.invoice_no, s.arrival_date, SUM(s.qty * s.cost) as total_cost, 
+               MAX(s.amount_paid) as base_paid, MAX(sup.name) as supplier_name
+        FROM storage s 
+        LEFT JOIN suppliers sup ON s.supplier_id = sup.id
+        WHERE s.is_credit = 1 
+        GROUP BY s.invoice_no, s.arrival_date
+    ''').fetchall()
+    
+    overdue_count = 0
+    critical_count = 0
+    outstanding_credits = []
+    
+    for r in credit_rows:
+        p_row = conn.execute('SELECT SUM(amount) FROM supplier_payments WHERE invoice_no = ?', (r['invoice_no'],)).fetchone()
+        t_paid = (r['base_paid'] or 0) + (p_row[0] or 0)
+        balance = (r['total_cost'] or 0) - t_paid
+        
+        if balance > 0.01: # Use a small threshold for floating point
+            try:
+                dt = datetime.datetime.strptime(r['arrival_date'], "%Y-%m-%d")
+                age = (now - dt).days
+                is_critical = age >= 14
+                if is_critical: critical_count += 1
+                elif age >= 7: overdue_count += 1
+                
+                outstanding_credits.append({
+                    'invoice_no': r['invoice_no'],
+                    'supplier_name': r['supplier_name'] or 'Unknown',
+                    'balance': balance,
+                    'age': age,
+                    'is_critical': is_critical
+                })
+            except: pass
+            
+    conn.close()
+    
+    # Sort: Critical first, then by oldest age
+    outstanding_credits.sort(key=lambda x: (x['is_critical'], x['age']), reverse=True)
+    
+    stats['credit_overdue'] = overdue_count
+    stats['credit_critical'] = critical_count
 
     # 3. Category Distribution Data
     category_map = {}
@@ -604,6 +711,7 @@ def inventory_dashboard():
                            stats=stats, 
                            low_stock=low_stock_items[:5], # Show top 5
                            expiring=expiring_batches[:5], # Show top 5
+                           outstanding_credits=outstanding_credits[:5], # Top 5 priority
                            cat_labels=cat_labels,
                            cat_values=cat_values,
                            entry_trends=entry_trends,
@@ -624,7 +732,10 @@ def inventory_invoices():
             SUM(s.qty) as total_qty,
             SUM(s.qty * s.cost) as total_cost,
             MAX(s.entry_time) as entry_time,
-            MAX(sup.name) as supplier_name
+            MAX(sup.name) as supplier_name,
+            MAX(s.payment_mode) as payment_mode,
+            MAX(s.is_credit) as is_credit,
+            MAX(s.amount_paid) as amount_paid
         FROM storage s
         LEFT JOIN suppliers sup ON s.supplier_id = sup.id
         WHERE s.invoice_no != 'MANUAL-STORAGE' AND s.invoice_no NOT LIKE 'RET-%' AND s.invoice_no NOT LIKE 'CANCEL-%'
@@ -648,6 +759,104 @@ def inventory_invoices():
             
     conn.close()
     return render_template('inventory/invoices.html', invoices=invoices, page='invoices')
+
+@app.route('/inventory/credit-purchase')
+def inventory_credit_purchase():
+    if session.get('role') not in ['inventory', 'admin']:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    # Fetch invoices that are credit
+    query = '''
+        SELECT 
+            s.invoice_no, 
+            s.arrival_date,
+            SUM(s.qty * s.cost) as total_cost,
+            MAX(s.amount_paid) as base_amount_paid,
+            MAX(sup.name) as supplier_name,
+            MAX(sup.id) as supplier_id
+        FROM storage s
+        LEFT JOIN suppliers sup ON s.supplier_id = sup.id
+        WHERE s.is_credit = 1
+        GROUP BY s.invoice_no, s.arrival_date
+        ORDER BY s.arrival_date DESC
+    '''
+    rows = conn.execute(query).fetchall()
+    invoices = []
+    
+    for row in rows:
+        inv = dict(row)
+        # Calculate how much paid through supplier_payments
+        payments = conn.execute('SELECT SUM(amount) FROM supplier_payments WHERE invoice_no = ?', (inv['invoice_no'],)).fetchone()
+        extra_paid = payments[0] or 0
+        inv['total_paid'] = inv['base_amount_paid'] + extra_paid
+        inv['balance'] = inv['total_cost'] - inv['total_paid']
+        
+        # Formatting & Notification Logic
+        now = datetime.datetime.now()
+        try:
+            dt = datetime.datetime.strptime(inv['arrival_date'], "%Y-%m-%d")
+            inv['date'] = dt.strftime("%d/%m/%Y")
+            
+            age = (now - dt).days
+            inv['age_days'] = age
+            
+            if inv['balance'] > 0:
+                if age >= 14:
+                    inv['alert_level'] = 2 # Important Alert
+                elif age >= 7:
+                    inv['alert_level'] = 1 # Normal notification
+                else:
+                    inv['alert_level'] = 0
+            else:
+                inv['alert_level'] = 0
+        except:
+            inv['date'] = inv['arrival_date']
+            inv['age_days'] = 0
+            inv['alert_level'] = 0
+            
+        invoices.append(inv)
+    
+    # Also fetch all suppliers who have a balance for general payments (if needed)
+    suppliers = [dict(r) for r in conn.execute('SELECT * FROM suppliers WHERE balance > 0').fetchall()]
+    
+    conn.close()
+    return render_template('inventory/credit_purchase.html', invoices=invoices, suppliers=suppliers, page='credit-purchase')
+
+@app.route('/api/inventory/supplier-payment', methods=['POST'])
+def api_supplier_payment():
+    if session.get('role') not in ['inventory', 'admin']:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    data = request.json
+    supplier_id = data.get('supplier_id')
+    invoice_no = data.get('invoice_no')
+    amount = float(data.get('amount', 0))
+    mode = data.get('payment_mode', 'CASH')
+    remarks = data.get('remarks', '')
+    
+    if not supplier_id or amount <= 0:
+        return jsonify({'success': False, 'message': 'Invalid input'})
+        
+    conn = None
+    try:
+        conn = get_db_connection()
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # 1. Update Supplier Balance
+        conn.execute('UPDATE suppliers SET balance = balance - ? WHERE id = ?', (amount, supplier_id))
+        
+        # 2. Record Payment
+        conn.execute('''INSERT INTO supplier_payments (supplier_id, invoice_no, amount, payment_mode, date, remarks) 
+                        VALUES (?, ?, ?, ?, ?, ?)''', (supplier_id, invoice_no, amount, mode, now, remarks))
+        
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        if conn: conn.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        if conn: conn.close()
 
 @app.route('/inventory/invoice/add')
 def inventory_invoice_add():
@@ -683,6 +892,221 @@ def api_delete_invoice(invoice_no):
     finally:
         if conn: conn.close()
 
+@app.route('/inventory/invoice/edit/<string:invoice_no>')
+def inventory_invoice_edit(invoice_no):
+    if session.get('role') not in ['inventory', 'admin']:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    # Fetch invoice items with current master prices
+    items_rows = conn.execute('''
+        SELECT s.*, p.price as current_retail, p.wholesale_price as current_wholesale, p.category as master_category, p.hsn_code
+        FROM storage s
+        LEFT JOIN products p ON s.product_code = p.code
+        WHERE s.invoice_no = ?
+    ''', (invoice_no,)).fetchall()
+    items = [dict(row) for row in items_rows]
+    for item in items:
+        item['retail_price'] = item['current_retail'] or 0
+        item['wholesale_price'] = item['current_wholesale'] or 0
+        if item['master_category']: item['category'] = item['master_category']
+    
+    # Fetch invoice header
+    invoice_data = {}
+    if items:
+        invoice_data = {
+            'invoice_no': items[0]['invoice_no'],
+            'arrival_date': items[0]['arrival_date'],
+            'supplier_id': items[0]['supplier_id']
+        }
+    
+    inventory = get_aggregated_inventory()
+    suppliers = [dict(row) for row in conn.execute('SELECT * FROM suppliers').fetchall()]
+    conn.close()
+    
+    return render_template('inventory/invoice_edit.html', 
+                          invoice_data=invoice_data,
+                          items=items,
+                          inventory=inventory,
+                          suppliers=suppliers,
+                          page='invoices')
+
+@app.route('/inventory/invoice/view/<string:invoice_no>')
+def inventory_invoice_view(invoice_no):
+    if session.get('role') not in ['inventory', 'admin']:
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    # Fetch invoice items with current master prices
+    items_rows = conn.execute('''
+        SELECT s.*, p.price as current_retail, p.wholesale_price as current_wholesale, p.category as master_category, p.hsn_code
+        FROM storage s
+        LEFT JOIN products p ON s.product_code = p.code
+        WHERE s.invoice_no = ?
+    ''', (invoice_no,)).fetchall()
+    items = [dict(row) for row in items_rows]
+    for item in items:
+        item['retail_price'] = item['current_retail'] or 0
+        item['wholesale_price'] = item['current_wholesale'] or 0
+        if item['master_category']: item['category'] = item['master_category']
+    
+    if not items:
+        conn.close()
+        return "Invoice not found", 404
+        
+    # Get header data from first item
+    first = items[0]
+    invoice_data = {
+        'invoice_no': first['invoice_no'],
+        'arrival_date': first['arrival_date'],
+        'supplier_id': first['supplier_id'],
+        'is_credit': first['is_credit'],
+        'amount_paid': first.get('amount_paid', 0),
+        'payment_mode': first.get('payment_mode', 'CASH'),
+        'round_off': first.get('round_off', 0)
+    }
+    
+    # Get supplier name
+    supplier = conn.execute('SELECT name FROM suppliers WHERE id = ?', (first['supplier_id'],)).fetchone()
+    invoice_data['supplier_name'] = supplier['name'] if supplier else 'None'
+    
+    # Calculate totals
+    total_qty = 0
+    total_taxable = 0
+    total_gst = 0
+    
+    for item in items:
+        cost = item.get('cost', 0)
+        qty = item.get('qty', 0)
+        discount = item.get('discount', 0)
+        gst_p = item.get('gst_percent', 0)
+        
+        cad = cost * (1 - discount / 100)
+        taxable = qty * cad
+        gst_v = taxable * gst_p / 100
+        
+        item['taxable'] = taxable
+        item['total'] = taxable + gst_v
+        
+        total_qty += qty
+        total_taxable += taxable
+        total_gst += gst_v
+        
+    invoice_data['total_qty'] = total_qty
+    invoice_data['total_taxable'] = total_taxable
+    invoice_data['total_gst'] = total_gst
+    invoice_data['cgst'] = total_gst / 2
+    invoice_data['sgst'] = total_gst / 2
+    invoice_data['grand_total'] = total_taxable + total_gst + invoice_data['round_off']
+    
+    conn.close()
+    return render_template('inventory/invoice_view.html', invoice_data=invoice_data, items=items)
+
+@app.route('/api/inventory/invoice/update', methods=['POST'])
+def api_update_invoice():
+    if session.get('role') not in ['inventory', 'admin']:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    data = request.json
+    old_invoice_no = data.get('old_invoice_no')
+    new_invoice_no = data.get('invoice_no')
+    supplier_id = data.get('supplier_id')
+    arrival_date = data.get('arrival_date')
+    items = data.get('items', [])
+    
+    if not old_invoice_no or not new_invoice_no or not items:
+        return jsonify({'success': False, 'message': 'Missing data'})
+        
+    conn = None
+    try:
+        conn = get_db_connection()
+        now = datetime.datetime.now()
+        
+        # 1. Recalculate and REVERSE old supplier balance impact before deleting
+        old_items = conn.execute('SELECT cost, qty, discount, gst_percent, is_credit, amount_paid, supplier_id FROM storage WHERE invoice_no = ?', (old_invoice_no,)).fetchall()
+        if old_items:
+            old_header = old_items[0]
+            if old_header['is_credit'] and old_header['supplier_id']:
+                old_total_cost = 0
+                for oi in old_items:
+                    c = oi['cost'] or 0
+                    q = oi['qty'] or 0
+                    d = oi['discount'] or 0
+                    g = oi['gst_percent'] or 0
+                    cad = c * (1 - d / 100)
+                    taxable = q * cad
+                    val = taxable + (taxable * g / 100)
+                    old_total_cost += val
+                
+                old_balance_due = old_total_cost - (old_header['amount_paid'] or 0)
+                if old_balance_due > 0:
+                    conn.execute('UPDATE suppliers SET balance = balance - ? WHERE id = ?', (old_balance_due, old_header['supplier_id']))
+
+        # 2. DELETE existing entries
+        conn.execute('DELETE FROM storage WHERE invoice_no = ?', (old_invoice_no,))
+        
+        # 3. INSERT new entries & Calculate new total
+        new_total_invoice_cost = 0
+        is_credit = 0
+        amount_paid = 0
+        round_off = float(data.get('round_off', 0))
+        
+        for item in items:
+            code = item.get('code')
+            name = item.get('name')
+            qty = float(item.get('qty', 0))
+            cost = float(item.get('cost', 0))
+            retail = float(item.get('retail', 0))
+            wholesale = float(item.get('wholesale', 0))
+            unit = item.get('unit', 'Nos')
+            discount = float(item.get('discount', 0))
+            gst_p = float(item.get('gst_percent', 0))
+            reorder = float(item.get('reorder_level', 0))
+            batch_no = item.get('batch_no')
+            
+            # For now invoice-wide flags come from payload
+            is_credit = 1 if data.get('is_credit') else 0
+            amount_paid = float(data.get('amount_paid', 0))
+
+            cad = cost * (1 - discount / 100)
+            taxable = qty * cad
+            gst_val = (taxable * gst_p) / 100
+            new_total_invoice_cost += (taxable + gst_val)
+            
+            # Update product master
+            master = conn.execute('SELECT code FROM products WHERE code = ?', (code,)).fetchone()
+            if not master:
+                 conn.execute('''INSERT INTO products (code, name, unit, price, last_cost, is_loose, gst_percent, reorder_level, category, wholesale_price, hsn_code) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            (code, name, unit, retail, cost, 1 if unit.lower() in ['kg', 'ltr', 'gm', 'ml'] else 0, gst_p, reorder, item.get('category'), wholesale, item.get('hsn_code')))
+            else:
+                conn.execute('''UPDATE products SET last_cost = ?, price = ?, wholesale_price = ?, gst_percent = ?, reorder_level = ?, category = ?, hsn_code = ? WHERE code = ?''', 
+                             (cost, retail, wholesale, gst_p, reorder, item.get('category'), item.get('hsn_code'), code))
+
+            entry_time = now.strftime("%Y-%m-%d %H:%M:%S")
+            if not batch_no:
+                batch_no = now.strftime('%j')
+            batch_id = f"{batch_no}-{now.strftime('%H%M%S')}-{code}"
+            
+            conn.execute('''INSERT INTO storage (batch_id, product_code, qty, entry_time, arrival_date, expiry, cost, invoice_no, supplier_id, product_name, unit, category, is_credit, amount_paid, discount, gst_percent, gst_value, reorder_level, round_off, retail_price, wholesale_price) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                        (batch_id, code, qty, entry_time, arrival_date, item.get('expiry'), cost, new_invoice_no, supplier_id, name, unit, item.get('category'), is_credit, amount_paid, discount, gst_p, gst_val, reorder, round_off, retail, wholesale))
+            
+        # 4. Apply new supplier balance if credit
+        if is_credit and supplier_id:
+            new_balance_due = new_total_invoice_cost + round_off - amount_paid
+            if new_balance_due != 0:
+                conn.execute('UPDATE suppliers SET balance = balance + ? WHERE id = ?', (new_balance_due, supplier_id))
+
+        conn.commit()
+        load_data()
+        return jsonify({'success': True})
+    except Exception as e:
+        if conn: conn.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        if conn: conn.close()
+
 @app.route('/api/inventory/stock-entry', methods=['POST'])
 def api_stock_entry():
     if session.get('role') not in ['inventory', 'admin']:
@@ -697,39 +1121,64 @@ def api_stock_entry():
     if not invoice_no or not items:
         return jsonify({'success': False, 'message': 'Missing invoice number or items'})
         
+    payment_mode = data.get('payment_mode', 'CASH')
+    is_credit = 1 if data.get('is_credit') else 0
+    amount_paid = float(data.get('amount_paid', 0))
+    round_off = float(data.get('round_off', 0))
+    
     conn = None
     try:
         conn = get_db_connection()
         now = datetime.datetime.now()
         
+        total_invoice_cost = 0
         for item in items:
             code = item.get('code')
             name = item.get('name')
             qty = float(item.get('qty', 0))
+            cost = float(item.get('cost', 0))
+            retail = float(item.get('retail', 0))
+            wholesale = float(item.get('wholesale', 0))
             unit = item.get('unit', 'Nos')
+            discount = float(item.get('discount', 0))
+            gst_p = float(item.get('gst_percent', 0))
+            reorder = float(item.get('reorder_level', 0))
+            batch_no = item.get('batch_no')
             
-            # 1. Fetch Master Data for this product
-            master = conn.execute('SELECT last_cost, gst_percent FROM products WHERE code = ?', (code,)).fetchone()
+            # Calculate derived totals for supplier balance
+            cost_after_discount = cost * (1 - discount / 100)
+            taxable = qty * cost_after_discount
+            gst_val = (taxable * gst_p) / 100
+            total_invoice_cost += (taxable + gst_val)
             
-            if master:
-                cost = master['last_cost']
-                gst_percent = master['gst_percent']
+            # 1. Fetch/Update Master Data
+            master = conn.execute('SELECT code FROM products WHERE code = ?', (code,)).fetchone()
+            if not master:
+                # Insert new product
+                conn.execute('''INSERT INTO products (code, name, unit, price, last_cost, is_loose, gst_percent, reorder_level, category, wholesale_price, hsn_code) 
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            (code, name, unit, retail, cost, 1 if unit.lower() in ['kg', 'ltr', 'gm', 'ml'] else 0, gst_p, reorder, item.get('category'), wholesale, item.get('hsn_code')))
             else:
-                # Completely New Product - Insert with placeholders
-                cost = 0
-                gst_percent = 0
-                conn.execute('''INSERT INTO products (code, name, unit, price, last_cost, is_loose, gst_percent) 
-                                VALUES (?, ?, ?, ?, ?, ?, ?)''',
-                            (code, name, unit, 0, 0, 1 if unit.lower() in ['kg', 'ltr', 'gm', 'ml'] else 0, 0))
+                # Update existing product
+                conn.execute('''UPDATE products SET last_cost = ?, price = ?, wholesale_price = ?, gst_percent = ?, reorder_level = ?, category = ?, hsn_code = ? WHERE code = ?''', 
+                             (cost, retail, wholesale, gst_p, reorder, item.get('category'), item.get('hsn_code'), code))
             
-            # 2. Batch ID
+            # 2. Batch ID Generation (Day of Year + Timestamp for uniqueness)
             entry_time = now.strftime("%Y-%m-%d %H:%M:%S")
-            batch_id = f"INV-{invoice_no}-{code}-{now.strftime('%H%M%S')}"
+            if not batch_no:
+                batch_no = now.strftime('%j')
+            batch_id = f"{batch_no}-{now.strftime('%H%M%S')}-{code}"
             
             # 3. Insert into storage
-            conn.execute('''INSERT INTO storage (batch_id, product_code, qty, entry_time, arrival_date, expiry, cost, invoice_no, supplier_id, product_name, unit) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                        (batch_id, code, qty, entry_time, arrival_date, None, cost, invoice_no, supplier_id, name, unit))
+            conn.execute('''INSERT INTO storage (batch_id, product_code, qty, entry_time, arrival_date, expiry, cost, invoice_no, supplier_id, product_name, unit, category, payment_mode, is_credit, amount_paid, discount, gst_percent, gst_value, reorder_level, round_off, retail_price, wholesale_price) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                        (batch_id, code, qty, entry_time, arrival_date, item.get('expiry'), cost, invoice_no, supplier_id, name, unit, item.get('category'), payment_mode, is_credit, amount_paid, discount, gst_p, gst_val, reorder, round_off, retail, wholesale))
+            
+        # Update Supplier Balance if it's a credit invoice
+        if is_credit and supplier_id:
+            balance_due = total_invoice_cost + round_off - amount_paid
+            if balance_due != 0:
+                conn.execute('UPDATE suppliers SET balance = balance + ? WHERE id = ?', (balance_due, supplier_id))
             
         conn.commit()
         load_data()
@@ -1177,6 +1626,60 @@ def billing_dashboard():
                            low_stock_items=low_stock_items[:5],
                            page='dashboard')
 
+def num2words_indian(num):
+    """Convert amount to words (Indian numbering system) fully offline."""
+    try:
+        num = round(float(num), 2)
+        amount = int(num)
+        
+        # Split decimals correctly for Paisa
+        paisa = int(round((num - amount) * 100))
+        
+        a = ['', 'one ', 'two ', 'three ', 'four ', 'five ', 'six ', 'seven ', 'eight ', 'nine ', 'ten ', 'eleven ', 'twelve ', 'thirteen ', 'fourteen ', 'fifteen ', 'sixteen ', 'seventeen ', 'eighteen ', 'nineteen ']
+        b = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety']
+        
+        def convert_chunk(n):
+            res = ""
+            if n >= 100:
+                res += a[n // 100] + "hundred "
+                n %= 100
+            if n > 19:
+                res += b[n // 10] + " " + a[n % 10]
+            elif n > 0:
+                res += a[n]
+            return res
+
+        if amount == 0:
+            words = "zero "
+        else:
+            words = ""
+            # Crores
+            if amount >= 10000000:
+                crore = amount // 10000000
+                words += convert_chunk(crore) + "crore "
+                amount %= 10000000
+            # Lakhs
+            if amount >= 100000:
+                lakh = amount // 100000
+                words += convert_chunk(lakh) + "lakh "
+                amount %= 100000
+            # Thousands
+            if amount >= 1000:
+                thousands = amount // 1000
+                words += convert_chunk(thousands) + "thousand "
+                amount %= 1000
+            # Remaining
+            words += convert_chunk(amount)
+
+        words = words.strip() + " rupees"
+        if paisa > 0:
+            words += " and " + convert_chunk(paisa).strip() + " paise"
+        
+        return (words + " only").title()
+    except Exception as e:
+        return str(num)
+
+
 def enrich_sales_data(sales_list):
     enriched = []
     for sale in sales_list:
@@ -1218,6 +1721,7 @@ def enrich_sales_data(sales_list):
             
             i_copy = item.copy()
             i_copy['category'] = cat
+            i_copy['hsn_code'] = item.get('hsn_code') or (prod['hsn_code'] if prod else '')
             i_copy['price'] = base_price  # Show base price as "Rate"
             i_copy['gross_amount'] = item_total_base # Show base total as "Amount"
             i_copy['tax_amount'] = item_tax
@@ -1230,26 +1734,13 @@ def enrich_sales_data(sales_list):
         actual_total_db = float(sale.get('total', 0))
         
         # Determine if this row should be dimmed in UI
-        s_display['is_voided'] = (status == 'CANCELLED' or (status == 'RETURNED' and actual_total_db <= 0.01))
+        is_voided = (status == 'CANCELLED' or (status == 'RETURNED' and actual_total_db <= 0.01))
         
-        # The total reported is what's currently in the DB row
-        report_total = actual_total_db
-        
-        # Use the actual discount stored in DB, do not re-calculate nonsensically
-        s_display['discount'] = float(sale.get('discount', 0))
-        
-        # If it's voided, all contributing values should effectively be 0 for the report summation
-        if s_display['is_voided']:
-            s_display['gross_amount'] = 0
-            s_display['tax_amount'] = 0
-            s_display['total'] = 0
-            s_display['net_amount'] = 0
-        else:
-            s_display['gross_amount'] = gross_total
-            s_display['tax_amount'] = tax_total
-            s_display['total'] = report_total
-            s_display['net_amount'] = report_total
-        
+        # Use the actual discount stored in DB
+        discount_total = float(sale.get('discount', 0))
+        if is_voided:
+            discount_total = 0
+            
         try:
             date_str = sale.get('date', '')
             if date_str:
@@ -1259,11 +1750,6 @@ def enrich_sales_data(sales_list):
         except:
             d_obj = None
             
-        # Define discount_total for the s_display dictionary below
-        discount_total = float(sale.get('discount', 0))
-        if s_display['is_voided']:
-            discount_total = 0
-            
         s_display = {
             'id': sale.get('id'),
             'date': sale.get('date'),
@@ -1271,24 +1757,27 @@ def enrich_sales_data(sales_list):
             'time_only': d_obj.strftime("%I:%M %p") if d_obj else "N/A",
             'items_count': sale.get('items_count', 0),
             'total': actual_total_db,      
-            'net_total': 0 if s_display['is_voided'] else report_total,    
-            'net_amount': 0 if s_display['is_voided'] else report_total,    
-            'subtotal': 0 if s_display['is_voided'] else gross_total,
-            'gross_total': 0 if s_display['is_voided'] else gross_total,
-            'gross_amount': 0 if s_display['is_voided'] else gross_total,
-            'tax_total': 0 if s_display['is_voided'] else tax_total,
-            'cgst_total': 0 if s_display['is_voided'] else cgst_total,
-            'sgst_total': 0 if s_display['is_voided'] else sgst_total,
+            'net_total': 0 if is_voided else actual_total_db,    
+            'net_amount': 0 if is_voided else actual_total_db,    
+            'subtotal': 0 if is_voided else gross_total,
+            'gross_total': 0 if is_voided else gross_total,
+            'gross_amount': 0 if is_voided else gross_total,
+            'tax_total': 0 if is_voided else tax_total,
+            'cgst_total': 0 if is_voided else cgst_total,
+            'sgst_total': 0 if is_voided else sgst_total,
             'discount_total': discount_total,
-            'discount': discount_total, # For templates that use 'discount'
-            'is_voided': s_display['is_voided'],
+            'discount': discount_total, 
+            'is_voided': is_voided,
             'payment_method': sale.get('payment_method', 'CASH'),
             'status': status,
             'customer_name': sale.get('customer_name', 'Walk-in'),
             'customer_mobile': sale.get('customer_mobile', ''),
+            'customer_address': sale.get('customer_address', ''),
+            'customer_gstn': sale.get('customer_gstn', ''),
             'customer_id': sale.get('customer_id', ''),
             'amount_paid': float(sale.get('amount_paid', 0)),
             'balance': float(sale.get('balance', 0)),
+            'total_words': num2words_indian(0 if is_voided else actual_total_db),
             'source_bill_id': sale.get('source_bill_id'),
             'details': details_with_cat
         }
@@ -1339,11 +1828,65 @@ def get_payment_report_data(payment_method):
     # Since enriched has mixed structures, we might just leave it appended or sort by date_only if needed.
     return enriched
 
+@app.route('/billing/reports/compliment')
+def report_compliment():
+    if session.get('role') != 'sales': return redirect(url_for('login'))
+    from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
+    to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
+    bill_id = request.args.get('bill_id', '').strip()
+    
+    filtered = []
+    for s in SALES_LOG:
+        if s.get('status') != 'COMPLIMENTARY': continue
+        s_date_str = s.get('date', '').split(' ')[0]
+        date_match = (from_date <= s_date_str <= to_date)
+        bill_match = True
+        if bill_id:
+            bill_match = (str(s.get('id')) == bill_id.replace('#', ''))
+        if date_match and bill_match:
+            filtered.append(s)
+            
+    enriched = enrich_sales_data(filtered)
+    return render_template('billing/compliment_report.html', title='Complimentary Bills', data=enriched, from_date_raw=from_date, to_date_raw=to_date, bill_id=bill_id)
+
 @app.route('/billing/reports')
 def billing_reports():
     if session.get('role') != 'sales': return redirect(url_for('login'))
-    enriched = enrich_sales_data(SALES_LOG)
-    return render_template('billing/reports.html', sales=enriched, page='reports')
+    
+    from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
+    to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
+    bill_id = request.args.get('bill_id', '').strip()
+    query = request.args.get('query', '').strip().lower()
+    
+    filtered = []
+    for s in SALES_LOG:
+        # Date Filter
+        s_date_str = s.get('date', '').split(' ')[0]
+        date_match = (from_date <= s_date_str <= to_date)
+        
+        # Bill ID Filter
+        bill_match = True
+        if bill_id:
+            bill_match = (str(s.get('id')) == bill_id.replace('#', ''))
+            
+        # Search Query (Customer Name/Mobile)
+        query_match = True
+        if query:
+            search_str = f"{s.get('customer_name', '')} {s.get('customer_mobile', '')}".lower()
+            query_match = query in search_str
+            
+        if date_match and bill_match and query_match:
+            filtered.append(s)
+            
+    enriched = enrich_sales_data(filtered)
+    return render_template('billing/reports.html', 
+                          sales=enriched, 
+                          page='reports',
+                          from_date_raw=from_date,
+                          to_date_raw=to_date,
+                          bill_id=bill_id,
+                          query_raw=query,
+                          now=datetime.datetime.now())
 
 # --- New Separate Report Pages ---
 
@@ -1384,22 +1927,67 @@ def report_sales_bill():
 @app.route('/billing/reports/detail-bill')
 def report_detail_bill():
     if session.get('role') != 'sales': return redirect(url_for('login'))
-    # Sales Report: Show all including cancelled for audit? Or just all? Let's show All.
-    enriched = enrich_sales_data(SALES_LOG)
-    return render_template('billing/detail_bill_report.html', title='Sales Report', data=enriched)
+    from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
+    to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
+    bill_id = request.args.get('bill_id', '').strip()
+    
+    filtered = []
+    for s in SALES_LOG:
+        s_date_str = s.get('date', '').split(' ')[0]
+        date_match = (from_date <= s_date_str <= to_date)
+        bill_match = True
+        if bill_id:
+            bill_match = (str(s.get('id')) == bill_id.replace('#', ''))
+        if date_match and bill_match:
+            filtered.append(s)
+            
+    enriched = enrich_sales_data(filtered)
+    return render_template('billing/detail_bill_report.html', title='Sales Report', data=enriched, from_date_raw=from_date, to_date_raw=to_date, bill_id=bill_id, from_date=from_date, to_date=to_date)
 
 @app.route('/billing/reports/cancelled')
 def report_cancelled():
     if session.get('role') != 'sales': return redirect(url_for('login'))
-    filtered = [s for s in SALES_LOG if s.get('status') == 'CANCELLED']
+    from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
+    to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
+    bill_id = request.args.get('bill_id', '').strip()
+    
+    filtered = []
+    for s in SALES_LOG:
+        if s.get('status') != 'CANCELLED': continue
+        s_date_str = s.get('date', '').split(' ')[0]
+        date_match = (from_date <= s_date_str <= to_date)
+        bill_match = True
+        if bill_id:
+            bill_match = (str(s.get('id')) == bill_id.replace('#', ''))
+        if date_match and bill_match:
+            filtered.append(s)
+            
     enriched = enrich_sales_data(filtered)
-    return render_template('billing/cancelled_bill_report.html', title='Cancelled Bills', data=enriched)
+    return render_template('billing/cancelled_bill_report.html', title='Cancelled Bills', data=enriched, from_date_raw=from_date, to_date_raw=to_date, bill_id=bill_id)
 
 @app.route('/billing/reports/returns')
 def report_returns_log():
-    # Note: differs from /billing/returns which is the ACTION page. This is the LOG page.
     if session.get('role') != 'sales': return redirect(url_for('login'))
-    return render_template('billing/return_bills_report.html', title='Return Bill Report', data=RETURNS_LOG, now=datetime.datetime.now())
+    from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
+    to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
+    bill_id = request.args.get('bill_id', '').strip()
+    
+    filtered = []
+    for r in RETURNS_LOG:
+        # Note: RETURNS_LOG structure might be slightly different or missing date_only
+        r_date = r.get('date', '').split(' ')[0]
+        date_match = True
+        if r_date:
+            date_match = (from_date <= r_date <= to_date)
+        
+        bill_match = True
+        if bill_id:
+            bill_match = (str(r.get('id')) == bill_id.replace('#', ''))
+            
+        if date_match and bill_match:
+            filtered.append(r)
+            
+    return render_template('billing/return_bills_report.html', title='Return Bill Report', data=filtered, now=datetime.datetime.now(), from_date_raw=from_date, to_date_raw=to_date, bill_id=bill_id)
 
 @app.route('/billing/reports/return-bills')
 def report_return_bills():
@@ -1410,6 +1998,9 @@ def report_return_bills():
 @app.route('/billing/reports/profit')
 def report_profit():
     if session.get('role') != 'sales': return redirect(url_for('login'))
+    
+    if not session.get('profit_pin_verified'):
+        return render_template('billing/profit_pin.html')
     
     from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
     to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
@@ -1456,6 +2047,7 @@ def report_profit():
                 # Update product summary
                 if p_code not in product_summary:
                     product_summary[p_code] = {
+                        'code': p_code,
                         'name': p_name,
                         'qty': 0,
                         'revenue': 0,
@@ -1508,9 +2100,23 @@ def report_profit():
 @app.route('/billing/reports/correction')
 def report_correction():
     if session.get('role') != 'sales': return redirect(url_for('login'))
-    filtered = [s for s in SALES_LOG if s.get('status') == 'CORRECTION']
+    from_date = request.args.get('from', datetime.datetime.now().strftime('%Y-%m-%d'))
+    to_date = request.args.get('to', datetime.datetime.now().strftime('%Y-%m-%d'))
+    bill_id = request.args.get('bill_id', '').strip()
+    
+    filtered = []
+    for s in SALES_LOG:
+        if s.get('status') != 'CORRECTION': continue
+        s_date_str = s.get('date', '').split(' ')[0]
+        date_match = (from_date <= s_date_str <= to_date)
+        bill_match = True
+        if bill_id:
+            bill_match = (str(s.get('id')) == bill_id.replace('#', ''))
+        if date_match and bill_match:
+            filtered.append(s)
+            
     enriched = enrich_sales_data(filtered)
-    return render_template('billing/correction_bill_report.html', title='Correction Bills', data=enriched)
+    return render_template('billing/correction_bill_report.html', title='Correction Bills', data=enriched, from_date_raw=from_date, to_date_raw=to_date, bill_id=bill_id)
 
 @app.route('/billing/expenses')
 def billing_expenses():
@@ -1550,6 +2156,64 @@ def print_receipt(sale_id):
     if not sale: return "Bill Not Found", 404
     enriched = enrich_sales_data([sale])[0]
     return render_template('billing/invoice_a5.html', sale=enriched, t=BILL_TRANSLATIONS)
+
+@app.route('/billing/edit-bill/<int:bill_id>')
+def edit_bill(bill_id):
+    if session.get('role') not in ['sales', 'admin']:
+         return redirect(url_for('login'))
+         
+    sale = next((s for s in SALES_LOG if s['id'] == bill_id), None)
+    if not sale:
+         return redirect(url_for('billing_pos'))
+         
+    # Return items to stock in memory
+    now = datetime.datetime.now()
+    agg = get_aggregated_inventory()
+    
+    for item in sale['details']:
+        qty = float(item.get('qty', 0))
+        if qty > 0:
+            item_id = str(item.get('id') or item.get('code') or item.get('product_code', ''))
+            p_agg = next((x for x in agg if x['code'] == item_id), None)
+            cost = p_agg['last_cost'] if p_agg else 0.0
+
+            STORAGE.append({
+                'batch_id': f"EDIT-#{bill_id}-{item_id}",
+                'code': item_id,
+                'qty': qty,
+                'entry_time': now.strftime("%Y-%m-%d %H:%M:%S"),
+                'arrival_date': now.strftime("%Y-%m-%d"),
+                'expiry': None,
+                'cost': cost,
+                'invoice_no': f"EDIT-#{bill_id}"
+            })
+            
+    # Put items in reprocess_cart
+    cart = []
+    for d in sale['details']:
+        qty = float(d.get('qty', 0))
+        if qty > 0:
+            item_id = str(d.get('id') or d.get('code') or d.get('product_code', ''))
+            cart.append({
+                'id': item_id,
+                'code': item_id,
+                'name': d.get('name', 'Unknown'),
+                'name_ta': d.get('name_ta', ''),
+                'price': float(d.get('price', 0)),
+                'qty': qty,
+                'unit': d.get('unit', 'PCS'),
+                'gst_percent': d.get('gst_percent', 0),
+                'igst_percent': d.get('igst_percent', 0),
+                'hsn_code': d.get('hsn_code', '')
+            })
+        
+    session.pop('source_bill_id', None)
+    session.pop('is_correction', False)
+    session['reprocess_cart'] = cart
+    session['edit_bill_id'] = bill_id
+    
+    return redirect(url_for('billing_pos'))
+
 
 @app.route('/api/expenses/add', methods=['POST'])
 def add_expense():
@@ -2069,15 +2733,17 @@ def cancel_bill():
     agg = get_aggregated_inventory()
     
     for item in sale['details']:
-        if item['qty'] > 0:
+        qty = float(item.get('qty', 0))
+        if qty > 0:
             # Find last cost for this product
-            p_agg = next((x for x in agg if x['code'] == str(item['id'])), None)
+            item_id = str(item.get('id') or item.get('code') or item.get('product_code', ''))
+            p_agg = next((x for x in agg if x['code'] == item_id), None)
             cost = p_agg['last_cost'] if p_agg else 0.0
 
             STORAGE.append({
-                'batch_id': f"CAN-#{bill_id}-{item['id']}",
-                'code': str(item['id']),
-                'qty': item['qty'],
+                'batch_id': f"CAN-#{bill_id}-{item_id}",
+                'code': item_id,
+                'qty': qty,
                 'entry_time': now.strftime("%Y-%m-%d %H:%M:%S"),
                 'arrival_date': now.strftime("%Y-%m-%d"),
                 'expiry': None,
@@ -2088,15 +2754,17 @@ def cancel_bill():
     # 2. Add to Returns Log (for the whole bill)
     return_date = now.strftime("%Y-%m-%d %H:%M:%S")
     for item in sale['details']:
-        if item['qty'] > 0:
+        qty = float(item.get('qty', 0))
+        if qty > 0:
+            item_id = str(item.get('id') or item.get('code') or item.get('product_code', ''))
             RETURNS_LOG.append({
                 'date': return_date,
                 'type': 'BILL_CANCELLATION',
                 'bill_id': bill_id,
-                'product_code': str(item['id']),
+                'product_code': item_id,
                 'product_name': item.get('name', 'Unknown'),
-                'qty': item['qty'],
-                'refund_amount': item['qty'] * item['price']
+                'qty': qty,
+                'refund_amount': qty * float(item.get('price', 0))
             })
 
     sale['status'] = 'CANCELLED'
@@ -2123,6 +2791,9 @@ def cancel_bill():
              cur.execute('INSERT INTO storage (batch_id, product_code, qty, entry_time, arrival_date, expiry, cost, invoice_no, remarks, grade, product_name, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                       (b.get('batch_id'), b.get('code'), b.get('qty', 0), b.get('entry_time'), b.get('arrival_date'), b.get('expiry'), b.get('cost', 0), b.get('invoice_no'), b.get('remarks'), b.get('grade'), b.get('product_name'), b.get('unit')))
              
+        # Save original details for reprocessing before zeroing them out
+        original_details = [d.copy() for d in sale['details']]
+
         # Bulk zero out item quantities in DB and memory
         cur.execute('UPDATE sale_items SET qty = 0 WHERE bill_id = ?', (bill_id,))
         for item in sale['details']:
@@ -2132,9 +2803,15 @@ def cancel_bill():
 
         # Handle Reprocessing (Moving to Billing for new bill)
         if data.get('reprocess'):
+            session.pop('source_bill_id', None) # Clear any existing
             session['reprocess_cart'] = []
+            session['is_correction'] = True
+            
+            # Record that this new bill originated from cancelled bill_id
+            session['source_bill_id'] = bill_id
+
             inv = get_aggregated_inventory()
-            for item in sale['details']:
+            for item in original_details:
                 if item['qty'] > 0:
                     code_str = str(item.get('product_code') or item.get('id', ''))
                     p_m = next((x for x in inv if str(x['code']) == code_str), None)
@@ -2245,16 +2922,17 @@ def edit_product(code):
     product['igst_percent'] = float(data.get('igst_percent', product.get('igst_percent', 0)))
     product['last_cost'] = float(data.get('last_cost', product.get('last_cost', 0)))
     product['wholesale_price'] = float(data.get('wholesale_price', product.get('wholesale_price', 0)))
+    product['hsn_code'] = data.get('hsn_code', product.get('hsn_code', ''))
     
     # DB Persistence
     conn = None
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('''UPDATE products SET name = ?, name_ta = ?, category = ?, price = ?, is_loose = ?, price_per_gram = ?, reorder_level = ?, gst_percent = ?, igst_percent = ?, last_cost = ?, wholesale_price = ?
+        cur.execute('''UPDATE products SET name = ?, name_ta = ?, category = ?, price = ?, is_loose = ?, price_per_gram = ?, reorder_level = ?, gst_percent = ?, igst_percent = ?, last_cost = ?, wholesale_price = ?, hsn_code = ?
                        WHERE code = ?''', 
                     (product['name'], product['name_ta'], product['category'], product['price'], product['is_loose'], 
-                     product['price_per_gram'], product['reorder_level'], product['gst_percent'], product['igst_percent'], product['last_cost'], product['wholesale_price'], code))
+                     product['price_per_gram'], product['reorder_level'], product['gst_percent'], product['igst_percent'], product['last_cost'], product['wholesale_price'], product['hsn_code'], code))
         conn.commit()
     except Exception as e:
         if conn: conn.rollback()
@@ -2276,10 +2954,16 @@ def delete_supplier(id):
     if session.get('role') not in ['inventory', 'admin']:
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
-    global SUPPLIERS
-    SUPPLIERS = [s for s in SUPPLIERS if s['id'] != id]
-    save_data()
-    return jsonify({'success': True})
+    conn = get_db_connection()
+    try:
+        conn.execute('DELETE FROM suppliers WHERE id = ?', (id,))
+        conn.commit()
+        load_data()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
 
 @app.route('/api/suppliers/edit/<int:id>', methods=['POST'])
 def edit_supplier(id):
@@ -2287,16 +2971,22 @@ def edit_supplier(id):
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     data = request.json
-    supplier = next((s for s in SUPPLIERS if s['id'] == id), None)
-    if not supplier:
-        return jsonify({'success': False, 'message': 'Supplier not found'})
+    name = data.get('name')
+    contact = data.get('contact')
+    phone = data.get('phone')
+    email = data.get('email')
     
-    supplier['name'] = data.get('name', supplier['name'])
-    supplier['contact'] = data.get('contact', supplier['contact'])
-    supplier['phone'] = data.get('phone', supplier['phone'])
-    supplier['email'] = data.get('email', supplier['email'])
-    save_data()
-    return jsonify({'success': True})
+    conn = get_db_connection()
+    try:
+        conn.execute('UPDATE suppliers SET name = ?, contact = ?, phone = ?, email = ? WHERE id = ?', 
+                    (name, contact, phone, email, id))
+        conn.commit()
+        load_data()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
 
 @app.route('/api/suppliers/add', methods=['POST'])
 def add_supplier():
@@ -2304,18 +2994,22 @@ def add_supplier():
         return jsonify({'success': False, 'message': 'Unauthorized'}), 403
         
     data = request.json
+    name = data.get('name')
+    contact = data.get('contact')
+    phone = data.get('phone')
+    email = data.get('email')
+    
+    conn = get_db_connection()
     try:
-        SUPPLIERS.append({
-            'id': len(SUPPLIERS) + 1,
-            'name': data.get('name'),
-            'contact': data.get('contact'),
-            'phone': data.get('phone'),
-            'email': data.get('email')
-        })
-        save_data()
+        conn.execute('INSERT INTO suppliers (name, contact, phone, email) VALUES (?, ?, ?, ?)', 
+                    (name, contact, phone, email))
+        conn.commit()
+        load_data()
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
 
 @app.route('/inventory/returns')
 def inventory_returns():
@@ -2548,6 +3242,11 @@ def checkout():
         data = request.json or {}
         cart = data.get('cart', [])
         
+        # Standardize items to have 'id' key (matches code) for consistent access in other modules
+        for item in cart:
+            if 'code' in item and 'id' not in item:
+                item['id'] = item['code']
+        
         # Robust Financial Parsing
         total = float(data.get('total', 0) or 0)          # Handle None with or 0
         gross_total = float(data.get('gross_total', total) or total) 
@@ -2567,9 +3266,12 @@ def checkout():
                 item['igst_percent'] = 0.0
         
         # Customer Details
-        customer_name = data.get('customer_name', '') or 'Walk-in'
+        customer_name = data.get('customer_name', '') or 'GENERAL'
         customer_mobile = data.get('customer_mobile', '')
         customer_id = data.get('customer_id', '')
+        customer_address = data.get('customer_address', '')
+        customer_gstn = data.get('customer_gstn', '')
+        
         amount_paid_raw = data.get('amount_paid', 0)
         amount_paid = float(amount_paid_raw if amount_paid_raw is not None else 0)
         send_sms = data.get('send_offer_sms', False)
@@ -2614,18 +3316,27 @@ def checkout():
                     
         STORAGE = [b for b in STORAGE if b['qty'] > 0]
 
-        # Insert Sale into DB
+        # Insert or Update Sale into DB
         conn = get_db_connection()
         cur = conn.cursor()
         
         sale_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         
-        cur.execute('''INSERT INTO sales_log 
-            (date, items_count, total, payment_method, status, customer_name, customer_mobile, customer_id, amount_paid, balance, discount, gross_total, source_bill_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (sale_date, len(cart), total, payment_method, bill_status, customer_name, customer_mobile, customer_id, amount_paid, balance, discount, gross_total, source_bill_id))
-            
-        sale_id = cur.lastrowid
+        edit_bill_id = session.pop('edit_bill_id', None)
+        
+        if edit_bill_id:
+            cur.execute('''UPDATE sales_log SET 
+                date=?, items_count=?, total=?, payment_method=?, status=?, customer_name=?, customer_mobile=?, customer_id=?, customer_address=?, customer_gstn=?, amount_paid=?, balance=?, discount=?, gross_total=?, source_bill_id=?
+                WHERE id=?''', (sale_date, len(cart), total, payment_method, bill_status, customer_name, customer_mobile, customer_id, customer_address, customer_gstn, amount_paid, balance, discount, gross_total, source_bill_id, edit_bill_id))
+            sale_id = edit_bill_id
+            # Also delete old items from sale_items to replace them
+            cur.execute('DELETE FROM sale_items WHERE bill_id=?', (edit_bill_id,))
+        else:
+            cur.execute('''INSERT INTO sales_log 
+                (date, items_count, total, payment_method, status, customer_name, customer_mobile, customer_id, customer_address, customer_gstn, amount_paid, balance, discount, gross_total, source_bill_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                (sale_date, len(cart), total, payment_method, bill_status, customer_name, customer_mobile, customer_id, customer_address, customer_gstn, amount_paid, balance, discount, gross_total, source_bill_id))
+            sale_id = cur.lastrowid
         
         # Update Storage DB (Stock Deduction)
         cur.execute('DELETE FROM storage')
@@ -2633,10 +3344,10 @@ def checkout():
              cur.execute('INSERT INTO storage (batch_id, product_code, qty, entry_time, arrival_date, expiry, cost, invoice_no, remarks, grade, product_name, unit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                       (b.get('batch_id'), b.get('code'), b.get('qty', 0), b.get('entry_time'), b.get('arrival_date'), b.get('expiry'), b.get('cost', 0), b.get('invoice_no'), b.get('remarks'), b.get('grade'), b.get('product_name'), b.get('unit')))
     
-        # Insert Sale Items
+            # Insert Sale Items
         for item in cart:
-            cur.execute('INSERT INTO sale_items (bill_id, product_code, product_name, product_name_ta, category, price, qty, bizz, gst_percent, igst_percent) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                        (sale_id, str(item['code']), item['name'], item.get('name_ta', ''), item.get('category', ''), item['price'], item['qty'], item.get('bizz', 0), item.get('gst_percent', 0), item.get('igst_percent', 0)))
+            cur.execute('INSERT INTO sale_items (bill_id, product_code, product_name, product_name_ta, category, price, qty, bizz, gst_percent, igst_percent, hsn_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                        (sale_id, str(item['code']), item['name'], item.get('name_ta', ''), item.get('category', ''), item['price'], item['qty'], item.get('bizz', 0), item.get('gst_percent', 0), item.get('igst_percent', 0), item.get('hsn_code', '')))
                         
         conn.commit()
         
@@ -2651,6 +3362,8 @@ def checkout():
             'customer_name': customer_name,
             'customer_mobile': customer_mobile,
             'customer_id': customer_id,
+            'customer_address': customer_address,
+            'customer_gstn': customer_gstn,
             'amount_paid': amount_paid,
             'balance': balance,
             'details': cart,
@@ -3021,15 +3734,38 @@ def get_customer(cust_id):
     conn = get_db_connection()
     cur = conn.cursor()
     # Search for the most recent transaction with this customer_id
-    cur.execute('SELECT customer_name, customer_mobile FROM sales_log WHERE customer_id = ? AND customer_name != "Walk-in" ORDER BY id DESC LIMIT 1', (cust_id,))
+    cur.execute('SELECT customer_name, customer_mobile, customer_address, customer_gstn FROM sales_log WHERE customer_id = ? AND customer_name != "GENERAL" ORDER BY id DESC LIMIT 1', (cust_id,))
     row = cur.fetchone()
     conn.close()
     
     if row:
+        row_dict = dict(row)
         return jsonify({
             'success': True,
-            'name': row['customer_name'],
-            'mobile': row['customer_mobile']
+            'name': row_dict.get('customer_name', ''),
+            'mobile': row_dict.get('customer_mobile', ''),
+            'address': row_dict.get('customer_address', ''),
+            'gstn': row_dict.get('customer_gstn', '')
+        })
+    return jsonify({'success': False, 'message': 'Customer not found'})
+
+@app.route('/api/customer/name/<string:name>')
+def get_customer_by_name(name):
+    conn = get_db_connection()
+    cur = conn.cursor()
+    # Search for the most recent transaction with this name
+    cur.execute('SELECT customer_id, customer_mobile, customer_address, customer_gstn FROM sales_log WHERE customer_name = ? AND customer_name != "GENERAL" ORDER BY id DESC LIMIT 1', (name,))
+    row = cur.fetchone()
+    conn.close()
+    
+    if row:
+        row_dict = dict(row)
+        return jsonify({
+            'success': True,
+            'id': row_dict.get('customer_id', ''),
+            'mobile': row_dict.get('customer_mobile', ''),
+            'address': row_dict.get('customer_address', ''),
+            'gstn': row_dict.get('customer_gstn', '')
         })
     return jsonify({'success': False, 'message': 'Customer not found'})
 
@@ -3096,6 +3832,20 @@ def online_coding_practice():
     practice_data = get_practice_showcase_data()
     return render_template('online_coding_practice.html', practice_data=practice_data)
 
+@app.route('/api/billing/verify-pin', methods=['POST'])
+def verify_profit_pin():
+    data = request.json
+    pin = data.get('pin')
+    if pin == '2307':
+        session['profit_pin_verified'] = True
+        return jsonify({'success': True})
+    return jsonify({'success': False, 'message': 'Incorrect PIN'})
+
+@app.route('/logout-profit-pin')
+def logout_profit_pin():
+    session.pop('profit_pin_verified', None)
+    return redirect(url_for('billing_navigation'))
+
 if __name__ == '__main__':
     # 1. Start Flask in background thread
     print("Starting server on port 5003...")
@@ -3109,7 +3859,7 @@ if __name__ == '__main__':
         # 2. Start the Desktop Window
         print("Launching Desktop Window...")
         webview.create_window(
-            "Jai Agency",
+            "JAI AGENCIES",
             "http://127.0.0.1:5003/",
             width=1200,
             height=800
@@ -3122,3 +3872,4 @@ if __name__ == '__main__':
         # Keep the main thread alive if webview isn't running
         while True:
             time.sleep(1)
+    

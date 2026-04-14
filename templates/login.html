@@ -1,6 +1,6 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
-{% block title %}Secure Entry | Jai Agency{% endblock %}
+{% block title %}Secure Entry | JAI AGENCIES{% endblock %}
 
 {% block content %}
 <style>
@@ -273,7 +273,7 @@
         <form action="/auth" method="POST">
             <div class="form-control-group">
                 <div class="input-wrapper">
-                    <input type="text" name="username" class="form-input" placeholder="Username" required autocomplete="username">
+                    <input type="text" id="usernameInput" name="username" class="form-input" placeholder="Username" required autocomplete="username" autofocus>
                     <i class="fas fa-user-shield"></i>
                 </div>
             </div>
@@ -292,8 +292,8 @@
         </form>
 
         <div class="login-footer">
-            <p>Â© 2026 Managed by Maple Pro</p>
-            <p>Protocol V9.2 â€¢ End-to-End Encrypted</p>
+            <p>© 2026 Managed by Maple Pro</p>
+            <p>Protocol V9.2 • End-to-End Encrypted</p>
             <a class="auth-mgmt-link" onclick="openAuthModal()">
                 <i class="fas fa-key-skeleton" style="margin-right: 6px;"></i> MANAGE_CREDENTIALS
             </a>
@@ -324,7 +324,7 @@
             </div>
             <div class="auth-form-row" style="margin-bottom: 0;">
                 <label>CURRENT_PASSWORD</label>
-                <input type="password" id="old_pass" class="auth-input" placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢">
+                <input type="password" id="old_pass" class="auth-input" placeholder="••••••••">
             </div>
         </div>
 
@@ -367,6 +367,10 @@
         }, 600);
     });
 
+    window.onload = () => {
+        document.getElementById('usernameInput').focus();
+    };
+
     const authModal = document.getElementById('authModal');
     function openAuthModal() { authModal.style.display = 'flex'; }
     function closeAuthModal() { authModal.style.display = 'none'; }
@@ -404,3 +408,4 @@
     }
 </script>
 {% endblock %}
+

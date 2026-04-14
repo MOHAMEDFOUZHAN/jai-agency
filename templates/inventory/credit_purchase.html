@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Credit Purchases | JAI AGENCIES{% endblock %}
+
+{% block nav_links %}
+<a href="/inventory">Dashboard</a>
+<a href="/inventory/live-stock">Live</a>
+<a href="/inventory/invoices">Invoices</a>
+<a href="/inventory/credit-purchase" class="active">Credit Purchase</a>
+<a href="/inventory/products">Product Master</a>
+<a href="/inventory/suppliers">Suppliers</a>
+<a href="/inventory/stock-return">Return Stock</a>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <div class="dash-hero">
+        <div class="hero-main">
+            <h1>Credit Purchases</h1>
+            <p>Track outstanding balances and record payments to suppliers.</p>
+        </div>
+        <div class="hero-actions">
+            <button class="btn-neural primary" onclick="openGeneralPaymentModal()" style="background: var(--dash-primary); color: white;">
+                <i class="fas fa-hand-holding-usd"></i> DIRECT PAYMENT
+            </button>
+        </div>
+    </div>
+
+    <div class="neural-panel" style="padding: 0; overflow: hidden; border-radius: 32px;">
+        <div style="padding: 2rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01);">
+            <h3 style="margin: 0; font-size: 0.8rem; font-weight: 850; letter-spacing: 2px; text-transform: uppercase; color: white;">
+                <i class="fas fa-credit-card" style="color: var(--dash-danger); margin-right: 15px;"></i> PENDING CREDIT INVOICES
+            </h3>
+            <div class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">{{ invoices|length }} PENDING</div>
+        </div>
+
+        <div class="neural-table-container" style="border: none; border-radius: 0;">
+            <table class="neural-table">
+                <thead>
+                    <tr>
+                        <th style="padding-left: 2.5rem;">DATE</th>
+                        <th>INVOICE NO.</th>
+                        <th>SUPPLIER</th>
+                        <th>STATUS</th>
+                        <th style="text-align: right;">TOTAL AMT</th>
+                        <th style="text-align: right;">PAID</th>
+                        <th style="text-align: right; color: var(--dash-danger);">BALANCE</th>
+                        <th style="text-align: center; padding-right: 2.5rem;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr class="activity-row">
+                        <td style="padding-left: 2.5rem;">
+                            <div style="font-weight: 700; color: white; font-family: 'DM Mono'; font-size: 0.8rem;">{{ inv.date }}</div>
+                        </td>
+                        <td>
+                            <div style="font-family: 'DM Mono'; font-weight: 700; color: var(--dash-primary);">#{{ inv.invoice_no }}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 800; color: white; font-size: 0.9rem;">{{ inv.supplier_name }}</div>
+                        </td>
+                        <td>
+                            {% if inv.alert_level == 2 %}
+                            <div class="badge-mini" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.6rem; font-weight: 900; animation: blink 1s infinite;">CRITICAL: {{ inv.age_days }}D OVERDUE</div>
+                            {% elif inv.alert_level == 1 %}
+                            <div class="badge-mini" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); font-size: 0.6rem; font-weight: 900;">DUE: {{ inv.age_days }}D</div>
+                            {% else %}
+                            <div class="badge-mini" style="background: rgba(255, 255, 255, 0.05); color: var(--text-tertiary); font-size: 0.6rem; font-weight: 800;">Age: {{ inv.age_days }}d</div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: right; font-family: 'DM Mono'; font-weight: 700;">₹{{ "%.2f"|format(inv.total_cost) }}</td>
+                        <td style="text-align: right; font-family: 'DM Mono'; font-weight: 700; color: var(--dash-success);">₹{{ "%.2f"|format(inv.total_paid) }}</td>
+                        <td style="text-align: right; font-family: 'DM Mono'; font-weight: 900; color: #ef4444;">₹{{ "%.2f"|format(inv.balance) }}</td>
+                        <td style="text-align: center; padding-right: 2.5rem;">
+                            {% if inv.balance > 0 %}
+                            <button class="btn-neural-small" onclick="payInvoice('{{ inv.invoice_no }}', '{{ inv.supplier_id }}', '{{ inv.supplier_name }}', {{ inv.balance }})" style="padding: 6px 15px; font-size: 0.65rem; background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2);">
+                                PAY NOW
+                            </button>
+                            {% else %}
+                            <span class="badge" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; font-size: 0.6rem;">SETTLED</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 10rem; color: var(--text-tertiary);">
+                            <i class="fas fa-check-circle" style="font-size: 4rem; opacity: 0.1; display: block; margin-bottom: 2rem;"></i>
+                            NO PENDING CREDIT PURCHASES
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="payment-modal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center;">
+    <div class="neural-panel" style="width: 500px; padding: 3rem; background: #0d1122; border: 1px solid var(--dash-primary);">
+        <h2 id="modal-title" style="margin-top: 0; color: white;">Record Payment</h2>
+        <p id="modal-subtitle" style="color: var(--text-tertiary); margin-bottom: 2.5rem;"></p>
+        
+        <input type="hidden" id="pay-supplier-id">
+        <input type="hidden" id="pay-invoice-no">
+        
+        <div class="f-group" style="margin-bottom: 2rem;">
+            <label>AMOUNT TO PAY</label>
+            <input type="number" id="pay-amount" class="neural-input" style="font-size: 1.5rem; color: var(--dash-success); font-weight: 800;">
+        </div>
+        
+        <div class="f-group" style="margin-bottom: 2rem;">
+            <label>PAYMENT MODE</label>
+            <select id="pay-mode" class="neural-input">
+                <option value="CASH">CASH</option>
+                <option value="UPI">UPI</option>
+                <option value="BANK TRANSFER">BANK TRANSFER</option>
+                <option value="CHEQUE">CHEQUE</option>
+            </select>
+        </div>
+        
+        <div class="f-group" style="margin-bottom: 3rem;">
+            <label>REMARKS (OPTIONAL)</label>
+            <input type="text" id="pay-remarks" class="neural-input" placeholder="Payment reference, etc...">
+        </div>
+        
+        <div style="display: flex; gap: 1.5rem;">
+            <button class="btn-neural" style="flex: 1;" onclick="closeModal()">CANCEL</button>
+            <button class="btn-neural primary" style="flex: 1; background: var(--dash-primary); color: white;" onclick="submitPayment()">CONFIRM PAYMENT</button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-wrapper { max-width: 1550px; margin: 0 auto; padding: 2.5rem; animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes dashboardEnter { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .btn-neural-small { border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; font-weight: 800; transition: all 0.2s; }
+    .btn-neural-small:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .modal-overlay { display: none; }
+    .modal-overlay.active { display: flex !important; }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+</style>
+
+<script>
+    function payInvoice(invNo, supplierId, supplierName, balance) {
+        document.getElementById('modal-title').innerText = "Invoice Payment";
+        document.getElementById('modal-subtitle').innerText = `Paying #${invNo} to ${supplierName}`;
+        document.getElementById('pay-supplier-id').value = supplierId;
+        document.getElementById('pay-invoice-no').value = invNo;
+        document.getElementById('pay-amount').value = balance;
+        document.getElementById('pay-remarks').value = `Payment for Invoice #${invNo}`;
+        document.getElementById('payment-modal').classList.add('active');
+    }
+
+    function openGeneralPaymentModal() {
+        // Option to pay directly to a supplier balance if needed, 
+        // but for now we'll focus on invoice-based payment as requested.
+        alert("Please use the 'PAY NOW' button on a specific invoice to record payments.");
+    }
+
+    function closeModal() {
+        document.getElementById('payment-modal').classList.remove('active');
+    }
+
+    async function submitPayment() {
+        const payload = {
+            supplier_id: document.getElementById('pay-supplier-id').value,
+            invoice_no: document.getElementById('pay-invoice-no').value,
+            amount: parseFloat(document.getElementById('pay-amount').value),
+            payment_mode: document.getElementById('pay-mode').value,
+            remarks: document.getElementById('pay-remarks').value
+        };
+
+        if (!payload.amount || payload.amount <= 0) return alert("Please enter a valid amount.");
+
+        try {
+            const res = await fetch('/api/inventory/supplier-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if (result.success) {
+                alert("Payment recorded successfully!");
+                location.reload();
+            } else {
+                alert("Error: " + result.message);
+            }
+        } catch (e) {
+            alert("Network error.");
+        }
+    }
+</script>
+{% endblock %}

@@ -4,7 +4,7 @@
 
 
 
-{% block title %}Invoice Journals | Jai Agency{% endblock %}
+{% block title %}Invoice Journals | JAI AGENCIES{% endblock %}
 
 
 
@@ -19,13 +19,14 @@
 <a href="/inventory/live-stock">Live</a>
 
 
-<a href="/inventory/storage">Storage</a><a href="/inventory/invoices" class="active">Invoices</a>
-
-
+<a href="/inventory/invoices" class="active">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
 <a href="/inventory/products">Product Master</a>
 
 
 <a href="/inventory/suppliers">Suppliers</a>
+
+<a href="/inventory/stock-return">Return Stock</a>
 
 
 {% endblock %}
@@ -133,6 +134,7 @@
                         <th>ITEMS</th>
 
 
+                        <th style="text-align: center;">PAYMENT</th>
                         <th style="text-align: center;">QTY</th>
 
 
@@ -193,27 +195,30 @@
                         </td>
 
 
+                        <td style="text-align: center;">
+                            {% if inv.is_credit %}
+                            <div class="badge-mini" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.6rem;">CREDIT</div>
+                            <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px; font-weight: 800;">Paid: ₹{{ inv.amount_paid }}</div>
+                            {% else %}
+                            <div class="badge-mini" style="background: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); font-size: 0.6rem;">PAID</div>
+                            <div style="font-size: 0.65rem; color: var(--text-tertiary); margin-top: 4px; font-weight: 800;">{{ inv.payment_mode }}</div>
+                            {% endif %}
+                        </td>
                         <td style="text-align: center; font-weight: 950; font-family: 'Outfit'; color: white;">{{ inv.total_qty }}</td>
 
 
-                        <td style="text-align: center; padding-right: 2.5rem;">
-
-
-                            <div style="display: flex; gap: 10px; justify-content: center;">
-
-
+                        <td style="text-align: center; padding: 0.8rem 2.5rem 0.8rem 0;">
+                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                <a href="/inventory/invoice/view/{{ inv.invoice_no }}" class="action-btn-small" title="View Details" style="background: rgba(0, 210, 255, 0.1); color: var(--dash-primary);">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/inventory/invoice/edit/{{ inv.invoice_no }}" class="action-btn-small" title="Edit Invoice">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <button class="action-btn-small danger" onclick="deleteInvoice('{{ inv.invoice_no }}')" title="Delete Invoice">
-
-
                                     <i class="fas fa-trash-alt"></i>
-
-
                                 </button>
-
-
                             </div>
-
-
                         </td>
 
 
@@ -246,7 +251,6 @@
 
                 </tbody>
 
-
             </table>
 
 
@@ -257,6 +261,50 @@
 
 
 </div>
+
+
+<style>
+    .dashboard-wrapper {
+        max-width: 1550px;
+        margin: 0 auto;
+        padding: 2.5rem;
+        animation: dashboardEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes dashboardEnter {
+        from { opacity: 0; transform: translateY(30px); filter: blur(10px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+
+    .action-btn-small {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--text-tertiary);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        text-decoration: none;
+    }
+
+    .action-btn-small:hover { background: var(--dash-primary); color: white; border-color: var(--dash-primary); }
+    .action-btn-small.danger:hover { background: var(--dash-danger); border-color: var(--dash-danger); color: white; }
+
+    @media print {
+        .navbar, .btn-neural, .hero-actions, .action-btn-small { display: none !important; }
+        body { background: white !important; color: black !important; }
+        .dashboard-wrapper { padding: 0 !important; max-width: 100% !important; }
+        .neural-panel { border: 1px solid #ddd !important; background: white !important; box-shadow: none !important; color: black !important; }
+        .neural-table th { border-bottom: 2px solid black !important; color: black !important; }
+        .neural-table td { border-bottom: 1px solid #eee !important; color: black !important; }
+        h1, h2, h3, p, div, span { color: black !important; }
+    }
+</style>
 
 
 
@@ -293,5 +341,6 @@
 
 
 {% endblock %}
+
 
 

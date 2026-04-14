@@ -4,30 +4,20 @@
 
 
 
-{% block title %}Wholesale Logs | Jai Agency{% endblock %}
+{% block title %}Wholesale Logs | JAI AGENCIES{% endblock %}
 
 
 
 
 
 {% block nav_links %}
-
-
 <a href="/inventory">Dashboard</a>
-
-
 <a href="/inventory/live-stock">Live</a>
-
-
-<a href="/inventory/storage">Storage</a><a href="/inventory/invoices">Invoices</a>
-
-
+<a href="/inventory/invoices" class="active">Invoices</a>
+<a href="/inventory/credit-purchase">Credit Purchase</a>
 <a href="/inventory/products">Product Master</a>
-
-
 <a href="/inventory/suppliers">Suppliers</a>
-
-
+<a href="/inventory/stock-return">Return Stock</a>
 {% endblock %}
 
 
@@ -370,7 +360,7 @@
     .hero-main h1 {
 
 
-        font-size: 3.5rem;
+        font-size: 2.2rem;
 
 
         font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
@@ -626,5 +616,6 @@
 
 
 {% endblock %}
+
 
 

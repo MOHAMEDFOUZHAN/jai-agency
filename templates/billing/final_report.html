@@ -1,25 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Jai Agency - Final Report{% endblock %}
+{% block title %}JAI AGENCIES - Final Report{% endblock %}
 
 {% block content %}
-<div class="dashboard-container fade-in report-shell final-thermal-report">
-    <div class="section-header">
+<div class="dashboard-container fade-in report-shell">
+    <div class="section-header no-print">
         <div>
             <h1>Final Daily Report</h1>
-            <p style="color: var(--text-muted);">Summary of sales and expenses for {{ report_date_display }}</p>
+            <p style="color: var(--text-muted);">Financial Summary Manifest</p>
         </div>
         <div style="display: flex; gap: 1rem; align-items: center;">
-            <div class="filter-box glass-panel"
-                style="padding: 5px 15px; border-radius: 12px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--glass-border);">
-                <i class="fas fa-calendar-alt" style="color: var(--primary);"></i>
-                <input type="date" id="reportDate" value="{{ report_date }}"
-                    style="border: none; background: transparent; font-weight: 700; color: var(--text-main); outline: none;"
-                    onchange="filterByDate()">
-            </div>
             <button class="btn btn-primary" onclick="window.print()">
-                <i class="fas fa-print"></i> Print Report
+                <i class="fas fa-print"></i> Print Manifest
             </button>
+        </div>
+    </div>
+
+    <!-- Standardized Filter Nexus -->
+    <div class="filter-nexus glass-panel no-print">
+        <div class="filter-group">
+            <label>FROM DATE</label>
+            <input type="date" id="fromDate" value="{{ from_date_raw or report_date }}">
+        </div>
+        <div class="filter-group">
+            <label>TO DATE</label>
+            <input type="date" id="toDate" value="{{ to_date_raw or report_date }}">
+        </div>
+        <div class="filter-group">
+            <label>BILL #</label>
+            <input type="text" id="billId" placeholder="Search ID..." value="{{ bill_id or '' }}">
+        </div>
+        <div class="action-group">
+            <button class="btn-cyber" onclick="applyFilters()">
+                <i class="fas fa-sync-alt"></i> Recompute
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function applyFilters() {
+            const from = document.getElementById('fromDate').value;
+            const to = document.getElementById('toDate').value;
+            const billId = document.getElementById('billId').value;
+            let url = `/billing/reports/final?from=${from}&to=${to}`;
+            if (billId) url += `&bill_id=${billId}`;
+            window.location.href = url;
+        }
+    </script>
+
+    <div class="print-only">
+        <div class="print-report-header">
+            <h2 class="title-sm">Final Daily Report</h2>
+            <p class="date-range">Date: {{ report_date_display }}</p>
         </div>
     </div>
 
@@ -30,38 +62,32 @@
                 <i class="fas fa-shopping-cart"></i>
                 <h2>Total Sales</h2>
             </div>
-            <div class="print-header print-only">
-                <div style="text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px;">
-                    <h2 style="margin: 0; font-size: 14pt;">Jai Agency</h2>
-                    <p style="margin: 2px 0; font-size: 8pt;">FINAL DAILY REPORT</p>
-                    <p style="margin: 2px 0; font-size: 8pt;">Date: {{ report_date_display }}</p>
-                </div>
-            </div>
+            
             <div class="data-list">
-                <div class="print-section-title print-only" style="font-weight: bold; margin-top: 5px;">SALES SUMMARY</div>
+                <div class="print-section-title print-only">SALES SUMMARY</div>
                 <div class="data-row">
                     <span>Cash Sales</span>
-                    <span class="value">&#8377;{{ "%.2f"|format(cash_sales) }}</span>
+                    <span class="value">₹{{ "%.2f"|format(cash_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>UPI Sales</span>
-                    <span class="value">&#8377;{{ "%.2f"|format(upi_sales) }}</span>
+                    <span class="value">₹{{ "%.2f"|format(upi_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>Credit Card Sales</span>
-                    <span class="value">&#8377;{{ "%.2f"|format(card_sales) }}</span>
+                    <span class="value">₹{{ "%.2f"|format(card_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>Credit Sales</span>
-                    <span class="value">&#8377;{{ "%.2f"|format(credit_sales) }}</span>
+                    <span class="value">₹{{ "%.2f"|format(credit_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>Complimentary Gifts</span>
                     <span class="value">{{ compliment_count }} items (GIFT)</span>
                 </div>
-                <div class="data-row total-row" style="border-top: 1px solid #000;">
-                    <span>Gross Sales</span>
-                    <span class="value">&#8377;{{ "%.2f"|format(cash_sales + upi_sales + card_sales + credit_sales) }}</span>
+                <div class="data-row total-row" style="border-top: 1.5pt solid #000; margin-top: 10px; padding-top: 10px;">
+                    <span style="font-weight: 800; font-size: 11pt;">GROSS SALES TOTAL</span>
+                    <span class="value" style="font-size: 13pt;">₹{{ "%.2f"|format(cash_sales + upi_sales + card_sales + credit_sales) }}</span>
                 </div>
             </div>
         </div>
@@ -73,7 +99,7 @@
                 <h2>Cash Debit Expenses</h2>
             </div>
             <div class="data-list">
-                <div class="print-section-title print-only" style="font-weight: bold; margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px;">EXPENSES</div>
+                <div class="print-section-title print-only">EXPENSES</div>
                 {% for exp in expenses %}
                 <div class="data-row">
                     <span>{{ exp.description }}</span>
@@ -82,9 +108,9 @@
                 {% else %}
                 <div class="empty-state">No expenses recorded</div>
                 {% endfor %}
-                <div class="data-row total-row" style="border-top: 1px solid #000;">
-                    <span>Total Expenses</span>
-                    <span class="value text-danger">&#8377;{{ "%.2f"|format(total_expenses) }}</span>
+                <div class="data-row total-row" style="border-top: 1.5pt solid #000; margin-top: 10px; padding-top: 10px;">
+                    <span style="font-weight: 800; font-size: 11pt;">TOTAL EXPENSES</span>
+                    <span class="value text-danger" style="font-size: 13pt;">₹{{ "%.2f"|format(total_expenses) }}</span>
                 </div>
             </div>
         </div>
@@ -96,31 +122,31 @@
                 <h2>Reconciliation</h2>
             </div>
             <div class="data-list">
-                <div class="print-section-title print-only" style="font-weight: bold; margin-top: 10px; border-top: 1px dashed #000; padding-top: 5px;">RECONCILIATION</div>
+                <div class="print-section-title print-only">RECONCILIATION & BALANCE</div>
                 <div class="data-row input-row">
                     <span>Opening Balance (OB)</span>
                     <div class="input-wrapper">
-                        <span class="no-print">&#8377;</span>
+                        <span class="no-print">₹</span>
                         <input type="number" id="openingBalance" value="0.00" step="0.01" oninput="calculateFinal()">
-                        <span class="print-only" id="printOB">&#8377;0.00</span>
+                        <span class="print-only" id="printOB">₹0.00</span>
                     </div>
                 </div>
                 <div class="data-row">
                     <span>Cash Sales</span>
-                    <span class="value">&#8377;{{ "%.2f"|format(cash_sales) }}</span>
+                    <span class="value">₹{{ "%.2f"|format(cash_sales) }}</span>
                 </div>
                 <div class="data-row">
                     <span>Total Expenses</span>
                     <span class="value text-danger">- ₹{{ "%.2f"|format(total_expenses) }}</span>
                 </div>
-                <div class="divider"></div>
+                <div class="divider no-print"></div>
                 <div class="data-row result-row">
                     <span>Cash @ Hand (C@H)</span>
-                    <span class="value" id="cashAtHand">&#8377;{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
+                    <span class="value" id="cashAtHand">₹{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
                 </div>
-                <div class="data-row result-row main-result" style="border: 2px solid #000 !important; padding: 5px !important; margin-top: 5px !important;">
-                    <span>Final Cash Balance</span>
-                    <span class="value" id="finalBalance">&#8377;{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
+                <div class="data-row result-row main-result" style="border: 2px solid #000 !important; padding: 15px !important; margin-top: 15px !important;">
+                    <span style="font-weight: 900; font-size: 12pt;">FINAL CASH BALANCE</span>
+                    <span class="value" id="finalBalance" style="font-size: 18pt;">₹{{ "%.2f"|format(cash_sales - total_expenses) }}</span>
                 </div>
             </div>
 
@@ -129,9 +155,9 @@
                 <p><strong>Final Balance:</strong> C@H + Opening Balance</p>
             </div>
             
-            <div class="print-footer print-only" style="text-align: center; margin-top: 20px; border-top: 1px dashed #000; padding-top: 10px; font-size: 7pt;">
+            <div class="print-footer print-only" style="text-align: center; margin-top: 30px; border-top: 1pt solid #ccc; padding-top: 10px; font-size: 8.5pt; color: #666;">
                 <p>Generated on {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
-                <p>Jai Agency POS System</p>
+                <p>JAI AGENCIES POS System</p>
             </div>
         </div>
     </div>
@@ -334,21 +360,20 @@
 
     @media print {
         @page {
-            size: A5;
-            margin: 5mm;
+            size: A4 portrait;
+            margin: 10mm;
         }
 
         body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 138mm !important;
             background: white !important;
             color: black !important;
-            font-family: Arial, sans-serif !important;
-            font-size: 10pt !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 9.5pt !important;
         }
 
-        .navbar, .btn, .filter-box, .info-box, .no-print, .print-only-header {
+        .no-print, .navbar, .site-footer, .header-actions, .filter-box, .btn, .print-hide, .info-box, .pill-tabs, .print-only-header {
             display: none !important;
         }
 
@@ -356,65 +381,85 @@
             display: block !important;
         }
 
-        .dashboard-container {
-            width: 138mm !important;
-            padding: 2mm !important;
-            margin: 0 auto !important;
+        .print-report-header {
+            text-align: center !important;
+            margin-bottom: 5mm !important;
+            border-bottom: 1pt solid black !important;
+            padding-bottom: 3mm !important;
         }
 
-        .report-grid {
-            display: block !important;
+        .print-report-header::before {
+            content: "JAI AGENCIES";
+            display: block;
+            font-size: 18pt;
+            font-weight: bold;
+            margin-bottom: 1mm;
+            text-transform: uppercase;
+        }
+
+        .title-sm { font-size: 10pt !important; font-weight: 600 !important; margin: 0 !important; }
+        .date-range { font-size: 9pt !important; margin: 2mm 0 0 0 !important; }
+
+        .dashboard-container, .report-shell, .report-card {
             width: 100% !important;
-        }
-
-        .report-card {
-            margin-bottom: 2mm !important;
+            max-width: none !important;
+            margin: 0 !important;
             padding: 0 !important;
+            background: none !important;
             border: none !important;
             box-shadow: none !important;
-            background: transparent !important;
         }
 
         .data-list {
-            gap: 1mm !important;
+            margin-bottom: 5mm;
         }
 
         .data-row {
             display: flex !important;
             justify-content: space-between !important;
-            font-size: 8pt !important;
+            border-bottom: 0.5pt solid #eee !important;
+            padding: 6pt 0 !important;
             color: black !important;
-            border-bottom: 1px dotted #ccc !important;
-            padding: 1mm 0 !important;
         }
 
-        .value {
-            font-weight: bold !important;
-            color: black !important;
-        }
+        .value { font-weight: bold !important; color: black !important; }
 
         .total-row {
-            border-top: 1px solid #000 !important;
-            margin-top: 1mm !important;
-            padding-top: 1mm !important;
+            border-top: 1pt solid #000 !important;
+            border-bottom: 1pt solid #000 !important;
+            margin-top: 2mm !important;
+            padding: 8pt 5pt !important;
+            font-weight: bold !important;
+            background: #f9f9f9 !important;
+            -webkit-print-color-adjust: exact;
         }
 
         .main-result {
-            background: white !important;
+            background: #fff !important;
             color: black !important;
-            border: 1px solid #000 !important;
-            padding: 2mm !important;
-            margin-top: 3mm !important;
+            border: 1.5pt solid #000 !important;
+            padding: 12pt !important;
+            margin-top: 4mm !important;
             display: flex !important;
             justify-content: space-between !important;
+            align-items: center !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
         }
 
-        .main-result .value {
-            font-size: 11pt !important;
-        }
+        .main-result .value { font-size: 16pt !important; color: black !important; }
 
-        #openingBalance { display: none !important; }
-        #printOB { display: inline !important; font-weight: bold; }
+        .print-section-title {
+            font-weight: bold !important;
+            background: #f0f0f0 !important;
+            -webkit-print-color-adjust: exact;
+            padding: 6pt !important;
+            margin: 5mm 0 2mm 0 !important;
+            border-left: 4pt solid #000 !important;
+            font-size: 10pt !important;
+            text-align: left !important;
+            text-transform: uppercase !important;
+        }
     }
 </style>
 
@@ -427,13 +472,6 @@
     const reportData = document.getElementById('report-data').dataset;
     const cashSales = parseFloat(reportData.cashSales) || 0;
     const totalExpenses = parseFloat(reportData.totalExpenses) || 0;
-
-    function filterByDate() {
-        const date = document.getElementById('reportDate').value;
-        if (date) {
-            window.location.href = `/billing/reports/final?date=${date}`;
-        }
-    }
 
     function calculateFinal() {
         const obInput = document.getElementById('openingBalance');
@@ -454,5 +492,6 @@
     window.onload = calculateFinal;
 </script>
 {% endblock %}
+
 
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Jai Agency - Billwise Sales Report{% endblock %}
+{% block title %}JAI AGENCIES - Billwise Sales Report{% endblock %}
 
 {% block content %}
 <div class="dashboard-container fade-in report-shell">
@@ -9,6 +9,13 @@
         <div class="header-main">
             <h1>Billwise Sales Report</h1>
             <p>Detailed financial breakdown</p>
+        </div>
+        <div class="print-only">
+            <div class="print-report-header">
+                <h2 class="title-sm">Sales Report (Bills)</h2>
+                <h1 class="store-name">JAI AGENCIES</h1>
+                <p class="date-range">Export Date: {{ now.strftime('%d/%m/%Y %I:%M %p') }}</p>
+            </div>
         </div>
         <div class="header-actions">
             <button class="btn-intelligence primary" onclick="window.print()">
@@ -20,25 +27,25 @@
         </div>
     </div>
 
-    <!-- Filter Bar (Modern) -->
+    <!-- Standardized Filter Nexus -->
     <div class="filter-nexus glass-panel no-print">
         <div class="filter-group">
             <label>FROM DATE</label>
-            <input type="date" id="fromDate" value="{{ from_date_raw }}">
+            <input type="date" id="fromDate" value="{{ from_date_raw or '' }}">
         </div>
         <div class="filter-group">
             <label>TO DATE</label>
-            <input type="date" id="toDate" value="{{ to_date_raw }}">
+            <input type="date" id="toDate" value="{{ to_date_raw or '' }}">
         </div>
         <div class="filter-group">
-            <label>BILL #</label>
-            <input type="text" id="billId" placeholder="Search ID..." value="{{ bill_id or '' }}">
+            <label>BILL # / SEARCH</label>
+            <input type="text" id="billId" placeholder="Search ID or Customer..." value="{{ bill_id or '' }}">
         </div>
-        <div class="filter-group action-group">
+        <div class="action-group">
             <button class="btn-cyber" onclick="applyFilters()">
-                <i class="fas fa-filter"></i> Apply
+                <i class="fas fa-filter"></i> Apply Matrix
             </button>
-            <button class="btn-intelligence secondary" onclick="window.location.href='/billing/reports/sales-bill'" title="Reset">
+            <button class="btn-intelligence secondary" onclick="window.location.href='/billing/reports/sales-bill'" title="Reload">
                 <i class="fas fa-sync-alt"></i>
             </button>
         </div>
@@ -67,7 +74,9 @@
                     <td style="padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.03); color: #94a3b8;">{{ item.time_only }}</td>
                     <td style="padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.03); font-weight: 800; color: #3b82f6;">#{{ item.id }}</td>
                     <td style="padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.03);">
-                        <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; background: {% if item.payment_method == 'CASH' %}rgba(16, 185, 129, 0.1){% elif item.payment_method == 'UPI' %}rgba(59, 130, 246, 0.1){% else %}rgba(245, 158, 11, 0.1){% endif %}; color: {% if item.payment_method == 'CASH' %}#10b981{% elif item.payment_method == 'UPI' %}#3b82f6{% else %}#f59e0b{% endif %};">{{ item.payment_method }}</span>
+                        <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.65rem; font-weight: 800; background: {% if item.payment_method == 'CASH' %}rgba(16, 185, 129, 0.1){% elif item.payment_method == 'UPI' %}rgba(59, 130, 246, 0.1){% else %}rgba(245, 158, 11, 0.1){% endif %}; color: {% if item.payment_method == 'CASH' %}#10b981{% elif item.payment_method == 'UPI' %}#3b82f6{% else %}#f59e0b{% endif %}; line-height: 1;">
+                            {{ item.payment_method }}
+                        </span>
                     </td>
                     <td style="padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.03);">{{ item.customer_name if item.customer_name else 'Walk-in' }}</td>
                     <td style="padding: 1.25rem 1.5rem; background: rgba(255, 255, 255, 0.02); border-top: 1px solid rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.03); text-align: right;">₹{{ "%.2f"|format(item.gross_amount) }}</td>
@@ -92,12 +101,12 @@
         </table>
     </div>
 
-    <!-- Print Layout (SAGAR Grid Style) -->
+    <!-- Print Layout (JAI AGENCIES Grid Style) -->
     <div class="print-layout print-only" style="display: none;">
-        <div style="text-align: center; border-bottom: 1px solid #000; padding-bottom: 10px; margin-bottom: 10px;">
-            <h1 style="margin: 0; font-size: 18pt;">Billwise Sales Report</h1>
-            <h2 style="margin: 0; font-size: 16pt; font-weight: 900;">SAGAR</h2>
-            <p style="margin: 5px 0; font-weight: bold;">From {{ date_from }} To {{ date_to }}</p>
+        <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px;">
+            <h1 style="margin: 0; font-size: 24pt; font-weight: 900; text-transform: uppercase;">JAI AGENCIES</h1>
+            <h2 style="margin: 2mm 0; font-size: 14pt; font-weight: 700;">Billwise Sales Report</h2>
+            <p style="margin: 5px 0; font-size: 9pt;">From {{ date_from }} To {{ date_to }}</p>
         </div>
         <table style="width: 100%; border-collapse: collapse;">
             <thead>
@@ -134,8 +143,7 @@
                     <td style="border: 1px solid #000; padding: 8px; text-align: right; font-weight: bold;">{{ "%.2f"|format(data | sum(attribute='net_amount')) }}</td>
                 </tr>
             </tfoot>
-        </table>
-    </div>
+          </div>
 </div>
 
 <style>
@@ -149,16 +157,100 @@
     .filter-group label { font-size: 0.7rem; font-weight: 900; color: #94a3b8; letter-spacing: 0.1em; }
     .filter-group input { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px 15px; color: #fff; font-weight: 700; }
     .action-group { flex: 0; display: flex; flex-direction: row; gap: 0.8rem; }
-
     .header-actions { display: flex; gap: 1rem; }
 
     @media print {
-        @page { size: A5 landscape; margin: 2mm; }
-        body { background: white !important; color: black !important; padding: 0 !important; }
-        .no-print, .navbar, .site-footer { display: none !important; }
-        .print-only { display: block !important; }
-        .dashboard-container { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
+        body {
+            background: white !important;
+            color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: 'Inter', -apple-system, sans-serif !important;
+            font-size: 9pt !important;
+        }
+
+        .no-print, .navbar, .site-footer, .header-actions, .filter-nexus, .filter-box, .btn, .btn-intelligence, .btn-cyber, .print-only-header {
+            display: none !important;
+        }
+
+        .print-only {
+            display: block !important;
+        }
+
+        .print-report-header {
+            text-align: center !important;
+            margin-bottom: 5mm !important;
+            border-bottom: 1pt solid black !important;
+            padding-bottom: 3mm !important;
+        }
+
+        .print-report-header::before {
+            content: "JAI AGENCIES";
+            display: block;
+            font-size: 22pt;
+            font-weight: 900;
+            margin-bottom: 2mm;
+            text-transform: uppercase;
+        }
+
+        .title-sm { font-size: 10pt !important; font-weight: 600 !important; margin: 0 !important; }
+        .date-range { font-size: 9pt !important; margin: 2mm 0 0 0 !important; }
+
+        .dashboard-container, .report-shell {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border: 1pt solid #000 !important;
+        }
+
+        thead {
+            display: table-header-group !important;
+        }
+
+        th, td {
+            border: 0.5pt solid #000 !important;
+            padding: 6pt !important;
+            text-align: left !important;
+            font-size: 9pt !important;
+            color: black !important;
+        }
+
+        th {
+            background: #eee !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            background-clip: padding-box;
+            -moz-background-clip: padding;
+            -webkit-background-clip: padding-box;
+            font-weight: bold !important;
+            text-transform: uppercase !important;
+        }
+
+        tr {
+            page-break-inside: avoid !important;
+        }
+
+        tfoot td {
+            background: #f0f0f0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-weight: bold !important;
+        }
+
+        .text-right { text-align: right !important; }
     }
+</style> }
 </style>
 
 <script>
@@ -173,3 +265,4 @@
     document.getElementById('billId').addEventListener('keypress', (e) => { if(e.key === 'Enter') applyFilters(); });
 </script>
 {% endblock %}
+
