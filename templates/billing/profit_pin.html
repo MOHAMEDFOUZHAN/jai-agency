@@ -1,28 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Authentication Required | JAI AGENCIES{% endblock %}
+{% block title %}Private Access Security | JAI AGENCIES{% endblock %}
 
 {% block content %}
-<div class="dashboard-wrapper" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
-    <div class="pin-portal glass-panel">
+<div class="dashboard-wrapper pin-wrapper fade-in">
+    <div class="pin-portal glass-panel" id="pinPortal">
         <div class="portal-header">
             <div class="lock-icon">
                 <i class="fas fa-lock"></i>
             </div>
             <h2>Private Access</h2>
-            <p>Verification required to view profit margins and cost analysis.</p>
+            <p>Verification required to access profit margin analysis & cost intelligence.</p>
         </div>
 
         <div class="pin-inputs">
-            <input type="password" id="pin" maxlength="4" placeholder="••••" autofocus>
-            <div id="pin-error" class="error-msg" style="display: none;">ACCESS DENIED: INCORRECT PIN</div>
+            <input type="password" id="pin" maxlength="4" placeholder="••••" autofocus autocomplete="off" oninput="handlePinInput(this)">
+            <div id="pin-error" class="error-msg" style="display: none;">
+                <i class="fas fa-circle-exclamation"></i> ACCESS DENIED: INCORRECT PIN
+            </div>
+        </div>
+
+        <!-- Touch/Mouse Keypad -->
+        <div class="keypad-grid">
+            <button class="key-btn" onclick="pressKey('1')">1</button>
+            <button class="key-btn" onclick="pressKey('2')">2</button>
+            <button class="key-btn" onclick="pressKey('3')">3</button>
+            <button class="key-btn" onclick="pressKey('4')">4</button>
+            <button class="key-btn" onclick="pressKey('5')">5</button>
+            <button class="key-btn" onclick="pressKey('6')">6</button>
+            <button class="key-btn" onclick="pressKey('7')">7</button>
+            <button class="key-btn" onclick="pressKey('8')">8</button>
+            <button class="key-btn" onclick="pressKey('9')">9</button>
+            <button class="key-btn action-key" onclick="clearPin()"><i class="fas fa-backspace"></i></button>
+            <button class="key-btn" onclick="pressKey('0')">0</button>
+            <button class="key-btn action-key primary-key" onclick="handleVerify()"><i class="fas fa-arrow-right"></i></button>
         </div>
 
         <div class="portal-actions">
-            <button onclick="handleVerify()" class="btn-premium primary" style="width: 100%;">
-                <i class="fas fa-shield-alt"></i> VERIFY IDENTITY
+            <button id="verifyBtn" onclick="handleVerify()" class="btn-premium primary" style="width: 100%;">
+                <i class="fas fa-shield-halved"></i> VERIFY IDENTITY
             </button>
-            <a href="/billing/navigation" class="btn-premium secondary" style="width: 100%; text-align: center; display: block; margin-top: 1rem;">
+            <a href="/billing/navigation" class="btn-premium secondary" style="width: 100%; text-align: center; display: block; margin-top: 0.8rem;">
                 CANCEL
             </a>
         </div>
@@ -30,117 +48,218 @@
 </div>
 
 <style>
+    .pin-wrapper {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+
     .pin-portal {
-        width: min(420px, 95%);
-        padding: 3rem;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        width: min(440px, 95%);
+        padding: 2.5rem 2rem;
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.12);
         border-radius: 32px;
         text-align: center;
         backdrop-filter: blur(40px);
-        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.5);
+        -webkit-backdrop-filter: blur(40px);
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.6);
+        transition: transform 0.3s ease;
     }
 
     .lock-icon {
-        width: 70px;
-        height: 70px;
-        background: linear-gradient(135deg, var(--dash-primary), #3b82f6);
+        width: 72px;
+        height: 72px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
         color: white;
         border-radius: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.8rem;
-        margin: 0 auto 2rem;
-        box-shadow: 0 15px 30px rgba(59, 130, 246, 0.3);
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
     }
 
     .portal-header h2 {
         font-size: 1.8rem;
         font-weight: 900;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
         letter-spacing: -0.02em;
+        color: #ffffff;
     }
 
     .portal-header p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
+        color: #94a3b8;
+        font-size: 0.88rem;
         line-height: 1.5;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
     }
 
     #pin {
         width: 100%;
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 18px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
         color: white;
         font-size: 2.2rem;
         text-align: center;
         letter-spacing: 0.8rem;
-        padding: 1.5rem;
+        padding: 1rem;
         font-weight: 800;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
         transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     #pin:focus {
         outline: none;
-        border-color: var(--dash-primary);
-        background: rgba(15, 23, 42, 0.9);
-        box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.1);
+        border-color: #3b82f6;
+        background: rgba(0, 0, 0, 0.7);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
     }
 
     .error-msg {
-        background: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-        padding: 10px;
-        border-radius: 12px;
-        font-size: 0.68rem;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(239, 68, 68, 0.2);
+        background: rgba(244, 63, 94, 0.15);
+        color: #f43f5e;
+        padding: 12px;
+        border-radius: 14px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        margin-bottom: 1.25rem;
+        border: 1px solid rgba(244, 63, 94, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
 
-    .btn-premium {
-        height: 60px;
-        font-size: 0.9rem;
-        font-weight: 900;
-        letter-spacing: 0.1em;
-        border-radius: 18px;
+    /* Keypad Grid */
+    .keypad-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+        max-width: 280px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .key-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        height: 52px;
+        color: #ffffff;
+        font-size: 1.25rem;
+        font-weight: 700;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .key-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: scale(1.04);
+    }
+    .key-btn:active {
+        transform: scale(0.96);
+    }
+    .key-btn.action-key {
+        font-size: 1rem;
+        color: #94a3b8;
+    }
+    .key-btn.primary-key {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    /* Action Buttons */
+    .btn-premium {
+        height: 54px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.25s ease;
         border: 1px solid rgba(255,255,255,0.1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
 
     .btn-premium.primary {
-        background: white;
-        color: var(--obsidian-950);
-        box-shadow: 0 15px 35px rgba(255,255,255,0.2);
+        background: linear-gradient(135deg, #ffffff, #e2e8f0);
+        color: #0f172a;
+        box-shadow: 0 10px 25px rgba(255,255,255,0.15);
     }
 
     .btn-premium.primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 20px 45px rgba(255,255,255,0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(255,255,255,0.25);
     }
 
     .btn-premium.secondary {
         background: rgba(255,255,255,0.05);
-        color: white;
-        line-height: 60px;
+        color: #94a3b8;
+        line-height: 54px;
         text-decoration: none;
     }
 
     .btn-premium.secondary:hover {
         background: rgba(255,255,255,0.1);
+        color: #ffffff;
+    }
+
+    /* Shake Animation */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        20%, 60% { transform: translateX(-10px); }
+        40%, 80% { transform: translateX(10px); }
+    }
+    .shake {
+        animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     }
 </style>
 
 <script>
+    function handlePinInput(input) {
+        document.getElementById('pin-error').style.display = 'none';
+        if (input.value.length === 4) {
+            handleVerify();
+        }
+    }
+
+    function pressKey(num) {
+        const pinInput = document.getElementById('pin');
+        if (pinInput.value.length < 4) {
+            pinInput.value += num;
+            handlePinInput(pinInput);
+        }
+    }
+
+    function clearPin() {
+        const pinInput = document.getElementById('pin');
+        pinInput.value = pinInput.value.slice(0, -1);
+        document.getElementById('pin-error').style.display = 'none';
+    }
+
     async function handleVerify() {
-        const pin = document.getElementById('pin').value;
+        const pinInput = document.getElementById('pin');
+        const pin = pinInput.value;
         const error = document.getElementById('pin-error');
+        const portal = document.getElementById('pinPortal');
+        const btn = document.getElementById('verifyBtn');
+
+        if (!pin) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VERIFYING...';
         
         try {
             const res = await fetch('/api/billing/verify-pin', {
@@ -148,36 +267,31 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pin })
             });
+
             const data = await res.json();
-            
+
             if (data.success) {
-                window.location.reload();
+                window.location.href = '/billing/reports/profit';
             } else {
-                error.style.display = 'block';
-                document.getElementById('pin').value = '';
-                document.getElementById('pin').focus();
-                
-                // Shake effect
-                const portal = document.querySelector('.pin-portal');
+                error.style.display = 'flex';
+                portal.classList.remove('shake');
+                void portal.offsetWidth; // Trigger reflow
                 portal.classList.add('shake');
-                setTimeout(() => portal.classList.remove('shake'), 500);
+                pinInput.value = '';
+                pinInput.focus();
             }
-        } catch (e) {
-            alert('Security connection failed.');
+        } catch (err) {
+            console.error(err);
+            error.style.display = 'flex';
+            error.innerHTML = '<i class="fas fa-circle-exclamation"></i> VERIFICATION ERROR';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-shield-halved"></i> VERIFY IDENTITY';
         }
     }
 
-    document.getElementById('pin').addEventListener('keypress', (e) => {
+    document.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleVerify();
     });
 </script>
-
-<style>
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-10px); }
-        75% { transform: translateX(10px); }
-    }
-    .shake { animation: shake 0.2s ease-in-out 0s 2; }
-</style>
 {% endblock %}

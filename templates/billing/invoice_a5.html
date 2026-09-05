@@ -305,6 +305,16 @@
           <td colspan="4" style="text-align:right;">Total</td>
           <td class="right">&#8377; {{ "%.2f"|format(sale.net_total) }}</td>
         </tr>
+        {% if sale.payment_method == 'CREDIT' %}
+        <tr class="advance-row">
+          <td colspan="4" style="text-align:right; font-size:7.5pt; font-weight:bold; color:#0f766e;">Advance / Initial Paid</td>
+          <td class="right" style="font-size:7.5pt; font-weight:bold; color:#0f766e;">&#8377; {{ "%.2f"|format(sale.amount_paid or 0) }}</td>
+        </tr>
+        <tr class="balance-row">
+          <td colspan="4" style="text-align:right; font-size:8pt; font-weight:bold; color:#b91c1c;">Balance Due</td>
+          <td class="right" style="font-size:8pt; font-weight:bold; color:#b91c1c;">&#8377; {{ "%.2f"|format(sale.balance or 0) }}</td>
+        </tr>
+        {% endif %}
       </tfoot>
     </table>
   </div>

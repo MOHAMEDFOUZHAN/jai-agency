@@ -1,135 +1,296 @@
 {% extends "base.html" %}
 
-{% block title %}Profit Analysis | JAI AGENCIES{% endblock %}
+{% block title %}Profit & Margin Intelligence | JAI AGENCIES{% endblock %}
 
 {% block content %}
 <div class="report-wrapper profit-page fade-in">
     <!-- Header -->
     <div class="report-header no-print">
         <div class="header-content">
-            <span class="kicker">Business Intelligence</span>
-            <h1>Profit Report</h1>
-            <p>Real-time margin analysis and revenue intelligence.</p>
+            <span class="kicker"><i class="fas fa-shield-alt"></i> Executive Dashboard</span>
+            <h1>Profit & Margin Intelligence</h1>
+            <p>Real-time revenue, cost structure, and product profitability analytics.</p>
         </div>
         <div class="header-actions">
-             <button class="btn-premium secondary" onclick="window.print()">
+            <button class="btn-action primary-glow" onclick="window.print()">
                 <i class="fas fa-print"></i> Print Manifest
             </button>
-            <a href="/logout-profit-pin" class="btn-premium danger-ghost" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.2);">
-                <i class="fas fa-shield-slash"></i> Lock Analytics
+            <a href="/logout-profit-pin" class="btn-action danger-glow">
+                <i class="fas fa-lock"></i> Lock Analytics
             </a>
-            <a href="/billing/navigation" class="btn-premium ghost">
-                <i class="fas fa-times"></i> Close Hub
+            <a href="/billing/navigation" class="btn-action glass-glow">
+                <i class="fas fa-arrow-left"></i> Back to Hub
             </a>
         </div>
     </div>
 
-    <!-- Standardized Filter Nexus -->
-    <div class="filter-nexus glass-panel no-print">
-        <div class="filter-group">
-            <label>FROM DATE</label>
-            <input type="date" id="fromDate" value="{{ from_date_raw }}">
+    <!-- Executive KPI Dashboard -->
+    {% set overall_margin = (total_profit / total_revenue * 100) if total_revenue > 0 else 0 %}
+    <div class="kpi-dashboard-grid no-print">
+        <!-- KPI 1: Revenue -->
+        <div class="kpi-card glass-card">
+            <div class="kpi-header">
+                <span class="kpi-title">TOTAL REVENUE</span>
+                <div class="kpi-icon blue"><i class="fas fa-wallet"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-val">₹{{ "{:,.2f}".format(total_revenue) }}</div>
+                <div class="kpi-sub"><i class="fas fa-arrow-up-right-dots text-emerald"></i> Gross Sales Revenue</div>
+            </div>
         </div>
-        <div class="filter-group">
-            <label>TO DATE</label>
-            <input type="date" id="toDate" value="{{ to_date_raw }}">
+
+        <!-- KPI 2: Cost of Goods -->
+        <div class="kpi-card glass-card">
+            <div class="kpi-header">
+                <span class="kpi-title">TOTAL COGS (COST)</span>
+                <div class="kpi-icon amber"><i class="fas fa-boxes-stacked"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-val">₹{{ "{:,.2f}".format(total_cost) }}</div>
+                <div class="kpi-sub">Cost of Sold Products</div>
+            </div>
         </div>
-        <div class="filter-group">
-            <label>MATRIX SEARCH</label>
-            <input type="text" id="productSearch" onkeyup="searchProducts()" placeholder="Search products or code...">
+
+        <!-- KPI 3: Net Profit / Loss -->
+        <div class="kpi-card glass-card highlight-card {% if total_profit < 0 %}loss{% else %}profit{% endif %}">
+            <div class="kpi-header">
+                <span class="kpi-title">{% if total_profit < 0 %}NET LOSS{% else %}NET PROFIT{% endif %}</span>
+                <div class="kpi-icon {% if total_profit < 0 %}red{% else %}emerald{% endif %}">
+                    <i class="fas {% if total_profit < 0 %}fa-arrow-trend-down{% else %}fa-chart-line{% endif %}"></i>
+                </div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-val {% if total_profit < 0 %}text-rose{% else %}text-emerald{% endif %}">
+                    ₹{{ "{:,.2f}".format(total_profit) }}
+                </div>
+                <div class="kpi-sub">
+                    <span class="margin-badge {% if overall_margin > 20 %}badge-emerald{% elif overall_margin > 10 %}badge-amber{% else %}badge-rose{% endif %}">
+                        {{ "%.1f"|format(overall_margin) }}% Margin
+                    </span>
+                </div>
+            </div>
         </div>
-        <div class="action-group">
-            <button class="btn-premium primary" onclick="applyFilters()">
-                <i class="fas fa-sync-alt"></i> Recompute
+
+        <!-- KPI 4: Margin Efficiency -->
+        <div class="kpi-card glass-card">
+            <div class="kpi-header">
+                <span class="kpi-title">PROFIT MARGIN</span>
+                <div class="kpi-icon purple"><i class="fas fa-gauge-high"></i></div>
+            </div>
+            <div class="kpi-body">
+                <div class="kpi-val">{{ "%.1f"|format(overall_margin) }}%</div>
+                <div class="kpi-progress-bar">
+                    <div class="kpi-progress-fill {% if overall_margin > 20 %}bg-emerald{% elif overall_margin > 10 %}bg-amber{% else %}bg-rose{% endif %}"
+                         style="width: {{ [overall_margin|round|abs, 100]|min }}%;"></div>
+                </div>
+                <div class="kpi-sub text-muted">Target: >20.0% Efficiency</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Nexus & Quick Presets -->
+    <div class="filter-nexus glass-card no-print">
+        <div class="nexus-row">
+            <div class="filter-group">
+                <label><i class="fas fa-calendar-alt"></i> FROM DATE</label>
+                <input type="date" id="fromDate" class="input-glass" value="{{ from_date_raw }}">
+            </div>
+            <div class="filter-group">
+                <label><i class="fas fa-calendar-check"></i> TO DATE</label>
+                <input type="date" id="toDate" class="input-glass" value="{{ to_date_raw }}">
+            </div>
+            <div class="filter-group grow">
+                <label><i class="fas fa-search"></i> PRODUCT SEARCH</label>
+                <input type="text" id="productSearch" class="input-glass" onkeyup="filterProducts()" placeholder="Filter by product name or code...">
+            </div>
+            <div class="action-group">
+                <button class="btn-action primary-glow" onclick="applyFilters()">
+                    <i class="fas fa-sync-alt"></i> Recompute
+                </button>
+            </div>
+        </div>
+        
+        <div class="preset-chips">
+            <span class="preset-label">Quick Ranges:</span>
+            <button class="chip-btn" onclick="setPreset('today')">Today</button>
+            <button class="chip-btn" onclick="setPreset('yesterday')">Yesterday</button>
+            <button class="chip-btn" onclick="setPreset('this-month')">This Month</button>
+            <button class="chip-btn" onclick="setPreset('all')">All Time</button>
+        </div>
+    </div>
+
+    <!-- Product Performance Section -->
+    <div class="product-section-shell no-print">
+        <div class="section-header-bar">
+            <div class="section-title">
+                <i class="fas fa-boxes-packing text-blue"></i>
+                <h2>Product Profitability Breakdown</h2>
+                <span class="item-count-badge">{{ summary|length }} Products Analyzed</span>
+            </div>
+            <div class="view-controls">
+                <div class="filter-pills">
+                    <button class="pill-btn active" onclick="setMarginFilter('all', this)">All</button>
+                    <button class="pill-btn" onclick="setMarginFilter('high', this)">High Margin (>20%)</button>
+                    <button class="pill-btn" onclick="setMarginFilter('moderate', this)">Moderate (10-20%)</button>
+                    <button class="pill-btn" onclick="setMarginFilter('low', this)">Low/Loss (<10%)</button>
+                </div>
+                <div class="toggle-switch">
+                    <button class="toggle-btn active" id="btnGridView" onclick="switchView('grid')" title="Grid View">
+                        <i class="fas fa-border-all"></i>
+                    </button>
+                    <button class="toggle-btn" id="btnTableView" onclick="switchView('table')" title="Table View">
+                        <i class="fas fa-list-ul"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if summary|length == 0 %}
+        <!-- Empty State -->
+        <div class="empty-state-card glass-card">
+            <div class="empty-icon"><i class="fas fa-chart-pie"></i></div>
+            <h3>No Sales Activity Recorded</h3>
+            <p>There are no completed sales transactions within the selected date range.</p>
+            <button class="btn-action glass-glow" onclick="setPreset('all')">
+                <i class="fas fa-calendar-day"></i> Show All Time Sales
             </button>
         </div>
-    </div>
+        {% else %}
 
-    <!-- Product Grid -->
-    <div class="product-grid-shell no-print">
-        <div class="section-title">
-            <i class="fas fa-cubes"></i>
-            <h2>Product Wise Performance</h2>
-        </div>
+        <!-- Grid View Container -->
         <div class="grid-container" id="productGrid">
             {% for p in summary %}
-            <div class="product-card" data-name="{{ p.name|lower }}" data-code="{{ p.code|lower }}">
-                <div class="card-status-dot {% if (p.profit / p.revenue * 100) > 20 %}good{% elif (p.profit / p.revenue * 100) > 10 %}fair{% else %}risk{% endif %}"></div>
-                <div class="card-header">
-                    <span class="p-name">{{ p.name }}</span>
-                    <span class="p-code">NODE ID: #{{ p.code }}</span>
+            {% set p_margin = (p.profit / p.revenue * 100) if p.revenue > 0 else 0 %}
+            {% set margin_cat = 'high' if p_margin > 20 else ('moderate' if p_margin >= 10 else 'low') %}
+            <div class="product-card glass-card" 
+                 data-name="{{ p.name|lower }}" 
+                 data-code="{{ p.code|lower }}"
+                 data-margin-cat="{{ margin_cat }}">
+                
+                <div class="card-top">
+                    <div class="card-title-group">
+                        <span class="p-name">{{ p.name }}</span>
+                        <span class="p-code">CODE: #{{ p.code }}</span>
+                    </div>
+                    <span class="status-pill {% if p_margin > 20 %}pill-emerald{% elif p_margin >= 10 %}pill-amber{% else %}pill-rose{% endif %}">
+                        {% if p.profit < 0 %}LOSS{% else %}{{ "%.1f"|format(p_margin) }}% Margin{% endif %}
+                    </span>
                 </div>
-                <div class="card-stats-list">
-                    <div class="stat-line p-performance-box">
-                        <span class="p-performance-label">{% if p.profit < 0 %}NET LOSS:{% else %}NET PROFIT:{% endif %}</span>
-                        <div class="val p-performance-val {% if p.profit < 0 %}text-danger{% else %}positive{% endif %}">
-                            ₹{{ "{:,.2f}".format(p.profit | abs) }}
-                        </div>
+
+                <div class="card-metrics-grid">
+                    <div class="metric-cell">
+                        <span class="m-label">Units Sold</span>
+                        <span class="m-val">{{ p.qty }}</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span class="m-label">Total Revenue</span>
+                        <span class="m-val">₹{{ "{:,.2f}".format(p.revenue) }}</span>
+                    </div>
+                    <div class="metric-cell">
+                        <span class="m-label">Total Cost</span>
+                        <span class="m-val">₹{{ "{:,.2f}".format(p.cost) }}</span>
+                    </div>
+                    <div class="metric-cell highlight-cell">
+                        <span class="m-label">Net Profit</span>
+                        <span class="m-val {% if p.profit < 0 %}text-rose{% else %}text-emerald{% endif %}">
+                            ₹{{ "{:,.2f}".format(p.profit) }}
+                        </span>
                     </div>
                 </div>
-                {% set p_margin = (p.profit / p.revenue * 100) if p.revenue > 0 else 0 %}
-                <div class="card-footer-viz">
-                    <div class="viz-label">Efficiency: {{ "%.1f"|format(p_margin) }}%</div>
-                    <div class="viz-bar-bg">
-                        <div class="viz-bar-fill {% if p_margin > 20 %}bg-emerald{% elif p_margin > 10 %}bg-warning{% else %}bg-danger{% endif %}" style="width: {{ p_margin|round }}%;"></div>
+
+                <div class="card-viz-footer">
+                    <div class="viz-info">
+                        <span>Margin Efficiency</span>
+                        <span class="viz-perc">{{ "%.1f"|format(p_margin) }}%</span>
+                    </div>
+                    <div class="viz-track">
+                        <div class="viz-fill {% if p_margin > 20 %}bg-emerald{% elif p_margin >= 10 %}bg-amber{% else %}bg-rose{% endif %}"
+                             style="width: {{ [p_margin|round|abs, 100]|min }}%;"></div>
                     </div>
                 </div>
             </div>
             {% endfor %}
         </div>
+
+        <!-- Table View Container (Hidden by default) -->
+        <div class="table-container glass-card" id="productTable" style="display: none;">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Product Details</th>
+                        <th>Code</th>
+                        <th style="text-align: right;">Qty Sold</th>
+                        <th style="text-align: right;">Revenue</th>
+                        <th style="text-align: right;">Cost (COGS)</th>
+                        <th style="text-align: right;">Net Profit</th>
+                        <th style="text-align: center;">Margin %</th>
+                        <th style="text-align: center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in summary %}
+                    {% set p_margin = (p.profit / p.revenue * 100) if p.revenue > 0 else 0 %}
+                    {% set margin_cat = 'high' if p_margin > 20 else ('moderate' if p_margin >= 10 else 'low') %}
+                    <tr class="table-row" data-name="{{ p.name|lower }}" data-code="{{ p.code|lower }}" data-margin-cat="{{ margin_cat }}">
+                        <td>
+                            <div class="td-product-name">{{ p.name }}</div>
+                        </td>
+                        <td><span class="td-code">#{{ p.code }}</span></td>
+                        <td style="text-align: right; font-weight: 700;">{{ p.qty }}</td>
+                        <td style="text-align: right;">₹{{ "{:,.2f}".format(p.revenue) }}</td>
+                        <td style="text-align: right; color: var(--text-dim);">₹{{ "{:,.2f}".format(p.cost) }}</td>
+                        <td style="text-align: right; font-weight: 800;" class="{% if p.profit < 0 %}text-rose{% else %}text-emerald{% endif %}">
+                            ₹{{ "{:,.2f}".format(p.profit) }}
+                        </td>
+                        <td style="text-align: center; font-weight: 700;">{{ "%.1f"|format(p_margin) }}%</td>
+                        <td style="text-align: center;">
+                            <span class="status-pill {% if p_margin > 20 %}pill-emerald{% elif p_margin >= 10 %}pill-amber{% else %}pill-rose{% endif %}">
+                                {% if p.profit < 0 %}LOSS{% else %}{{ "%.1f"|format(p_margin) }}%{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% endif %}
     </div>
 
-    <!-- Overall Report -->
-    <div class="overall-report-shell no-print">
-        <div class="section-title">
-            <i class="fas fa-chart-pie"></i>
-            <h2>Consolidated Summary</h2>
-        </div>
-        <div class="overall-card glass-panel">
-            <div class="overall-meta" style="display: none;">
-                <!-- Hidden Metrics -->
-            </div>
-            <div class="overall-stats-grid simple-view">
-                <div class="big-stat" style="display: none;">
-                    <label>Total Revenue</label>
-                    <div class="val">₹{{ "{:,.2f}".format(total_revenue) }}</div>
-                    <div class="sub-label">Gross Sales volume</div>
-                </div>
-                <div class="big-stat highlight">
-                    <label>{% if total_profit < 0 %}Overall Loss{% else %}Overall Profit{% endif %}</label>
-                    <div class="val {% if total_profit < 0 %}text-danger{% else %}text-emerald{% endif %}">₹{{ "{:,.2f}".format(total_profit) }}</div>
-                    <div class="sub-label">Consolidated Margin</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Print Only Content (Modern Manifest View) -->
+    <!-- Print Only Content (Modern Print Manifest View) -->
     <div class="print-content print-only">
         <div class="print-report-header">
             <h1 class="store-name-print">JAI AGENCIES</h1>
-            <h2 class="title-sm">{{ title or 'Profit Analysis Report' }}</h2>
-            <p class="date-range" style="display: none;">Period: {{ date_from }} to {{ date_to }}</p>
+            <h2 class="title-sm">PROFIT & MARGIN ANALYSIS REPORT</h2>
+            <p class="date-range">Report Period: {{ from_date_raw }} to {{ to_date_raw }}</p>
         </div>
         
-        <div class="manifest-summary-grid simple-print">
-            <div class="summary-node" style="display: none;">
+        <div class="manifest-summary-grid">
+            <div class="summary-node">
                 <label>TOTAL REVENUE</label>
                 <strong>₹{{ "{:,.2f}".format(total_revenue) }}</strong>
             </div>
             <div class="summary-node">
+                <label>TOTAL COST</label>
+                <strong>₹{{ "{:,.2f}".format(total_cost) }}</strong>
+            </div>
+            <div class="summary-node">
                 <label>{% if total_profit < 0 %}NET LOSS{% else %}NET PROFIT{% endif %}</label>
-                <strong class="total-profit-print {% if total_profit < 0 %}print-text-danger{% else %}print-text-emerald{% endif %}">₹{{ "{:,.2f}".format(total_profit | abs) }}</strong>
+                <strong class="total-profit-print {% if total_profit < 0 %}print-text-rose{% else %}print-text-emerald{% endif %}">
+                    ₹{{ "{:,.2f}".format(total_profit | abs) }}
+                </strong>
             </div>
         </div>
 
         <table class="manifest-table">
             <thead>
                 <tr>
-                    <th style="text-align: left;">Product Performance Matrix</th>
+                    <th style="text-align: left;">Product Description</th>
                     <th>Code</th>
-                    <th style="text-align: right;">Units</th>
-                    <th style="text-align: right;">Total Net Profit</th>
+                    <th style="text-align: right;">Units Sold</th>
+                    <th style="text-align: right;">Revenue</th>
+                    <th style="text-align: right;">Cost</th>
+                    <th style="text-align: right;">Net Profit</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,10 +298,12 @@
                 <tr>
                     <td>{{ p.name }}</td>
                     <td>#{{ p.code }}</td>
-                     <td style="text-align: right;">{{ p.qty }}</td>
-                     <td class="cell-profit-print {% if p.profit < 0 %}print-text-danger{% else %}print-text-emerald{% endif %}">
-                         ₹{{ "{:,.2f}".format(p.profit | abs) }}
-                     </td>
+                    <td style="text-align: right;">{{ p.qty }}</td>
+                    <td style="text-align: right;">₹{{ "{:,.2f}".format(p.revenue) }}</td>
+                    <td style="text-align: right;">₹{{ "{:,.2f}".format(p.cost) }}</td>
+                    <td class="cell-profit-print {% if p.profit < 0 %}print-text-rose{% else %}print-text-emerald{% endif %}">
+                        ₹{{ "{:,.2f}".format(p.profit) }}
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -148,7 +311,7 @@
         
         <div class="manifest-footer">
             <p>Generated on: <span id="printTime"></span> | Page 1 of 1</p>
-            <p>Confidential Business Intelligence Document</p>
+            <p>Confidential Business Intelligence Document - Jai Agencies</p>
         </div>
     </div>
 </div>
@@ -156,110 +319,544 @@
 <style>
     :root {
         --accent-blue: #3b82f6;
+        --accent-blue-glow: rgba(59, 130, 246, 0.25);
         --accent-emerald: #10b981;
+        --accent-emerald-glow: rgba(16, 185, 129, 0.25);
+        --accent-rose: #f43f5e;
+        --accent-rose-glow: rgba(244, 63, 94, 0.25);
+        --accent-amber: #f59e0b;
+        --accent-amber-glow: rgba(245, 158, 11, 0.25);
         --text-dim: #94a3b8;
-        --bg-glass: rgba(15, 23, 42, 0.6);
-        --border-glass: rgba(255, 255, 255, 0.08);
+        --bg-glass: rgba(15, 23, 42, 0.7);
+        --border-glass: rgba(255, 255, 255, 0.1);
     }
 
-    .profit-page { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+    .profit-page {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+
+    /* Print hide for standard view */
+    .print-only {
+        display: none !important;
+    }
 
     /* Header */
-    .report-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; }
-    .kicker { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.2em; font-weight: 800; color: var(--accent-blue); display: block; margin-bottom: 0.5rem; }
-    .report-header h1 { font-size: 2.2rem; letter-spacing: -2px; margin: 0; line-height: 1; }
-    .report-header p { color: var(--text-dim); margin-top: 0.5rem; font-size: 1.1rem; }
-    .header-actions { display: flex; gap: 1rem; }
+    .report-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 2rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .kicker {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-weight: 800;
+        color: var(--accent-blue);
+        display: block;
+        margin-bottom: 0.4rem;
+    }
+    .report-header h1 {
+        font-size: 2.2rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin: 0;
+        color: #ffffff;
+    }
+    .report-header p {
+        color: var(--text-dim);
+        margin-top: 0.4rem;
+        font-size: 1rem;
+    }
+    .header-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
 
-    /* Filters - Replaced by Global Filter Nexus */
-    
-    /* Section Titles */
-    .section-title { display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; color: #fff; }
-    .section-title i { font-size: 1.2rem; color: var(--accent-blue); }
-    .section-title h2 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; opacity: 0.9; }
+    /* Modern Buttons */
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.05);
+        color: #ffffff;
+    }
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+    .btn-action.primary-glow {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border: none;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+    }
+    .btn-action.primary-glow:hover {
+        box-shadow: 0 12px 25px rgba(37, 99, 235, 0.5);
+    }
+    .btn-action.danger-glow {
+        background: rgba(244, 63, 94, 0.12);
+        color: #f43f5e;
+        border-color: rgba(244, 63, 94, 0.3);
+    }
+    .btn-action.danger-glow:hover {
+        background: rgba(244, 63, 94, 0.25);
+        box-shadow: 0 8px 20px rgba(244, 63, 94, 0.25);
+    }
+    .btn-action.glass-glow:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
 
-    /* Product Grid */
-    .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 4rem; }
-    .product-card { background: var(--bg-glass); border: 1px solid var(--border-glass); border-radius: 28px; padding: 2rem; position: relative; backdrop-filter: blur(12px); overflow: hidden; transition: 0.3s; }
-    .product-card:hover { transform: translateY(-8px); border-color: var(--accent-blue); background: rgba(15, 23, 42, 0.8); }
+    /* Glass Cards Base */
+    .glass-card {
+        background: var(--bg-glass);
+        border: 1px solid var(--border-glass);
+        border-radius: 24px;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
 
-    .card-status-dot { position: absolute; top: 1.5rem; right: 1.5rem; width: 10px; height: 10px; border-radius: 50%; }
-    .card-status-dot.good { background: var(--accent-emerald); box-shadow: 0 0 15px var(--accent-emerald); }
-    .card-status-dot.fair { background: #f59e0b; }
-    .card-status-dot.risk { background: #ef4444; }
+    /* KPI Dashboard */
+    .kpi-dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .kpi-card {
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .kpi-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .kpi-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .kpi-title {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        color: var(--text-dim);
+    }
+    .kpi-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+    }
+    .kpi-icon.blue { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+    .kpi-icon.amber { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+    .kpi-icon.emerald { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .kpi-icon.red { background: rgba(244, 63, 94, 0.15); color: #f43f5e; }
+    .kpi-icon.purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
 
-    .card-header { margin-bottom: 1.75rem; }
-    .p-name { display: block; font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 0.25rem; }
-    .p-code { font-size: 0.7rem; font-weight: 900; color: var(--accent-blue); }
+    .kpi-val {
+        font-size: 1.8rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: #ffffff;
+        margin-bottom: 0.4rem;
+    }
+    .kpi-sub {
+        font-size: 0.82rem;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
 
-    .stat-line { display: flex; justify-content: space-between; margin-bottom: 0.75rem; border-bottom: 1px dotted rgba(255,255,255,0.05); padding-bottom: 0.5rem; }
-    .stat-line .label { font-size: 0.85rem; color: var(--text-dim); }
-    .stat-line .val { font-weight: 700; color: #fff; }
-    .stat-line.highlight { margin-top: 1rem; border: none; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 12px; }
-    
-    .stat-calc-detail { font-size: 0.75rem; color: #475569; font-weight: 700; margin-top: 0.5rem; text-align: center; background: rgba(0,0,0,0.2); padding: 0.4rem; border-radius: 8px; font-family: 'Space Grotesk', monospace; }
-    .calc-res { color: var(--accent-emerald); }
-    
-    .card-footer-viz { margin-top: 2rem; }
-    .viz-label { font-size: 0.75rem; font-weight: 800; margin-bottom: 0.5rem; color: var(--text-dim); }
-    .viz-bar-bg { height: 6px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; }
-    .viz-bar-fill { height: 100%; border-radius: 10px; transition: 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .highlight-card.profit {
+        background: linear-gradient(145deg, rgba(16, 185, 129, 0.08), rgba(15, 23, 42, 0.8));
+        border-color: rgba(16, 185, 129, 0.3);
+    }
+    .highlight-card.loss {
+        background: linear-gradient(145deg, rgba(244, 63, 94, 0.08), rgba(15, 23, 42, 0.8));
+        border-color: rgba(244, 63, 94, 0.3);
+    }
 
-    /* Overall Summary */
-    .overall-card { padding: 3rem; border-radius: 36px; }
-    .overall-meta { display: flex; gap: 3rem; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-glass); }
-    .meta-item label { display: block; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; color: #475569; margin-bottom: 0.5rem; }
-    .meta-item .val { font-weight: 800; color: #fff; }
-
-    .overall-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 3rem; }
-    .overall-stats-grid.simple-view { grid-template-columns: repeat(2, 1fr); max-width: 900px; margin: 0 auto; }
-    .big-stat label { display: block; font-size: 0.8rem; font-weight: 800; color: var(--text-dim); margin-bottom: 0.5rem; }
-    .text-emerald { color: #10b981 !important; }
-
-    .p-performance-box {
-        margin-top: 0; 
-        padding: 1.5rem; 
-        background: rgba(255,255,255,0.05); 
+    .margin-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
         border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.75rem;
+    }
+    .badge-emerald { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-rose { background: rgba(244, 63, 94, 0.2); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    .kpi-progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        margin: 0.6rem 0;
+        overflow: hidden;
+    }
+    .kpi-progress-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.8s ease;
+    }
+
+    /* Filter Nexus */
+    .filter-nexus {
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .nexus-row {
+        display: flex;
+        gap: 1.25rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+    .filter-group {
         display: flex;
         flex-direction: column;
-        align-items: flex-start;
-        border-bottom: none;
+        gap: 0.4rem;
     }
-    .p-performance-label {
-        font-size: 1.1rem; 
-        color: var(--text-dim); 
-        text-transform: uppercase; 
+    .filter-group.grow { flex: 1; min-width: 240px; }
+    .filter-group label {
+        font-size: 0.72rem;
         font-weight: 800;
+        color: var(--text-dim);
+        letter-spacing: 0.08em;
     }
-    .p-performance-val {
-        font-size: 1.8rem; 
-        font-weight: 950; 
-        letter-spacing: -1px; 
-        margin-top: 5px;
+    .input-glass {
+        background: rgba(0, 0, 0, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        padding: 0.7rem 1rem;
+        color: #ffffff;
+        font-size: 0.9rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+    .input-glass:focus {
+        border-color: var(--accent-blue);
+        box-shadow: 0 0 0 3px var(--accent-blue-glow);
+    }
+    
+    .preset-chips {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        flex-wrap: wrap;
+    }
+    .preset-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-dim);
+        margin-right: 0.25rem;
+    }
+    .chip-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 0.3rem 0.8rem;
+        color: var(--text-dim);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .chip-btn:hover {
+        background: rgba(59, 130, 246, 0.15);
+        color: #ffffff;
+        border-color: rgba(59, 130, 246, 0.3);
     }
 
-    .bg-emerald { background: #10b981; }
-    .bg-warning { background: #f59e0b; }
-    .bg-danger { background: #ef4444; }
+    /* Product Section */
+    .section-header-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .section-title h2 {
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        margin: 0;
+        color: #ffffff;
+    }
+    .item-count-badge {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-dim);
+    }
+
+    .view-controls {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .filter-pills {
+        display: flex;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .pill-btn {
+        background: transparent;
+        border: none;
+        padding: 0.4rem 0.9rem;
+        border-radius: 10px;
+        color: var(--text-dim);
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .pill-btn.active {
+        background: var(--accent-blue);
+        color: #ffffff;
+        box-shadow: 0 4px 12px var(--accent-blue-glow);
+    }
+
+    .toggle-switch {
+        display: flex;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .toggle-btn {
+        background: transparent;
+        border: none;
+        width: 36px;
+        height: 32px;
+        border-radius: 10px;
+        color: var(--text-dim);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .toggle-btn.active {
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+    }
+
+    /* Product Grid Cards */
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 3rem;
+    }
+    .product-card {
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+    .product-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.25rem;
+    }
+    .p-name {
+        display: block;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.3;
+        margin-bottom: 0.2rem;
+    }
+    .p-code {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: var(--accent-blue);
+        letter-spacing: 0.05em;
+    }
+
+    .status-pill {
+        padding: 0.25rem 0.65rem;
+        border-radius: 20px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+    .pill-emerald { background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .pill-amber { background: rgba(245, 158, 11, 0.18); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .pill-rose { background: rgba(244, 63, 94, 0.18); color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.3); }
+
+    .card-metrics-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.25);
+        border-radius: 16px;
+    }
+    .metric-cell {
+        display: flex;
+        flex-direction: column;
+    }
+    .m-label {
+        font-size: 0.68rem;
+        font-weight: 700;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        margin-bottom: 0.15rem;
+    }
+    .m-val {
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #ffffff;
+    }
+    .metric-cell.highlight-cell {
+        grid-column: span 2;
+        padding-top: 0.5rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.1);
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-viz-footer {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+    .viz-info {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-dim);
+    }
+    .viz-perc { font-weight: 800; color: #ffffff; }
+    .viz-track {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .viz-fill {
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.6s ease;
+    }
+
+    .bg-emerald { background: var(--accent-emerald); }
+    .bg-amber { background: var(--accent-amber); }
+    .bg-rose { background: var(--accent-rose); }
+    .text-emerald { color: var(--accent-emerald) !important; }
+    .text-rose { color: var(--accent-rose) !important; }
+
+    /* Table View */
+    .table-container {
+        padding: 1rem;
+        overflow-x: auto;
+        margin-bottom: 3rem;
+    }
+    .dashboard-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .dashboard-table th {
+        padding: 1rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        color: var(--text-dim);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-transform: uppercase;
+    }
+    .dashboard-table td {
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: #ffffff;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .dashboard-table tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+    }
+    .td-product-name { font-weight: 800; }
+    .td-code { font-size: 0.75rem; font-weight: 800; color: var(--accent-blue); }
+
+    /* Empty State */
+    .empty-state-card {
+        text-align: center;
+        padding: 4rem 2rem;
+        margin: 2rem 0;
+    }
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--accent-blue);
+        margin-bottom: 1rem;
+        opacity: 0.6;
+    }
+    .empty-state-card h3 {
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+    .empty-state-card p {
+        color: var(--text-dim);
+        margin-bottom: 1.5rem;
+    }
 
     /* PRINT STYLES */
     @media print {
         @page {
             size: A4 portrait;
-            margin: 10mm;
+            margin: 12mm;
         }
 
         body {
             background: white !important;
             color: black !important;
-            margin: 0 !important;
-            padding: 0 !important;
             font-family: 'Inter', -apple-system, sans-serif !important;
-            font-size: 9pt !important;
         }
 
-        .no-print, .navbar, .site-footer, .header-actions, .report-filters, .product-grid-shell, .overall-report-shell, .print-only-header {
+        .no-print, .navbar, .site-footer, .app-bg, .app-vignette {
             display: none !important;
         }
 
@@ -268,37 +865,31 @@
         }
 
         .store-name-print {
-            font-size: 24pt; 
-            font-weight: 900; 
-            margin-bottom: 2mm;
+            font-size: 22pt;
+            font-weight: 900;
+            margin: 0 0 2mm 0;
             text-align: center;
+            letter-spacing: -0.5pt;
         }
 
         .print-report-header {
             text-align: center !important;
-            margin-bottom: 5mm !important;
-            border-bottom: 1pt solid black !important;
-            padding-bottom: 3mm !important;
+            margin-bottom: 6mm !important;
+            border-bottom: 1.5pt solid #000 !important;
+            padding-bottom: 4mm !important;
         }
 
-        .title-sm { font-size: 14pt !important; font-weight: 700 !important; margin: 0 !important; }
-        .date-range { font-size: 9pt !important; margin: 2mm 0 0 0 !important; }
-
-        .report-wrapper, .print-content {
-            width: 100% !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+        .title-sm { font-size: 12pt !important; font-weight: 800 !important; margin: 0 !important; }
+        .date-range { font-size: 9pt !important; margin: 2mm 0 0 0 !important; color: #444; }
 
         .manifest-summary-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 10mm;
-            margin-bottom: 5mm;
-            border: 1.5pt solid black !important;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4mm;
+            margin-bottom: 6mm;
+            border: 1.5pt solid #000 !important;
             padding: 4mm !important;
-            background: #f9f9f9 !important;
+            background: #f8fafc !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -307,37 +898,34 @@
             text-align: center;
         }
 
-        .summary-node label { font-size: 8.5pt; display: block; margin-bottom: 4pt; color: #000; font-weight: bold; text-transform: uppercase; }
-        .summary-node strong { font-size: 16pt; display: block; }
-        
-        .total-profit-print { font-size: 24pt; }
-        .print-text-danger { color: #ef4444 !important; }
-        .print-text-emerald { color: #10b981 !important; }
+        .summary-node label { font-size: 8pt; display: block; margin-bottom: 2pt; color: #000; font-weight: 800; }
+        .summary-node strong { font-size: 14pt; display: block; color: #000; }
+        .total-profit-print { font-size: 16pt; }
+        .print-text-rose { color: #dc2626 !important; }
+        .print-text-emerald { color: #16a34a !important; }
 
         .manifest-table {
             width: 100% !important;
             border-collapse: collapse !important;
-            border: 1pt solid black !important;
-        }
-
-        .manifest-table thead {
-            display: table-header-group !important;
+            border: 1pt solid #000 !important;
+            margin-bottom: 6mm;
         }
 
         .manifest-table th {
-            padding: 8pt;
+            padding: 6pt 8pt;
             border: 0.5pt solid #000 !important;
-            background: #eee !important;
+            background: #f1f5f9 !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
-            font-size: 9.5pt;
+            font-size: 8.5pt;
+            font-weight: 800;
             text-transform: uppercase;
         }
 
         .manifest-table td {
-            padding: 8pt;
+            padding: 6pt 8pt;
             border: 0.5pt solid #000 !important;
-            font-size: 9pt;
+            font-size: 8.5pt;
         }
 
         .cell-profit-print {
@@ -350,16 +938,14 @@
         }
 
         .manifest-footer {
-            margin-top: 10mm;
-            border-top: 0.5pt solid #ccc;
-            padding-top: 4mm;
+            margin-top: 8mm;
+            border-top: 0.5pt solid #94a3b8;
+            padding-top: 3mm;
             display: flex;
             justify-content: space-between;
-            color: #666;
-            font-size: 8.5pt;
+            color: #64748b;
+            font-size: 8pt;
         }
-
-        .text-emerald { color: black !important; font-weight: bold !important; }
     }
 </style>
 
@@ -370,24 +956,90 @@
         window.location.href = `/billing/reports/profit?from=${from}&to=${to}`;
     }
 
-    function searchProducts() {
-        const query = document.getElementById('productSearch').value.toLowerCase();
-        const cards = document.querySelectorAll('.product-card');
+    function setPreset(type) {
+        const today = new Date();
+        const formatDate = (d) => d.toISOString().split('T')[0];
         
+        let fromDate = formatDate(today);
+        let toDate = formatDate(today);
+
+        if (type === 'yesterday') {
+            const y = new Date(today);
+            y.setDate(y.getDate() - 1);
+            fromDate = formatDate(y);
+            toDate = formatDate(y);
+        } else if (type === 'this-month') {
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            fromDate = formatDate(firstDay);
+            toDate = formatDate(today);
+        } else if (type === 'all') {
+            fromDate = '2020-01-01';
+            toDate = formatDate(today);
+        }
+
+        document.getElementById('fromDate').value = fromDate;
+        document.getElementById('toDate').value = toDate;
+        applyFilters();
+    }
+
+    let activeMarginCat = 'all';
+
+    function setMarginFilter(cat, btn) {
+        activeMarginCat = cat;
+        document.querySelectorAll('.filter-pills .pill-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        filterProducts();
+    }
+
+    function filterProducts() {
+        const query = (document.getElementById('productSearch')?.value || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.product-card');
+        const rows = document.querySelectorAll('.table-row');
+
+        const matchItem = (name, code, marginCat) => {
+            const matchesSearch = !query || name.includes(query) || code.includes(query);
+            const matchesCat = (activeMarginCat === 'all') || (marginCat === activeMarginCat);
+            return matchesSearch && matchesCat;
+        };
+
         cards.forEach(card => {
-            const name = card.getAttribute('data-name');
-            const code = card.getAttribute('data-code');
-            if (name.includes(query) || code.includes(query)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+            const name = card.getAttribute('data-name') || '';
+            const code = card.getAttribute('data-code') || '';
+            const cat = card.getAttribute('data-margin-cat') || '';
+            card.style.display = matchItem(name, code, cat) ? 'flex' : 'none';
+        });
+
+        rows.forEach(row => {
+            const name = row.getAttribute('data-name') || '';
+            const code = row.getAttribute('data-code') || '';
+            const cat = row.getAttribute('data-margin-cat') || '';
+            row.style.display = matchItem(name, code, cat) ? 'table-row' : 'none';
         });
     }
 
+    function switchView(viewMode) {
+        const grid = document.getElementById('productGrid');
+        const table = document.getElementById('productTable');
+        const btnGrid = document.getElementById('btnGridView');
+        const btnTable = document.getElementById('btnTableView');
+
+        if (viewMode === 'grid') {
+            if (grid) grid.style.display = 'grid';
+            if (table) table.style.display = 'none';
+            btnGrid?.classList.add('active');
+            btnTable?.classList.remove('active');
+        } else {
+            if (grid) grid.style.display = 'none';
+            if (table) table.style.display = 'block';
+            btnGrid?.classList.remove('active');
+            btnTable?.classList.add('active');
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('printTime').innerText = new Date().toLocaleString();
+        const now = new Date();
+        const printTime = document.getElementById('printTime');
+        if (printTime) printTime.innerText = now.toLocaleString();
     });
 </script>
 {% endblock %}
-

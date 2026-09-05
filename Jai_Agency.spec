@@ -1,12 +1,33 @@
 # -*- mode: python ; coding: utf-8 -*-
-
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
 
 a = Analysis(
     ['app.py'],
     pathex=[],
-    binaries=[],
-    datas=[('templates', 'templates'), ('static', 'static')],
-    hiddenimports=['webview', 'waitress', 'flask'],
+    binaries=collect_dynamic_libs('pypdfium2_raw') + collect_dynamic_libs('onnxruntime'),
+    datas=[
+        ('templates', 'templates'),
+        ('static', 'static'),
+        ('datebase', 'datebase')
+    ] + collect_data_files('rapidocr_onnxruntime') + collect_data_files('pypdfium2') + collect_data_files('pypdfium2_raw') + collect_data_files('onnxruntime'),
+    hiddenimports=[
+        'webview',
+        'waitress',
+        'flask',
+        'jinja2',
+        'mailer',
+        'clr',
+        'pythonnet',
+        'ocr_invoice_parser',
+        'rapidocr_onnxruntime',
+        'pypdfium2',
+        'pypdfium2_raw',
+        'onnxruntime',
+        'cv2',
+        'numpy',
+        'PIL',
+        'PIL.Image',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

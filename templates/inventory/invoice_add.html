@@ -17,12 +17,45 @@
     <div class="dash-hero">
         <div class="hero-main">
             <h1>Register Invoice</h1>
-            <p>Enter incoming product details for inventory replenishment.</p>
+            <p>Enter incoming product details manually or auto-scan your supplier invoice with AI OCR.</p>
         </div>
         <div class="hero-actions">
             <button class="btn-neural primary" onclick="saveInvoice()" style="background: var(--dash-primary); color: white;">
                 <i class="fas fa-save" style="margin-right: 10px;"></i> SAVE INVOICE
             </button>
+        </div>
+    </div>
+
+    <!-- AI Smart OCR Scanner Card -->
+    <div class="ocr-scanner-card" id="ocrCard">
+        <div class="ocr-header">
+            <div class="ocr-title">
+                <i class="fas fa-magic" style="color: var(--dash-primary); font-size: 1.1rem;"></i>
+                <span>SMART OCR INVOICE SCANNER</span>
+                <small style="color: var(--text-tertiary); font-size: 0.72rem; font-weight: 500; margin-left: 8px;">Auto-fill from PDF scans or mobile photos</small>
+            </div>
+            <span class="ocr-badge ocr-badge-ready" id="ocrStatusBadge">Ready</span>
+        </div>
+
+        <div class="ocr-dropzone" id="ocrDropZone" onclick="document.getElementById('invoiceFileInput').click()">
+            <input type="file" id="invoiceFileInput" accept="image/*,application/pdf" style="display:none;" onchange="if(this.files.length) handleInvoiceFile(this.files[0])">
+            <div class="ocr-drop-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="ocr-drop-text">
+                <strong>Click to Browse</strong> or Drag & Drop GST Invoice here
+            </div>
+            <div class="ocr-drop-subtext">Supports PDF, PNG, JPG, JPEG, WEBP • Fast offline OCR layout extraction</div>
+        </div>
+
+        <div id="ocrLoading" class="ocr-loading" style="display:none;">
+            <div class="ocr-spinner"></div>
+            <span id="ocrLoadingText">Scanning & parsing invoice with AI OCR... please wait...</span>
+        </div>
+
+        <div id="ocrSuccessMsg" class="ocr-success-msg" style="display:none;">
+            <i class="fas fa-check-circle" style="color: var(--dash-success); font-size: 1.2rem;"></i>
+            <span id="ocrSuccessText">Invoice parsed successfully! Header details and line items populated. Review below and save.</span>
         </div>
     </div>
 
@@ -108,6 +141,7 @@
 </div>
 
 <style>
+    /* Neural & OCR Styles */
     .neural-input-sm {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -131,6 +165,7 @@
         padding: 1.5rem 2rem;
         margin-bottom: 1.5rem;
         animation: itemFade 0.5s ease-out;
+        transition: border-color 0.3s, box-shadow 0.3s;
     }
     .stat-label {
         font-size: 0.6rem; 
@@ -143,6 +178,152 @@
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
     }
+
+    /* OCR Scanner Card Styles */
+    .ocr-scanner-card {
+        background: linear-gradient(135deg, rgba(13, 25, 48, 0.85) 0%, rgba(20, 15, 40, 0.85) 100%);
+        border: 1px solid rgba(0, 210, 255, 0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 210, 255, 0.08);
+        border-radius: 20px;
+        padding: 1.5rem 2rem;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(15px);
+        position: relative;
+        overflow: hidden;
+    }
+    .ocr-scanner-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--dash-primary), rgba(120, 80, 255, 0.8), transparent);
+    }
+    .ocr-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.2rem;
+    }
+    .ocr-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 0.85rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        color: white;
+        text-transform: uppercase;
+    }
+    .ocr-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+    }
+    .ocr-badge-ready {
+        background: rgba(0, 210, 255, 0.1);
+        border: 1px solid rgba(0, 210, 255, 0.3);
+        color: var(--dash-primary);
+    }
+    .ocr-badge-processing {
+        background: rgba(255, 170, 0, 0.15);
+        border: 1px solid rgba(255, 170, 0, 0.4);
+        color: #ffaa00;
+        animation: pulse 1.5s infinite;
+    }
+    .ocr-badge-success {
+        background: rgba(0, 230, 150, 0.15);
+        border: 1px solid rgba(0, 230, 150, 0.4);
+        color: #00e696;
+    }
+    .ocr-badge-error {
+        background: rgba(255, 75, 75, 0.15);
+        border: 1px solid rgba(255, 75, 75, 0.4);
+        color: #ff4b4b;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(0.97); }
+    }
+    .ocr-dropzone {
+        border: 2px dashed rgba(0, 210, 255, 0.35);
+        border-radius: 16px;
+        padding: 1.8rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.015);
+        transition: all 0.3s ease;
+    }
+    .ocr-dropzone:hover, .ocr-dropzone.drag-over {
+        border-color: var(--dash-primary);
+        background: rgba(0, 210, 255, 0.06);
+        box-shadow: 0 0 25px rgba(0, 210, 255, 0.18);
+        transform: translateY(-2px);
+    }
+    .ocr-drop-icon {
+        font-size: 2.2rem;
+        color: var(--dash-primary);
+        margin-bottom: 0.6rem;
+    }
+    .ocr-drop-text {
+        color: white;
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+    .ocr-drop-subtext {
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+    .ocr-loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.2rem;
+        background: rgba(0, 210, 255, 0.05);
+        border-radius: 12px;
+        margin-top: 1rem;
+        color: #7dd3fc;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .ocr-spinner {
+        width: 22px;
+        height: 22px;
+        border: 3px solid rgba(0, 210, 255, 0.2);
+        border-top-color: var(--dash-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    .ocr-success-msg {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 1rem 1.2rem;
+        background: rgba(0, 230, 150, 0.08);
+        border: 1px solid rgba(0, 230, 150, 0.25);
+        border-radius: 12px;
+        margin-top: 1rem;
+        color: #4ade80;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .ocr-highlight {
+        animation: ocrGlow 3s ease-out;
+    }
+    @keyframes ocrGlow {
+        0% { background: rgba(0, 210, 255, 0.28) !important; border-color: var(--dash-primary) !important; box-shadow: 0 0 15px rgba(0, 210, 255, 0.5); }
+        100% { background: rgba(255, 255, 255, 0.03); }
+    }
 </style>
 
 <script>
@@ -151,25 +332,26 @@
     let itemCount = 0;
 
     function syncSupplierId() {
-        const name = document.getElementById('supplier-name').value;
-        const s = suppliers.find(sup => sup.name === name);
+        const name = (document.getElementById('supplier-name').value || '').trim().toLowerCase();
+        const s = suppliers.find(sup => (sup.name || '').trim().toLowerCase() === name);
         document.getElementById('supplier-id').value = s ? s.id : '';
     }
 
     function addItemBlock() {
         itemCount++;
         const container = document.getElementById('items-container');
-        const blockId = Date.now();
+        const blockId = Date.now() + Math.floor(Math.random() * 1000);
         const block = document.createElement('div');
         block.id = `item-block-${blockId}`;
         block.className = 'item-block';
+        block.dataset.blockId = blockId;
 
         block.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem;">
                 <h3 style="color: white; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-weight: 900;">
                     <span style="color: var(--dash-primary);">PRODUCT #${itemCount}</span>
                 </h3>
-                <button class="btn-neural" style="padding: 10px 18px; font-size: 0.65rem; color: var(--dash-danger);" onclick="document.getElementById('item-block-${blockId}').remove(); calculateTotals();">
+                <button class="btn-neural" style="padding: 10px 18px; font-size: 0.65rem; color: var(--dash-danger);" onclick="document.getElementById('item-block-${blockId}').remove(); calculateGrandTotals();">
                     <i class="fas fa-trash"></i> DELETE
                 </button>
             </div>
@@ -252,15 +434,17 @@
                 </div>
                 <div class="f-group">
                     <label style="font-size: 0.6rem; margin-bottom: 4px;">MIN STOCK</label>
-                    <input type="number" class="m-reorder neural-input-sm" placeholder="Min.">
+                    <input type="number" class="m-reorder neural-input-sm" placeholder="Min." value="10">
                 </div>
             </div>
         `;
         container.appendChild(block);
+        return { block, blockId };
     }
 
     function calculateItemTotals(id) {
         const block = document.getElementById(`item-block-${id}`);
+        if (!block) return;
         const qty = parseFloat(block.querySelector('.m-qty').value) || 0;
         const cost = parseFloat(block.querySelector('.m-cost').value) || 0;
         const discountPercent = parseFloat(block.querySelector('.m-discount').value) || 0;
@@ -333,6 +517,234 @@
         }
     }
 
+    function fillAndHighlight(selectorOrEl, value) {
+        const el = (typeof selectorOrEl === 'string') ? document.querySelector(selectorOrEl) : selectorOrEl;
+        if (el) {
+            el.value = value;
+            el.classList.add('ocr-highlight');
+            setTimeout(() => el.classList.remove('ocr-highlight'), 3000);
+        }
+    }
+
+    // OCR Auto-Fill Trigger & Processing
+    function handleInvoiceFile(file) {
+        if (!file) return;
+
+        const statusBadge = document.getElementById('ocrStatusBadge');
+        const dropZone = document.getElementById('ocrDropZone');
+        const loading = document.getElementById('ocrLoading');
+        const successMsg = document.getElementById('ocrSuccessMsg');
+
+        statusBadge.className = 'ocr-badge ocr-badge-processing';
+        statusBadge.innerText = 'Scanning...';
+        loading.style.display = 'flex';
+        successMsg.style.display = 'none';
+        dropZone.style.opacity = '0.5';
+
+        const formData = new FormData();
+        formData.append('invoice_file', file);
+
+        fetch('/api/ocr/scan_invoice', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(res => {
+            loading.style.display = 'none';
+            dropZone.style.opacity = '1';
+
+            if (res.success && res.data) {
+                const data = res.data;
+                statusBadge.className = 'ocr-badge ocr-badge-success';
+                statusBadge.innerText = 'Auto-Filled';
+                successMsg.style.display = 'flex';
+
+                // Auto-fill Header
+                if (data.invoice_no) fillAndHighlight('#invoice-no', data.invoice_no);
+                if (data.date) fillAndHighlight('#arrival-date', data.date);
+
+                // Auto-match Supplier
+                if (data.vendor) {
+                    const cleanVendor = data.vendor.toLowerCase().trim();
+                    let matchedSupplier = suppliers.find(s => {
+                        const sName = (s.name || '').toLowerCase().trim();
+                        return sName === cleanVendor || sName.includes(cleanVendor) || cleanVendor.includes(sName);
+                    });
+
+                    if (matchedSupplier) {
+                        fillAndHighlight('#supplier-name', matchedSupplier.name);
+                        document.getElementById('supplier-id').value = matchedSupplier.id;
+                    } else {
+                        fillAndHighlight('#supplier-name', data.vendor);
+                        syncSupplierId();
+                    }
+                }
+
+                // Auto-populate Line Items
+                if (data.items && data.items.length > 0) {
+                    const container = document.getElementById('items-container');
+                    container.innerHTML = '';
+                    itemCount = 0;
+
+                    data.items.forEach((item, idx) => {
+                        const { block, blockId } = addItemBlock();
+
+                        // Try to match product in existing inventory by name or HSN
+                        const itemNameLower = (item.name || '').toLowerCase().trim();
+                        let existingProduct = null;
+
+                        if (itemNameLower) {
+                            existingProduct = inventory.find(p => {
+                                const pName = (p.name || '').toLowerCase().trim();
+                                return pName === itemNameLower || pName.includes(itemNameLower) || itemNameLower.includes(pName);
+                            });
+                        }
+
+                        if (!existingProduct && item.hsn) {
+                            existingProduct = inventory.find(p => p.hsn_code && p.hsn_code.trim() === item.hsn.trim());
+                        }
+
+                        // Code
+                        const codeInput = block.querySelector('.m-code');
+                        if (existingProduct) {
+                            codeInput.value = existingProduct.code;
+                            codeInput.style.borderColor = 'var(--dash-success)';
+                        } else {
+                            // Suggest code based on HSN or initials
+                            if (item.hsn) {
+                                codeInput.value = `HSN-${item.hsn}`;
+                            } else {
+                                const initials = item.name ? item.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 4) : 'PRD';
+                                codeInput.value = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
+                            }
+                        }
+
+                        // Product Name
+                        const nameInput = block.querySelector('.m-name');
+                        nameInput.value = (existingProduct ? existingProduct.name : item.name) || '';
+
+                        // HSN
+                        const hsnInput = block.querySelector('.m-hsn');
+                        hsnInput.value = item.hsn || (existingProduct ? existingProduct.hsn_code : '') || '';
+
+                        // Category
+                        const catInput = block.querySelector('.m-category');
+                        catInput.value = (existingProduct ? existingProduct.category : 'General') || 'General';
+
+                        // Unit
+                        const unitSelect = block.querySelector('.m-unit');
+                        const rawUnit = (item.unit || (existingProduct ? existingProduct.unit : 'Pcs') || 'Pcs').toLowerCase();
+                        if (rawUnit.includes('pkt') || rawUnit.includes('pack')) unitSelect.value = 'Pkt';
+                        else if (rawUnit.includes('kg')) unitSelect.value = 'Kg';
+                        else if (rawUnit.includes('ltr') || rawUnit.includes('litre')) unitSelect.value = 'Ltr';
+                        else if (rawUnit.includes('box')) unitSelect.value = 'Box';
+                        else if (rawUnit.includes('bag')) unitSelect.value = 'Bags';
+                        else if (rawUnit.includes('roll')) unitSelect.value = 'Roll';
+                        else if (rawUnit.includes('nos')) unitSelect.value = 'Nos';
+                        else unitSelect.value = 'Pcs';
+
+                        // Quantity & Cost
+                        const qtyInput = block.querySelector('.m-qty');
+                        qtyInput.value = item.quantity || 1;
+
+                        const costInput = block.querySelector('.m-cost');
+                        const unitCost = item.unit_price || (existingProduct ? existingProduct.last_cost : 0) || 0;
+                        costInput.value = parseFloat(unitCost).toFixed(2);
+
+                        // Retail & Wholesale
+                        const retailInput = block.querySelector('.m-retail');
+                        const wholesaleInput = block.querySelector('.m-wholesale');
+                        if (existingProduct) {
+                            retailInput.value = existingProduct.price || 0;
+                            wholesaleInput.value = existingProduct.wholesale_price || 0;
+                        } else {
+                            const costNum = parseFloat(unitCost) || 0;
+                            retailInput.value = costNum > 0 ? (costNum * 1.25).toFixed(2) : '0.00';
+                            wholesaleInput.value = costNum > 0 ? (costNum * 1.15).toFixed(2) : '0.00';
+                        }
+
+                        // Discount %
+                        const discountInput = block.querySelector('.m-discount');
+                        let discPct = 0;
+                        if (item.discount_percent !== undefined && item.discount_percent !== null) {
+                            discPct = parseFloat(item.discount_percent);
+                        } else if (item.discount && item.quantity && unitCost) {
+                            const gross = parseFloat(item.quantity) * parseFloat(unitCost);
+                            if (gross > 0) {
+                                discPct = (parseFloat(item.discount) / gross) * 100;
+                            }
+                        }
+                        if (discountInput) {
+                            discountInput.value = discPct > 0 ? discPct.toFixed(2) : '0';
+                        }
+
+                        // GST Rate
+                        const gstRateInput = block.querySelector('.m-gst-rate');
+                        const gstPct = parseFloat(item.gst_percent) || (existingProduct ? parseFloat(existingProduct.gst_percent) : 0) || 0;
+                        gstRateInput.value = gstPct;
+
+                        // Reorder level
+                        const reorderInput = block.querySelector('.m-reorder');
+                        if (existingProduct && existingProduct.reorder_level) {
+                            reorderInput.value = existingProduct.reorder_level;
+                        }
+
+                        // Calculate item GST and highlight
+                        calculateItemTotals(blockId);
+                        block.classList.add('ocr-highlight');
+                        setTimeout(() => block.classList.remove('ocr-highlight'), 3000);
+                    });
+                }
+
+                // Round off
+                if (data.round_off && parseFloat(data.round_off) !== 0) {
+                    fillAndHighlight('#round-off', parseFloat(data.round_off).toFixed(2));
+                }
+
+                // Recalculate Grand Totals
+                calculateGrandTotals();
+            } else {
+                statusBadge.className = 'ocr-badge ocr-badge-error';
+                statusBadge.innerText = 'Scan Failed';
+                alert('OCR Error: ' + (res.error || 'Failed to extract invoice data'));
+            }
+        })
+        .catch(err => {
+            loading.style.display = 'none';
+            dropZone.style.opacity = '1';
+            statusBadge.className = 'ocr-badge ocr-badge-error';
+            statusBadge.innerText = 'Error';
+            console.error('OCR Upload Error:', err);
+            alert('Failed to connect to OCR service: ' + err);
+        });
+    }
+
+    // Drag and Drop Handling
+    document.addEventListener('DOMContentLoaded', function() {
+        addItemBlock();
+
+        const dropZone = document.getElementById('ocrDropZone');
+        if (dropZone) {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('drag-over');
+                }, false);
+            });
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('drag-over');
+                }, false);
+            });
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length) handleInvoiceFile(files[0]);
+            });
+        }
+    });
+
     async function saveInvoice() {
         const invNo = document.getElementById('invoice-no').value;
         if (!invNo) return alert("Invoice Number is required.");
@@ -383,8 +795,5 @@
             alert("Error: " + result.message);
         }
     }
-
-    document.addEventListener('DOMContentLoaded', addItemBlock);
 </script>
 {% endblock %}
-

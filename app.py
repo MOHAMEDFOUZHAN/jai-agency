@@ -9,6 +9,13 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 import mailer
 
 try:
+    from ocr_invoice_parser import extract_invoice_data_from_bytes
+except Exception as ocr_e:
+    print(f"OCR module import note: {ocr_e}")
+    extract_invoice_data_from_bytes = None
+
+
+try:
     import webview
     from waitress import serve
 except ImportError:
@@ -435,10 +442,13 @@ def get_aggregated_inventory():
         code = str(p['code'])
         stock = stock_map.get(code, 0)
         
-        # Latest cost and category if available
         # Sort batches by entry_time to support FIFO visualization
-        batches = sorted([b for b in STORAGE if str(b.get('code')) == code], key=lambda x: x['entry_time'])
-        last_cost = p.get('last_cost', 0)
+        batches = sorted([b for b in STORAGE if str(b.get('code')) == code], key=lambda x: str(x.get('entry_time', '')))
+        latest_batch = batches[-1] if batches else {}
+        
+        last_cost = float(p.get('last_cost') or latest_batch.get('cost') or 0)
+        category = p.get('category') or latest_batch.get('category') or ''
+        hsn_code = p.get('hsn_code') or latest_batch.get('hsn_code') or ''
         
         # Attach batches with stock > 0 for the expanded view in Product Master
         item_batches = []
@@ -466,9 +476,9 @@ def get_aggregated_inventory():
         agg.append({
             'code': code,
             'name': p['name'],
-            'grade': p.get('category', 'General'), # Using Category as the primary descriptor
+            'grade': category or 'General', # Using Category as the primary descriptor
             'name_ta': p.get('name_ta', ''),
-            'category': p.get('category', 'General'),
+            'category': category,
             'unit': p.get('unit', 'Nos'),
             'stock': stock,
             'price': p['price'],
@@ -479,7 +489,7 @@ def get_aggregated_inventory():
             'reorder_level': p.get('reorder_level', 10),
             'gst_percent': p.get('gst_percent', 0),
             'igst_percent': p.get('igst_percent', 0),
-            'hsn_code': p.get('hsn_code', ''),
+            'hsn_code': hsn_code,
             'batches': item_batches
         })
     return agg
@@ -857,6 +867,29 @@ def api_supplier_payment():
         return jsonify({'success': False, 'message': str(e)})
     finally:
         if conn: conn.close()
+
+
+@app.route('/api/ocr/scan_invoice', methods=['POST'])
+def api_ocr_scan_invoice():
+    if session.get('role') not in ['inventory', 'admin'] and 'user' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 403
+
+    if 'invoice_file' not in request.files:
+        return jsonify({'success': False, 'error': 'No invoice file uploaded'}), 400
+
+    file = request.files['invoice_file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No selected file'}), 400
+
+    try:
+        if extract_invoice_data_from_bytes is None:
+            return jsonify({'success': False, 'error': 'OCR engine module is not loaded'}), 500
+
+        file_bytes = file.read()
+        extracted = extract_invoice_data_from_bytes(file_bytes)
+        return jsonify(extracted)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/inventory/invoice/add')
 def inventory_invoice_add():
@@ -2910,6 +2943,14 @@ def edit_product(code):
     product = next((p for p in PRODUCTS if p['code'] == str(code)), None)
     if not product:
         return jsonify({'success': False, 'message': 'Product not found'})
+
+    new_code = str(data.get('code') or code).strip()
+    if not new_code:
+        return jsonify({'success': False, 'message': 'Product code cannot be empty'})
+    
+    if new_code != str(code):
+        if any(str(p['code']) == new_code for p in PRODUCTS if str(p['code']) != str(code)):
+            return jsonify({'success': False, 'message': f'Product code "{new_code}" already exists!'})
     
     product['name'] = data.get('name', product['name'])
     product['name_ta'] = data.get('name_ta', product.get('name_ta', ''))
@@ -2929,10 +2970,17 @@ def edit_product(code):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('''UPDATE products SET name = ?, name_ta = ?, category = ?, price = ?, is_loose = ?, price_per_gram = ?, reorder_level = ?, gst_percent = ?, igst_percent = ?, last_cost = ?, wholesale_price = ?, hsn_code = ?
+        cur.execute('''UPDATE products SET code = ?, name = ?, name_ta = ?, category = ?, price = ?, is_loose = ?, price_per_gram = ?, reorder_level = ?, gst_percent = ?, igst_percent = ?, last_cost = ?, wholesale_price = ?, hsn_code = ?
                        WHERE code = ?''', 
-                    (product['name'], product['name_ta'], product['category'], product['price'], product['is_loose'], 
-                     product['price_per_gram'], product['reorder_level'], product['gst_percent'], product['igst_percent'], product['last_cost'], product['wholesale_price'], product['hsn_code'], code))
+                    (new_code, product['name'], product['name_ta'], product['category'], product['price'], product['is_loose'], 
+                     product['price_per_gram'], product['reorder_level'], product['gst_percent'], product['igst_percent'], product['last_cost'], product['wholesale_price'], product['hsn_code'], str(code)))
+        
+        if new_code != str(code):
+            product['code'] = new_code
+            cur.execute('UPDATE storage SET product_code = ? WHERE product_code = ?', (new_code, str(code)))
+            cur.execute('UPDATE sale_items SET product_code = ? WHERE product_code = ?', (new_code, str(code)))
+            cur.execute('UPDATE returns_log SET product_code = ? WHERE product_code = ?', (new_code, str(code)))
+
         conn.commit()
     except Exception as e:
         if conn: conn.rollback()
@@ -3137,7 +3185,7 @@ def send_fast2sms(mobile, message):
         return False
 
 def send_offer_sms(mobile, name, amount):
-    msg = f"Dear {name if name else 'Customer'}, Thanks for shopping at Maple Pro! Bill Amt: {amount}. See you soon!"
+    msg = f"Dear {name if name else 'Customer'}, Thanks for shopping at MPLAE PRO! Bill Amt: {amount}. See you soon!"
     return send_fast2sms(mobile, msg)
 
 @app.route('/billing/customers')

@@ -605,8 +605,18 @@
                             <span class="preview-total-label">Settlement Total</span>
                             <span style="font-size: 0.82rem; font-weight: 600;">Verified and authenticated</span>
                         </div>
-                        <span class="preview-total-value">?${bill.total.toFixed(2)}</span>
+                        <span class="preview-total-value">₹${bill.total.toFixed(2)}</span>
                     </div>
+                    ${bill.payment_method === 'CREDIT' ? `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 0.85rem; padding: 6px 12px; background: rgba(16, 185, 129, 0.08); border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                        <span style="font-weight: 700; color: #10b981;">Advance Paid:</span>
+                        <span style="font-weight: 800; color: #10b981;">₹${(bill.amount_paid || 0).toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.85rem; padding: 6px 12px; background: rgba(239, 68, 68, 0.08); border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.2);">
+                        <span style="font-weight: 700; color: #ef4444;">Balance Due:</span>
+                        <span style="font-weight: 800; color: #ef4444;">₹${(bill.balance || 0).toFixed(2)}</span>
+                    </div>
+                    ` : ''}
                 `;
 
                 const cancelBtn = document.getElementById('modalCancelBtn');

@@ -1,6 +1,6 @@
-# Maple Pro - SMS Marketing & Billing System Guide
+# MPLAE PRO - SMS Marketing & Billing System Guide
 
-This document provides a detailed breakdown of the SMS pricing plans, how the credits work, and instructions for activating the live SMS feature in your Maple Pro software.
+This document provides a detailed breakdown of the SMS pricing plans, how the credits work, and instructions for activating the live SMS feature in your MPLAE PRO software.
 
 ---
 
@@ -72,4 +72,4 @@ pip install requests
 
 ---
 
-*Generated for Maple Pro v3.0*
+*Generated for MPLAE PRO v3.0*

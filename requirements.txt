@@ -2,3 +2,8 @@ flask
 pywebview
 waitress
 pyinstaller
+rapidocr-onnxruntime
+pypdfium2
+opencv-python
+numpy
+pillow

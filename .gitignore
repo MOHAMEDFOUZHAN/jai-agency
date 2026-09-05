@@ -1,0 +1,33 @@
+# Virtual Environment
+.venv/
+env/
+venv/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# PyInstaller / Build outputs
+build/
+dist/
+*.spec.bak
+
+# Databases & Backups (Local state)
+*.db
+*.db-journal
+*.bak*
+*.sqlite3
+datebase/
+dist/datebase/
+
+# Logs & temp files
+*.log
+scratch/
+scratch_*.txt
+
+# OS generated files
+.DS_Store
+Thumbs.db

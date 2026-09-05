@@ -324,11 +324,11 @@
                 </tr>
                 {% if sale.payment_method == 'CREDIT' %}
                 <tr>
-                    <td class="label">Paid Now:</td>
-                    <td class="value" style="color: #050;">₹{{ "%.2f"|format(sale.amount_paid or 0) }}</td>
+                    <td class="label">Advance / Paid:</td>
+                    <td class="value" style="color: #050; font-weight: bold;">₹{{ "%.2f"|format(sale.amount_paid or 0) }}</td>
                 </tr>
                 <tr>
-                    <td class="label">Balance:</td>
+                    <td class="label">Balance Due:</td>
                     <td class="value" style="color: #d00; font-weight: 800;">₹{{ "%.2f"|format(sale.balance or 0) }}</td>
                 </tr>
                 {% endif %}

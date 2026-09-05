@@ -59,8 +59,8 @@
                     <div id="modeWrapper" class="billing-mode-toggle">
                         <span class="mode-label">Billing Mode</span>
                         <select id="billingMode" class="form-input mode-select" onchange="toggleBillingMode()">
+                            <option value="wholesale" selected>Wholesale</option>
                             <option value="retail">Retail</option>
-                            <option value="wholesale">Wholesale</option>
                         </select>
                     </div>
 
@@ -303,66 +303,34 @@
 
 
 
+
+
                 <div class="payment-controls">
-
-
                     <div class="form-group">
-
-
                         <label class="form-label">Settle Method</label>
-
-
                         <select id="paymentMode" onchange="toggleCreditFields()" class="form-input">
-
-
                             <option value="CASH">Cash</option>
-
-
                             <option value="UPI">UPI / GPay / QR</option>
-
-
                             <option value="CARD">Card</option>
                             <option value="CREDIT">Credit</option>
                             <option value="COMPLIMENT">Complimentary</option>
                         </select>
-
-
                     </div>
 
-
-
-
-
-                    <div id="creditFields" class="credit-fields" style="display: none;">
-
-
-                        <div class="form-group" style="margin-bottom: 0.5rem;">
-
-
-                            <label class="form-label text-green">Amount Paid</label>
-
-
-                            <input type="number" id="amountPaid" placeholder="0.00" class="form-input border-green text-green font-bold">
-
-
+                    <div id="creditFields" class="credit-fields" style="display: none; background: rgba(16, 185, 129, 0.04); border: 1px dashed rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 0.6rem; margin-bottom: 0.5rem;">
+                        <div class="form-group" style="margin-bottom: 0.35rem;">
+                            <label class="form-label text-green" style="font-weight: 800; font-size: 0.72rem; letter-spacing: 0.03em;">ADVANCE / INITIAL PAID (₹)</label>
+                            <input type="number" id="amountPaid" step="0.01" placeholder="0.00" class="form-input border-green text-green font-bold" oninput="updateCreditBalanceDisplay()">
                         </div>
-
-
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(239, 68, 68, 0.06); padding: 4px 8px; border-radius: 6px; margin-top: 4px; border: 1px solid rgba(239, 68, 68, 0.15);">
+                            <span style="font-size: 0.7rem; font-weight: 800; color: #ef4444;">REMAINING BALANCE:</span>
+                            <span id="creditBalanceDisplay" style="font-size: 0.85rem; font-weight: 850; color: #ef4444;">₹0.00</span>
+                        </div>
                     </div>
-
-
-
-
 
                     <div class="customer-info" style="border-top: 1px solid rgba(0,0,0,0.05); padding-top: 0.6rem; margin-top: 0.35rem;">
-
-
                         <label class="form-label" style="text-transform: uppercase; font-weight: 850; font-size: 0.7rem; color: var(--navy-900); display: block; margin-bottom: 0.6rem; letter-spacing: 0.05em;">Client Assignment</label>
-
-
                         <div style="display: grid; gap: 0.5rem;">
-
-
                             <input type="text" id="custCode" placeholder="Customer ID (Enter to Fill)" class="form-input sm" style="background: rgba(21, 28, 56, 0.03); font-weight: 700; border: 1px solid var(--border-light);">
                             <div class="relative">
                                 <input type="text" id="custName" placeholder="Search or Enter Name" class="form-input sm" autocomplete="off">
@@ -373,19 +341,8 @@
                             <input type="text" id="custGstn" placeholder="Customer GSTN" class="form-input sm">
                             <input type="hidden" id="custId" value="">
                         </div>
-
-
                     </div>
-
-
                 </div>
-
-
-
-
-
-
-
 
                 <button id="saveBtn" class="btn btn-primary checkout-btn">
 
@@ -530,7 +487,7 @@
 
 
         renderCart();
-        toggleBillingMode();
+        toggleBillingMode(true);
         codeSearch.focus();
 
 
@@ -746,10 +703,6 @@
 
     });
 
-
-
-
-
     const custCode = document.getElementById('custCode');
 
 
@@ -844,7 +797,13 @@
         } else {
             custResults.style.display = 'none';
         }
+
+
     });
+
+
+
+
 
     async function selectAndFetchCustomer(name) {
         custName.value = name;
@@ -922,7 +881,7 @@
 
 
 
-    function toggleBillingMode() {
+    function toggleBillingMode(skipAlert = false) {
         const modeInput = document.getElementById('billingMode');
         const parent = modeInput.parentElement;
         const modeLabel = parent.querySelector('.mode-label');
@@ -935,10 +894,12 @@
             if (modeLabel) modeLabel.style.color = 'rgba(255,255,255,0.9)';
             
             // Compulsory Customer Ask
-            setTimeout(() => {
-                alert("WHOLESALE_PROTOCOL: Wholesale mode requires detailed customer assignment.");
-                document.getElementById('custName').focus();
-            }, 100);
+            if (!skipAlert) {
+                setTimeout(() => {
+                    alert("WHOLESALE_PROTOCOL: Wholesale mode requires detailed customer assignment.");
+                    document.getElementById('custName').focus();
+                }, 100);
+            }
         } else {
             parent.style.background = '#0f172a'; // Restore deep dark 
             parent.style.borderColor = 'rgba(255,255,255,0.1)';
@@ -1323,25 +1284,12 @@
     if (cartSearch) {
         cartSearch.addEventListener('input', renderCart);
     }
-
-
-
-
+    inputQty.addEventListener('keypress', (e) => { if(e.key === 'Enter') addToCart(); });
 
     function calculateTotals() {
-
-
-        let gross = 0;
-
-
-        let tax = 0;
-
-
-        let totalInclusive = 0;
-
-
-
-
+        let gross = 0.0;
+        let tax = 0.0;
+        let totalInclusive = 0.0;
 
         const mode = document.getElementById('paymentMode').value;
         const isCompliment = (mode === 'COMPLIMENT');
@@ -1373,52 +1321,39 @@
         const net = Math.max(0, totalInclusive - disc);
 
         document.getElementById('totalItems').innerText = cart.length;
-
-
         document.getElementById('grossTotal').innerText = '₹' + gross.toFixed(2);
-
-
         document.getElementById('taxTotal').innerText = '₹' + tax.toFixed(2);
-
-
         document.getElementById('netTotal').innerText = '₹' + net.toLocaleString('en-IN', {minimumFractionDigits: 2});
-
-
+        updateCreditBalanceDisplay();
     }
 
-
-
-
+    function updateCreditBalanceDisplay() {
+        const netStr = document.getElementById('netTotal').innerText.replace(/[^\d.]/g, '');
+        const net = parseFloat(netStr) || 0;
+        const amountPaidInput = document.getElementById('amountPaid');
+        const paid = amountPaidInput ? (parseFloat(amountPaidInput.value) || 0) : 0;
+        const bal = Math.max(0, net - paid);
+        const balDisplay = document.getElementById('creditBalanceDisplay');
+        if (balDisplay) {
+            balDisplay.innerText = '₹' + bal.toFixed(2);
+        }
+    }
 
     function toggleCreditFields() {
-
-
         const mode = document.getElementById('paymentMode').value;
-
-
-        document.getElementById('creditFields').style.display = (mode === 'CREDIT') ? 'block' : 'none';
-
-
-        if (mode === 'CREDIT') {
-
-
-             custCode.focus();
-
-
+        const creditDiv = document.getElementById('creditFields');
+        if (creditDiv) {
+            creditDiv.style.display = (mode === 'CREDIT') ? 'block' : 'none';
         }
-
-
+        if (mode === 'CREDIT') {
+             updateCreditBalanceDisplay();
+             const custCodeEl = document.getElementById('custCode');
+             if (custCodeEl) custCodeEl.focus();
+        }
     }
 
-
-
-
-
     document.getElementById('saveBtn').addEventListener('click', async () => {
-
-
         if (cart.length === 0) return;
-
 
         const billingMode = document.getElementById('billingMode').value;
         const customerName = document.getElementById('custName').value.trim();
@@ -1431,35 +1366,16 @@
             }
         }
 
-
         const mode = document.getElementById('paymentMode').value;
-
-
         const netStr = document.getElementById('netTotal').innerText.replace(/[^\d.]/g, '');
         const net = parseFloat(netStr) || 0;
 
-
-        
-
-
         const payload = {
-
-
             cart: cart,
-
-
             total: net,
-
-
             gross_total: parseFloat(document.getElementById('grossTotal').innerText.replace(/[^\d.]/g, '')) || 0,
-
-
             tax_amount: parseFloat(document.getElementById('taxTotal').innerText.replace(/[^\d.]/g, '')) || 0,
-
-
             discount: parseFloat(document.getElementById('discountInput').value) || 0,
-
-
             payment_method: mode,
             customer_name: document.getElementById('custName').value || 'GENERAL',
             customer_mobile: document.getElementById('custMobile').value || '',
@@ -1469,56 +1385,20 @@
             amount_paid: (mode === 'CREDIT') ? (parseFloat(document.getElementById('amountPaid').value) || 0) : net
         };
 
-
-
-
-
         try {
-
-
             const res = await fetch('/api/checkout', {
-
-
                 method: 'POST',
-
-
                 headers: {'Content-Type': 'application/json'},
-
-
                 body: JSON.stringify(payload)
-
-
             });
-
-
             const data = await res.json();
-
-
             if (data.success) {
-
-
                 window.location.href = `/billing/print-receipt/${data.sale_id}`;
-
-
             } else {
-
-
                 alert("TERMINAL_REJECT: " + data.message);
-
-
             }
-
-
         } catch (e) { alert("COMMS_FAILURE: Network error."); }
-
-
     });
-
-
-
-
-
-    inputQty.addEventListener('keypress', (e) => { if(e.key === 'Enter') addToCart(); });
 
 
 </script>
