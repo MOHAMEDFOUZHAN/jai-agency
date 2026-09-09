@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Private Access Security | JAI AGENCIES{% endblock %}
+{% block title %}Profit PIN | JAI AGENCIES{% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper pin-wrapper fade-in">
@@ -9,14 +9,14 @@
             <div class="lock-icon">
                 <i class="fas fa-lock"></i>
             </div>
-            <h2>Private Access</h2>
-            <p>Verification required to access profit margin analysis & cost intelligence.</p>
+            <h2>Enter Profit PIN</h2>
+            <p>Enter your 4-digit PIN to access profit reports.</p>
         </div>
 
         <div class="pin-inputs">
             <input type="password" id="pin" maxlength="4" placeholder="••••" autofocus autocomplete="off" oninput="handlePinInput(this)">
             <div id="pin-error" class="error-msg" style="display: none;">
-                <i class="fas fa-circle-exclamation"></i> ACCESS DENIED: INCORRECT PIN
+                <i class="fas fa-circle-exclamation"></i> Incorrect PIN. Please try again.
             </div>
         </div>
 
@@ -38,10 +38,10 @@
 
         <div class="portal-actions">
             <button id="verifyBtn" onclick="handleVerify()" class="btn-premium primary" style="width: 100%;">
-                <i class="fas fa-shield-halved"></i> VERIFY IDENTITY
+                <i class="fas fa-unlock"></i> Unlock Report
             </button>
             <a href="/billing/navigation" class="btn-premium secondary" style="width: 100%; text-align: center; display: block; margin-top: 0.8rem;">
-                CANCEL
+                Back
             </a>
         </div>
     </div>

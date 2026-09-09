@@ -7,3 +7,5 @@ pypdfium2
 opencv-python
 numpy
 pillow
+fpdf
+

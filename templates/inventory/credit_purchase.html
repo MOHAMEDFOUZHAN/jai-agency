@@ -17,21 +17,21 @@
     <div class="dash-hero">
         <div class="hero-main">
             <h1>Credit Purchases</h1>
-            <p>Track outstanding balances and record payments to suppliers.</p>
+            <p>Supplier bills & outstanding balance payments.</p>
         </div>
         <div class="hero-actions">
-            <button class="btn-neural primary" onclick="openGeneralPaymentModal()" style="background: var(--dash-primary); color: white;">
-                <i class="fas fa-hand-holding-usd"></i> DIRECT PAYMENT
+            <button class="btn-neural primary hero-btn" onclick="openGeneralPaymentModal()" style="background: var(--dash-primary); color: white;">
+                <i class="fas fa-hand-holding-usd"></i> PAY SUPPLIER
             </button>
         </div>
     </div>
 
-    <div class="neural-panel" style="padding: 0; overflow: hidden; border-radius: 32px;">
-        <div style="padding: 2rem 2.5rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01);">
-            <h3 style="margin: 0; font-size: 0.8rem; font-weight: 850; letter-spacing: 2px; text-transform: uppercase; color: white;">
-                <i class="fas fa-credit-card" style="color: var(--dash-danger); margin-right: 15px;"></i> PENDING CREDIT INVOICES
+    <div class="neural-panel" style="padding: 0; overflow: hidden; border-radius: 18px;">
+        <div style="padding: 1.25rem 1.75rem; border-bottom: 1px solid var(--dash-glass-border); display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.01);">
+            <h3 style="margin: 0; font-size: 0.8rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: white;">
+                <i class="fas fa-credit-card" style="color: var(--dash-danger); margin-right: 10px;"></i> PENDING CREDIT INVOICES
             </h3>
-            <div class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;">{{ invoices|length }} PENDING</div>
+            <div class="badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; font-weight: 800;">{{ invoices|length }} PENDING</div>
         </div>
 
         <div class="neural-table-container" style="border: none; border-radius: 0;">

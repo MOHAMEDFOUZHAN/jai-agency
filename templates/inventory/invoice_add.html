@@ -16,12 +16,15 @@
 <div class="dashboard-wrapper">
     <div class="dash-hero">
         <div class="hero-main">
-            <h1>Register Invoice</h1>
-            <p>Enter incoming product details manually or auto-scan your supplier invoice with AI OCR.</p>
+            <h1>New Purchase Bill</h1>
+            <p>Add stock manually or scan bill image/PDF.</p>
         </div>
-        <div class="hero-actions">
-            <button class="btn-neural primary" onclick="saveInvoice()" style="background: var(--dash-primary); color: white;">
-                <i class="fas fa-save" style="margin-right: 10px;"></i> SAVE INVOICE
+        <div class="hero-actions" style="display: flex; gap: 0.8rem; align-items: center;">
+            <button type="button" class="btn-neural" onclick="openPricingModalFromForm()" style="border: 1px solid rgba(0, 210, 255, 0.4); background: rgba(0, 210, 255, 0.08); color: var(--dash-primary); font-weight: 700;">
+                <i class="fas fa-bolt" style="margin-right: 8px;"></i> Set Prices
+            </button>
+            <button type="button" class="btn-neural primary" onclick="saveInvoice()" style="background: var(--dash-primary); color: white;">
+                <i class="fas fa-save" style="margin-right: 10px;"></i> Save Bill
             </button>
         </div>
     </div>
@@ -55,7 +58,10 @@
 
         <div id="ocrSuccessMsg" class="ocr-success-msg" style="display:none;">
             <i class="fas fa-check-circle" style="color: var(--dash-success); font-size: 1.2rem;"></i>
-            <span id="ocrSuccessText">Invoice parsed successfully! Header details and line items populated. Review below and save.</span>
+            <span id="ocrSuccessText" style="flex: 1;">Invoice parsed successfully! Header details and line items populated.</span>
+            <button type="button" class="btn-neural" onclick="openPricingModalFromForm()" style="padding: 5px 12px; font-size: 0.72rem; background: rgba(0, 230, 150, 0.15); border: 1px solid rgba(0, 230, 150, 0.4); color: #4ade80;">
+                <i class="fas fa-bolt"></i> Open Price Console
+            </button>
         </div>
     </div>
 
@@ -103,7 +109,7 @@
     <div id="items-container"></div>
 
     <div style="margin-bottom: 5rem;">
-        <button class="btn-neural" style="width: 100%; border-style: dashed; padding: 2.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; background: rgba(255,255,255,0.02); justify-content: center; font-size: 0.9rem;" onclick="addItemBlock()">
+        <button type="button" class="btn-neural" style="width: 100%; border-style: dashed; padding: 2.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; background: rgba(255,255,255,0.02); justify-content: center; font-size: 0.9rem;" onclick="addItemBlock()">
             <i class="fas fa-plus-circle" style="font-size: 1.2rem;"></i> ADD PRODUCT ITEM
         </button>
     </div>
@@ -122,7 +128,7 @@
                 <span class="stat-label">CGST</span>
                 <h2 id="grand-cgst" style="margin: 2px 0 0; font-weight: 800; font-size: 1.1rem; color: var(--dash-warning);">₹ 0.00</h2>
             </div>
-            <div class="footer-stat">
+            <div class="footer-stat" style="border-left: 1px solid rgba(255,255,255,0.1); padding-left: 2rem;">
                 <span class="stat-label">SGST</span>
                 <h2 id="grand-sgst" style="margin: 2px 0 0; font-weight: 800; font-size: 1.1rem; color: var(--dash-warning);">₹ 0.00</h2>
             </div>
@@ -137,6 +143,137 @@
             <span class="stat-label" style="color: var(--dash-success); font-size: 0.6rem;">NET PAYABLE</span>
             <h2 id="grand-total" style="margin: 0; font-weight: 950; font-size: 2.2rem; color: var(--dash-success); text-shadow: 0 0 15px rgba(0, 200, 150, 0.25);">₹ 0.00</h2>
         </div>
+    </div>
+</div>
+
+<!-- Datalist for existing product codes and names -->
+<datalist id="inventory-codes-list">
+    {% for p in inventory %}
+    <option value="{{ p.code }}">{{ p.name }} (₹{{ p.wholesale_price or 0 }} WS / ₹{{ p.price or 0 }} RT)</option>
+    {% endfor %}
+</datalist>
+
+<!-- POST-SCAN 2-PHASE POPUP MODAL -->
+<div id="scanPricingModal" class="scan-modal-overlay" style="display: none;">
+    <div class="scan-modal-container neural-panel" id="scanModalBox">
+        
+        <!-- PHASE 1: SCAN COMPLETE SUMMARY (Shows for 3.5s countdown or until skipped) -->
+        <div id="scanPhase1" class="scan-phase-view">
+            <div class="scan-radar-wrapper">
+                <div class="scan-radar-ring ring-1"></div>
+                <div class="scan-radar-ring ring-2"></div>
+                <div class="scan-radar-center">
+                    <i class="fas fa-file-invoice-dollar scan-icon-pulse"></i>
+                </div>
+            </div>
+
+            <div class="scan-phase1-badge">
+                <i class="fas fa-check-circle"></i> AI INVOICE SCAN COMPLETE
+            </div>
+
+            <h2 class="scan-phase1-title">Invoice Scanned Successfully!</h2>
+            <p class="scan-phase1-sub">We've extracted invoice details & products. Preparing Fast Price & Code Setup console...</p>
+
+            <!-- Scanned Overview Chips -->
+            <div class="scan-overview-grid">
+                <div class="scan-chip">
+                    <span class="scan-chip-label"><i class="fas fa-hashtag"></i> INVOICE NO</span>
+                    <span class="scan-chip-val" id="p1InvoiceNo">-</span>
+                </div>
+                <div class="scan-chip">
+                    <span class="scan-chip-label"><i class="fas fa-building"></i> SUPPLIER</span>
+                    <span class="scan-chip-val" id="p1Supplier">-</span>
+                </div>
+                <div class="scan-chip">
+                    <span class="scan-chip-label"><i class="fas fa-boxes"></i> DETECTED ITEMS</span>
+                    <span class="scan-chip-val" id="p1ItemCount">0 Products</span>
+                </div>
+                <div class="scan-chip">
+                    <span class="scan-chip-label"><i class="fas fa-calendar-alt"></i> DATE</span>
+                    <span class="scan-chip-val" id="p1Date">-</span>
+                </div>
+            </div>
+
+            <!-- 3.5s Animated Countdown Indicator -->
+            <div class="scan-countdown-box">
+                <div class="scan-countdown-header">
+                    <span><i class="fas fa-clock"></i> Opening Price & Code Setup in <strong id="scanTimerCountdown">3</strong>s</span>
+                    <button type="button" class="scan-skip-btn" onclick="goToPhase2()">Configure Now <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <div class="scan-progress-track">
+                    <div class="scan-progress-fill" id="scanProgressFill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PHASE 2: QUICK PRICE & PRODUCT CODE SETUP CONSOLE -->
+        <div id="scanPhase2" class="scan-phase-view" style="display: none;">
+            <div class="scan-phase2-header">
+                <div>
+                    <div class="scan-phase2-badge">
+                        <i class="fas fa-bolt" style="color: var(--dash-primary);"></i> FAST PRICING & CODE CONSOLE
+                    </div>
+                    <h2 class="scan-phase2-title">Set Product Codes, Wholesale & Retail Prices</h2>
+                    <p class="scan-phase2-sub">Existing products auto-fill stored wholesale & retail prices. For new products, enter code and prices below.</p>
+                </div>
+                <div style="display: flex; gap: 0.8rem; align-items: center;">
+                    <button type="button" class="btn-neural secondary" onclick="closeScanPricingModal()" style="padding: 8px 16px; font-size: 0.75rem;">
+                        <i class="fas fa-times"></i> CLOSE
+                    </button>
+                    <button type="button" class="btn-neural primary" onclick="applyScanPricingToInvoice()" style="background: var(--dash-primary); color: white; padding: 8px 20px; font-size: 0.8rem; font-weight: 800;">
+                        <i class="fas fa-check-double"></i> APPLY TO INVOICE
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar: Search filter -->
+            <div class="scan-toolbar">
+                <div class="scan-search-wrap">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="scanItemFilter" placeholder="Filter items by code, name, or HSN..." oninput="filterScanItems(this.value)">
+                </div>
+
+                <div class="scan-items-summary-badge">
+                    <span id="scanModalItemCountBadge">0 Items</span>
+                </div>
+            </div>
+
+            <!-- Table Container: Clean Layout (CODE, PRODUCT, COST, STATUS, WHOLESALE, RETAIL) -->
+            <div class="scan-table-container">
+                <table class="scan-table" id="scanPricingTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">#</th>
+                            <th style="min-width: 160px; width: 180px;">CODE</th>
+                            <th style="min-width: 240px;">PRODUCT</th>
+                            <th style="width: 110px;">COST (₹)</th>
+                            <th style="width: 110px; text-align: center;">STATUS</th>
+                            <th style="min-width: 135px; width: 150px;">WHOLESALE (₹)</th>
+                            <th style="min-width: 135px; width: 150px;">RETAIL (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scanPricingTableBody">
+                        <!-- Injected dynamically -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="scan-modal-footer">
+                <div class="scan-footer-hints">
+                    <span><i class="fas fa-info-circle" style="color: var(--dash-primary);"></i> Type an existing product code to auto-load prices, or enter a new code and set wholesale & retail prices.</span>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="button" class="btn-neural secondary" onclick="closeScanPricingModal()" style="padding: 10px 20px; font-size: 0.75rem;">
+                        Discard
+                    </button>
+                    <button type="button" class="btn-neural primary" onclick="applyScanPricingToInvoice()" style="background: linear-gradient(135deg, var(--dash-primary), #0077ff); color: white; padding: 10px 28px; font-weight: 900; letter-spacing: 1px; font-size: 0.85rem;">
+                        <i class="fas fa-check-circle" style="margin-right: 8px;"></i> APPLY & UPDATE INVOICE
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -324,12 +461,446 @@
         0% { background: rgba(0, 210, 255, 0.28) !important; border-color: var(--dash-primary) !important; box-shadow: 0 0 15px rgba(0, 210, 255, 0.5); }
         100% { background: rgba(255, 255, 255, 0.03); }
     }
+
+    /* =========================================================
+       POST-SCAN POPUP MODAL STYLES (PHASE 1 & PHASE 2)
+       ========================================================= */
+    .scan-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(4, 8, 20, 0.85);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        animation: modalFadeIn 0.35s ease-out;
+    }
+    @keyframes modalFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    .scan-modal-container {
+        width: 100%;
+        max-width: 1050px;
+        max-height: 90vh;
+        background: linear-gradient(145deg, rgba(13, 20, 38, 0.96) 0%, rgba(9, 13, 26, 0.98) 100%);
+        border: 1px solid rgba(0, 210, 255, 0.35);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 210, 255, 0.15);
+        border-radius: 24px;
+        padding: 2rem 2.2rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes modalSlideUp {
+        from { opacity: 0; transform: translateY(25px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .scan-modal-container::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, var(--dash-primary), #3b82f6, #00e696, transparent);
+    }
+
+    .scan-phase-view {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* --- PHASE 1 STYLES --- */
+    #scanPhase1 {
+        align-items: center;
+        text-align: center;
+        padding: 2.5rem 1.5rem 1.5rem;
+    }
+
+    .scan-radar-wrapper {
+        position: relative;
+        width: 110px;
+        height: 110px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    .scan-radar-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid rgba(0, 210, 255, 0.5);
+    }
+    .scan-radar-ring.ring-1 {
+        width: 100%;
+        height: 100%;
+        animation: radarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    .scan-radar-ring.ring-2 {
+        width: 75%;
+        height: 75%;
+        border-color: rgba(0, 230, 150, 0.4);
+        animation: radarPing 2s cubic-bezier(0, 0, 0.2, 1) infinite 0.6s;
+    }
+    @keyframes radarPing {
+        0% { transform: scale(0.6); opacity: 0.9; }
+        100% { transform: scale(1.4); opacity: 0; }
+    }
+    .scan-radar-center {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(0, 210, 255, 0.25), rgba(0, 230, 150, 0.25));
+        border: 1px solid rgba(0, 210, 255, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 25px rgba(0, 210, 255, 0.4);
+        z-index: 2;
+    }
+    .scan-icon-pulse {
+        font-size: 1.8rem;
+        color: #00e696;
+        animation: pulseIcon 1.5s ease-in-out infinite;
+    }
+    @keyframes pulseIcon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .scan-phase1-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 5px 14px;
+        background: rgba(0, 230, 150, 0.12);
+        border: 1px solid rgba(0, 230, 150, 0.35);
+        color: #4ade80;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        margin-bottom: 0.8rem;
+    }
+    .scan-phase1-title {
+        font-size: 1.75rem;
+        color: white;
+        font-weight: 900;
+        margin: 0 0 0.5rem 0;
+        letter-spacing: 0.5px;
+    }
+    .scan-phase1-sub {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin: 0 0 2rem 0;
+        max-width: 580px;
+    }
+
+    .scan-overview-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        width: 100%;
+        max-width: 780px;
+        margin-bottom: 2.2rem;
+    }
+    .scan-chip {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        transition: 0.3s;
+    }
+    .scan-chip:hover {
+        border-color: rgba(0, 210, 255, 0.3);
+        background: rgba(0, 210, 255, 0.04);
+    }
+    .scan-chip-label {
+        font-size: 0.62rem;
+        font-weight: 800;
+        color: #64748b;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .scan-chip-val {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: white;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+
+    .scan-countdown-box {
+        width: 100%;
+        max-width: 560px;
+        background: rgba(0, 210, 255, 0.05);
+        border: 1px solid rgba(0, 210, 255, 0.2);
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+    }
+    .scan-countdown-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #bae6fd;
+        font-weight: 600;
+        margin-bottom: 0.6rem;
+    }
+    .scan-skip-btn {
+        background: rgba(0, 210, 255, 0.15);
+        border: 1px solid rgba(0, 210, 255, 0.4);
+        color: var(--dash-primary);
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 4px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        transition: 0.2s;
+    }
+    .scan-skip-btn:hover {
+        background: var(--dash-primary);
+        color: white;
+    }
+    .scan-progress-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .scan-progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, var(--dash-primary), #00e696);
+        border-radius: 10px;
+        transition: width 0.1s linear;
+    }
+
+    /* --- PHASE 2 STYLES --- */
+    .scan-phase2-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .scan-phase2-badge {
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        color: var(--dash-primary);
+        text-transform: uppercase;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .scan-phase2-title {
+        font-size: 1.35rem;
+        color: white;
+        font-weight: 900;
+        margin: 0 0 0.25rem 0;
+    }
+    .scan-phase2-sub {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin: 0;
+    }
+
+    .scan-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .scan-search-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 6px 12px;
+        flex: 1;
+        max-width: 380px;
+    }
+    .scan-search-wrap i {
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+    .scan-search-wrap input {
+        background: transparent;
+        border: none;
+        outline: none;
+        color: white;
+        font-size: 0.82rem;
+        width: 100%;
+    }
+    .scan-items-summary-badge {
+        font-size: 0.72rem;
+        font-weight: 800;
+        color: #38bdf8;
+        background: rgba(0, 210, 255, 0.1);
+        border: 1px solid rgba(0, 210, 255, 0.25);
+        padding: 4px 12px;
+        border-radius: 12px;
+    }
+
+    .scan-table-container {
+        flex: 1;
+        max-height: 52vh;
+        overflow-y: auto;
+        overflow-x: auto;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 14px;
+        background: rgba(0, 0, 0, 0.2);
+        margin-bottom: 1.2rem;
+    }
+    .scan-table-container::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .scan-table-container::-webkit-scrollbar-thumb {
+        background: rgba(0, 210, 255, 0.25);
+        border-radius: 6px;
+    }
+
+    .scan-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        font-size: 0.82rem;
+    }
+    .scan-table th {
+        position: sticky;
+        top: 0;
+        background: #090f20;
+        color: #94a3b8;
+        font-size: 0.65rem;
+        font-weight: 800;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 11px 12px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        z-index: 10;
+    }
+    .scan-table td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        vertical-align: middle;
+    }
+    .scan-table tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .scan-row-highlight {
+        animation: scanRowGlow 1.8s ease-out;
+    }
+    @keyframes scanRowGlow {
+        0% { background: rgba(0, 210, 255, 0.22); }
+        100% { background: transparent; }
+    }
+
+    .scan-input {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 8px;
+        color: white;
+        padding: 7px 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        width: 100%;
+        outline: none;
+        transition: 0.2s;
+    }
+    .scan-input:focus {
+        border-color: var(--dash-primary);
+        box-shadow: 0 0 8px rgba(0, 210, 255, 0.3);
+        background: rgba(0, 210, 255, 0.05);
+    }
+
+    .badge-existing {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(0, 230, 150, 0.15);
+        border: 1px solid rgba(0, 230, 150, 0.4);
+        color: #4ade80;
+    }
+    .badge-new {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background: rgba(255, 170, 0, 0.15);
+        border: 1px solid rgba(255, 170, 0, 0.4);
+        color: #fbbf24;
+    }
+
+    .scan-modal-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .scan-footer-hints {
+        font-size: 0.72rem;
+        color: #94a3b8;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 </style>
 
 <script>
     const inventory = JSON.parse('{{ inventory| tojson | safe }}');
     const suppliers = JSON.parse('{{ suppliers| tojson | safe }}');
     let itemCount = 0;
+
+    // Modal state
+    let scannedModalItems = [];
+    let scannedRawData = null;
+    let scanCountdownTimer = null;
 
     function syncSupplierId() {
         const name = (document.getElementById('supplier-name').value || '').trim().toLowerCase();
@@ -351,7 +922,7 @@
                 <h3 style="color: white; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-weight: 900;">
                     <span style="color: var(--dash-primary);">PRODUCT #${itemCount}</span>
                 </h3>
-                <button class="btn-neural" style="padding: 10px 18px; font-size: 0.65rem; color: var(--dash-danger);" onclick="document.getElementById('item-block-${blockId}').remove(); calculateGrandTotals();">
+                <button type="button" class="btn-neural" style="padding: 10px 18px; font-size: 0.65rem; color: var(--dash-danger);" onclick="document.getElementById('item-block-${blockId}').remove(); calculateGrandTotals();">
                     <i class="fas fa-trash"></i> DELETE
                 </button>
             </div>
@@ -359,7 +930,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1.8fr 1fr 1.2fr 0.8fr; gap: 1rem; margin-bottom: 1.2rem;">
                 <div class="f-group">
                     <label style="font-size: 0.6rem; margin-bottom: 4px;">ITEM CODE</label>
-                    <input type="text" class="m-code neural-input-sm" placeholder="Code..." onchange="lookupProduct(this, ${blockId})">
+                    <input type="text" class="m-code neural-input-sm" list="inventory-codes-list" placeholder="Code..." onchange="lookupProduct(this, ${blockId})">
                 </div>
                 <div class="f-group">
                     <label style="font-size: 0.6rem; margin-bottom: 4px;">PRODUCT NAME</label>
@@ -497,8 +1068,8 @@
     }
 
     function lookupProduct(input, id) {
-        const code = input.value.trim();
-        const existing = inventory.find(i => i.code === code);
+        const code = input.value.trim().toLowerCase();
+        const existing = inventory.find(i => (i.code || '').toLowerCase() === code);
         const block = document.getElementById(`item-block-${id}`);
         if (existing) {
             block.querySelector('.m-name').value = existing.name;
@@ -524,6 +1095,386 @@
             el.classList.add('ocr-highlight');
             setTimeout(() => el.classList.remove('ocr-highlight'), 3000);
         }
+    }
+
+    // =========================================================
+    // POST-SCAN POPUP MODAL LOGIC (PHASE 1 -> 3.5s -> PHASE 2)
+    // =========================================================
+    function openScanPricingModal(data) {
+        scannedRawData = data;
+        const modal = document.getElementById('scanPricingModal');
+        const p1 = document.getElementById('scanPhase1');
+        const p2 = document.getElementById('scanPhase2');
+
+        // Populate Phase 1 UI chips
+        document.getElementById('p1InvoiceNo').innerText = data.invoice_no || 'N/A';
+        document.getElementById('p1Supplier').innerText = data.vendor || 'N/A';
+        document.getElementById('p1ItemCount').innerText = `${(data.items || []).length} Products`;
+        document.getElementById('p1Date').innerText = data.date || new Date().toISOString().split('T')[0];
+
+        // Prepare items data model
+        scannedModalItems = (data.items || []).map((item, index) => {
+            const rawName = (item.name || '').trim();
+            const itemNameLower = rawName.toLowerCase();
+            const itemHsn = (item.hsn || '').trim();
+
+            // Match product in existing inventory by exact/fuzzy name or HSN
+            let existingProduct = null;
+            if (itemNameLower) {
+                existingProduct = inventory.find(p => {
+                    const pName = (p.name || '').toLowerCase().trim();
+                    return pName === itemNameLower || pName.includes(itemNameLower) || itemNameLower.includes(pName);
+                });
+            }
+            if (!existingProduct && itemHsn) {
+                existingProduct = inventory.find(p => p.hsn_code && p.hsn_code.trim() === itemHsn);
+            }
+
+            const unitCost = parseFloat(item.unit_price || (existingProduct ? existingProduct.last_cost : 0) || 0);
+            const isExisting = !!existingProduct;
+
+            // Existing products fetch stored wholesale & retail prices.
+            // New products remain completely blank for user to enter.
+            let wholesalePrice = isExisting ? (parseFloat(existingProduct.wholesale_price || 0) || '') : '';
+            let retailPrice = isExisting ? (parseFloat(existingProduct.price || 0) || '') : '';
+            let productCode = isExisting ? existingProduct.code : '';
+
+            // Clean unit
+            let cleanUnit = (item.unit || (existingProduct ? existingProduct.unit : 'Pcs') || 'Pcs');
+            const lowerUnit = cleanUnit.toLowerCase();
+            if (lowerUnit.includes('pkt') || lowerUnit.includes('pack')) cleanUnit = 'Pkt';
+            else if (lowerUnit.includes('kg')) cleanUnit = 'Kg';
+            else if (lowerUnit.includes('ltr') || lowerUnit.includes('litre')) cleanUnit = 'Ltr';
+            else if (lowerUnit.includes('box')) cleanUnit = 'Box';
+            else if (lowerUnit.includes('bag')) cleanUnit = 'Bags';
+            else if (lowerUnit.includes('roll')) cleanUnit = 'Roll';
+            else if (lowerUnit.includes('nos')) cleanUnit = 'Nos';
+            else cleanUnit = 'Pcs';
+
+            // Discount
+            let discPct = 0;
+            if (item.discount_percent !== undefined && item.discount_percent !== null) {
+                discPct = parseFloat(item.discount_percent);
+            } else if (item.discount && item.quantity && unitCost) {
+                const gross = parseFloat(item.quantity) * unitCost;
+                if (gross > 0) discPct = (parseFloat(item.discount) / gross) * 100;
+            }
+
+            return {
+                id: index,
+                name: existingProduct ? existingProduct.name : (rawName || `Product #${index + 1}`),
+                code: productCode,
+                hsn: itemHsn || (existingProduct ? existingProduct.hsn_code : ''),
+                category: existingProduct ? existingProduct.category : 'General',
+                unit: cleanUnit,
+                qty: parseFloat(item.quantity || 1),
+                cost: unitCost,
+                wholesale: wholesalePrice,
+                retail: retailPrice,
+                discount: discPct,
+                gst_percent: parseFloat(item.gst_percent || (existingProduct ? existingProduct.gst_percent : 0) || 0),
+                reorder_level: existingProduct && existingProduct.reorder_level ? existingProduct.reorder_level : 10,
+                is_existing: isExisting
+            };
+        });
+
+        // Show Phase 1
+        p1.style.display = 'flex';
+        p2.style.display = 'none';
+        modal.style.display = 'flex';
+
+        // Start 3.5s countdown
+        const totalDuration = 3500;
+        const startTime = Date.now();
+        const countdownEl = document.getElementById('scanTimerCountdown');
+        const progressFill = document.getElementById('scanProgressFill');
+
+        if (scanCountdownTimer) clearInterval(scanCountdownTimer);
+
+        scanCountdownTimer = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const remaining = Math.max(0, totalDuration - elapsed);
+            const secondsLeft = Math.ceil(remaining / 1000);
+            const progressPercent = Math.min(100, (elapsed / totalDuration) * 100);
+
+            if (countdownEl) countdownEl.innerText = secondsLeft;
+            if (progressFill) progressFill.style.width = `${progressPercent}%`;
+
+            if (elapsed >= totalDuration) {
+                clearInterval(scanCountdownTimer);
+                scanCountdownTimer = null;
+                goToPhase2();
+            }
+        }, 80);
+    }
+
+    function goToPhase2() {
+        if (scanCountdownTimer) {
+            clearInterval(scanCountdownTimer);
+            scanCountdownTimer = null;
+        }
+
+        const p1 = document.getElementById('scanPhase1');
+        const p2 = document.getElementById('scanPhase2');
+
+        p1.style.display = 'none';
+        p2.style.display = 'flex';
+
+        renderScanPricingTable();
+    }
+
+    function renderScanPricingTable(filterText = '') {
+        const tbody = document.getElementById('scanPricingTableBody');
+        tbody.innerHTML = '';
+
+        const filter = (filterText || '').trim().toLowerCase();
+        const filtered = scannedModalItems.filter(item => {
+            if (!filter) return true;
+            return (item.name || '').toLowerCase().includes(filter) ||
+                   (item.code || '').toLowerCase().includes(filter) ||
+                   (item.hsn || '').toLowerCase().includes(filter);
+        });
+
+        document.getElementById('scanModalItemCountBadge').innerText = `${scannedModalItems.length} Products`;
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 2.5rem; color: #64748b;">
+                        <i class="fas fa-search" style="font-size: 1.5rem; margin-bottom: 0.5rem; display: block; opacity: 0.4;"></i>
+                        No matching scanned items found
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        filtered.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            tr.id = `scan-row-${item.id}`;
+
+            const statusBadge = item.is_existing ? 
+                `<span class="badge-existing" id="badge-status-${item.id}"><i class="fas fa-check"></i> EXISTING</span>` :
+                `<span class="badge-new" id="badge-status-${item.id}"><i class="fas fa-plus"></i> NEW</span>`;
+
+            tr.innerHTML = `
+                <td style="text-align: center; color: #64748b; font-weight: 800;">${index + 1}</td>
+                <td>
+                    <input type="text" class="scan-input" list="inventory-codes-list" value="${escapeHtml(item.code || '')}" 
+                           placeholder="Enter Code..." 
+                           oninput="onScanRowCodeChange(${item.id}, this)"
+                           onchange="onScanRowCodeChange(${item.id}, this)">
+                </td>
+                <td>
+                    <div id="scan-name-display-${item.id}" style="font-weight: 700; color: white; margin-bottom: 2px;">${escapeHtml(item.name)}</div>
+                    <div style="font-size: 0.68rem; color: #94a3b8; display: flex; gap: 0.8rem;">
+                        <span>Qty: <strong style="color: #cbd5e1;">${item.qty} ${item.unit}</strong></span>
+                        <span>HSN: <strong style="color: #cbd5e1;">${item.hsn || '-'}</strong></span>
+                        <span>GST: <strong style="color: #cbd5e1;">${item.gst_percent}%</strong></span>
+                    </div>
+                </td>
+                <td>
+                    <div style="font-weight: 800; color: var(--dash-primary); font-size: 0.9rem;">₹ ${(parseFloat(item.cost) || 0).toFixed(2)}</div>
+                </td>
+                <td style="text-align: center;">
+                    ${statusBadge}
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="scan-input" style="color: #38bdf8; font-weight: 800;" 
+                           value="${item.wholesale !== '' && item.wholesale !== null && item.wholesale !== undefined ? item.wholesale : ''}" 
+                           placeholder="0.00" 
+                           oninput="onScanRowPriceChange(${item.id}, 'wholesale', this)">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="scan-input" style="color: #4ade80; font-weight: 800;" 
+                           value="${item.retail !== '' && item.retail !== null && item.retail !== undefined ? item.retail : ''}" 
+                           placeholder="0.00" 
+                           oninput="onScanRowPriceChange(${item.id}, 'retail', this)">
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function onScanRowCodeChange(itemId, inputEl) {
+        const item = scannedModalItems.find(i => i.id === itemId);
+        if (!item) return;
+
+        const enteredCode = (inputEl.value || '').trim();
+        item.code = enteredCode;
+
+        const matched = inventory.find(p => (p.code || '').toLowerCase() === enteredCode.toLowerCase());
+        const statusBadgeEl = document.getElementById(`badge-status-${itemId}`);
+        const nameDisplayEl = document.getElementById(`scan-name-display-${itemId}`);
+
+        if (matched) {
+            item.is_existing = true;
+            item.name = matched.name;
+            item.wholesale = matched.wholesale_price !== null && matched.wholesale_price !== undefined ? parseFloat(matched.wholesale_price) : '';
+            item.retail = matched.price !== null && matched.price !== undefined ? parseFloat(matched.price) : '';
+            item.category = matched.category || item.category;
+            item.unit = matched.unit || item.unit;
+            item.hsn = matched.hsn_code || item.hsn;
+            item.gst_percent = parseFloat(matched.gst_percent || item.gst_percent || 0);
+
+            if (statusBadgeEl) {
+                statusBadgeEl.className = 'badge-existing';
+                statusBadgeEl.innerHTML = '<i class="fas fa-check"></i> EXISTING';
+            }
+
+            if (nameDisplayEl) {
+                nameDisplayEl.innerText = matched.name;
+            }
+
+            // Update row wholesale and retail inputs
+            const row = document.getElementById(`scan-row-${itemId}`);
+            if (row) {
+                const inputs = row.querySelectorAll('input[type="number"]');
+                if (inputs[0]) inputs[0].value = item.wholesale !== '' ? item.wholesale : '';
+                if (inputs[1]) inputs[1].value = item.retail !== '' ? item.retail : '';
+                row.classList.add('scan-row-highlight');
+                setTimeout(() => row.classList.remove('scan-row-highlight'), 1800);
+            }
+        } else {
+            item.is_existing = false;
+            if (statusBadgeEl) {
+                statusBadgeEl.className = 'badge-new';
+                statusBadgeEl.innerHTML = '<i class="fas fa-plus"></i> NEW';
+            }
+        }
+    }
+
+    function onScanRowPriceChange(itemId, type, inputEl) {
+        const item = scannedModalItems.find(i => i.id === itemId);
+        if (!item) return;
+
+        const val = inputEl.value !== '' ? parseFloat(inputEl.value) : '';
+        if (type === 'wholesale') {
+            item.wholesale = val;
+        } else if (type === 'retail') {
+            item.retail = val;
+        }
+    }
+
+    function filterScanItems(query) {
+        renderScanPricingTable(query);
+    }
+
+    function closeScanPricingModal() {
+        if (scanCountdownTimer) {
+            clearInterval(scanCountdownTimer);
+            scanCountdownTimer = null;
+        }
+        document.getElementById('scanPricingModal').style.display = 'none';
+    }
+
+    function applyScanPricingToInvoice() {
+        if (!scannedModalItems || scannedModalItems.length === 0) {
+            closeScanPricingModal();
+            return;
+        }
+
+        const container = document.getElementById('items-container');
+        container.innerHTML = '';
+        itemCount = 0;
+
+        scannedModalItems.forEach(item => {
+            const { block, blockId } = addItemBlock();
+
+            const codeInput = block.querySelector('.m-code');
+            codeInput.value = item.code || '';
+            if (item.is_existing) codeInput.style.borderColor = 'var(--dash-success)';
+
+            block.querySelector('.m-name').value = item.name || '';
+            block.querySelector('.m-hsn').value = item.hsn || '';
+            block.querySelector('.m-category').value = item.category || 'General';
+            block.querySelector('.m-unit').value = item.unit || 'Pcs';
+            block.querySelector('.m-qty').value = item.qty || 1;
+            block.querySelector('.m-cost').value = (parseFloat(item.cost) || 0).toFixed(2);
+            block.querySelector('.m-wholesale').value = item.wholesale !== '' && item.wholesale !== null && item.wholesale !== undefined ? parseFloat(item.wholesale).toFixed(2) : '';
+            block.querySelector('.m-retail').value = item.retail !== '' && item.retail !== null && item.retail !== undefined ? parseFloat(item.retail).toFixed(2) : '';
+            block.querySelector('.m-discount').value = (parseFloat(item.discount) || 0).toFixed(2);
+            block.querySelector('.m-gst-rate').value = parseFloat(item.gst_percent) || 0;
+            block.querySelector('.m-reorder').value = item.reorder_level || 10;
+
+            calculateItemTotals(blockId);
+            block.classList.add('ocr-highlight');
+            setTimeout(() => block.classList.remove('ocr-highlight'), 3000);
+        });
+
+        // Recalculate Grand Totals
+        calculateGrandTotals();
+        closeScanPricingModal();
+
+        // Update OCR Status Badge & Message
+        const statusBadge = document.getElementById('ocrStatusBadge');
+        if (statusBadge) {
+            statusBadge.className = 'ocr-badge ocr-badge-success';
+            statusBadge.innerText = 'Prices Applied';
+        }
+        const successMsg = document.getElementById('ocrSuccessMsg');
+        if (successMsg) {
+            successMsg.style.display = 'flex';
+            const successText = document.getElementById('ocrSuccessText');
+            if (successText) successText.innerText = `Successfully loaded and priced ${scannedModalItems.length} products on this invoice!`;
+        }
+    }
+
+    function openPricingModalFromForm() {
+        const blocks = document.querySelectorAll('.item-block');
+        if (blocks.length === 0) {
+            return alert("No product items on invoice yet. Add an item or scan an invoice first.");
+        }
+
+        scannedModalItems = [];
+        blocks.forEach((block, index) => {
+            const code = (block.querySelector('.m-code').value || '').trim();
+            const name = (block.querySelector('.m-name').value || '').trim();
+            const hsn = (block.querySelector('.m-hsn').value || '').trim();
+            const category = (block.querySelector('.m-category').value || '').trim();
+            const unit = block.querySelector('.m-unit').value || 'Pcs';
+            const qty = parseFloat(block.querySelector('.m-qty').value || 1);
+            const cost = parseFloat(block.querySelector('.m-cost').value || 0);
+            const retail = (block.querySelector('.m-retail').value || '').trim();
+            const wholesale = (block.querySelector('.m-wholesale').value || '').trim();
+            const discount = parseFloat(block.querySelector('.m-discount').value || 0);
+            const gst_percent = parseFloat(block.querySelector('.m-gst-rate').value || 0);
+            const reorder_level = parseFloat(block.querySelector('.m-reorder').value || 10);
+
+            const isExisting = inventory.some(p => (p.code || '').toLowerCase() === code.toLowerCase());
+
+            scannedModalItems.push({
+                id: index,
+                name: name || `Product #${index + 1}`,
+                code: code,
+                hsn: hsn,
+                category: category || 'General',
+                unit: unit,
+                qty: qty,
+                cost: cost,
+                wholesale: wholesale !== '' ? parseFloat(wholesale) : '',
+                retail: retail !== '' ? parseFloat(retail) : '',
+                discount: discount,
+                gst_percent: gst_percent,
+                reorder_level: reorder_level,
+                is_existing: isExisting
+            });
+        });
+
+        const modal = document.getElementById('scanPricingModal');
+        const p1 = document.getElementById('scanPhase1');
+        const p2 = document.getElementById('scanPhase2');
+
+        p1.style.display = 'none';
+        p2.style.display = 'flex';
+        modal.style.display = 'flex';
+
+        renderScanPricingTable();
     }
 
     // OCR Auto-Fill Trigger & Processing
@@ -556,8 +1507,7 @@
             if (res.success && res.data) {
                 const data = res.data;
                 statusBadge.className = 'ocr-badge ocr-badge-success';
-                statusBadge.innerText = 'Auto-Filled';
-                successMsg.style.display = 'flex';
+                statusBadge.innerText = 'Scanned';
 
                 // Auto-fill Header
                 if (data.invoice_no) fillAndHighlight('#invoice-no', data.invoice_no);
@@ -580,129 +1530,13 @@
                     }
                 }
 
-                // Auto-populate Line Items
-                if (data.items && data.items.length > 0) {
-                    const container = document.getElementById('items-container');
-                    container.innerHTML = '';
-                    itemCount = 0;
-
-                    data.items.forEach((item, idx) => {
-                        const { block, blockId } = addItemBlock();
-
-                        // Try to match product in existing inventory by name or HSN
-                        const itemNameLower = (item.name || '').toLowerCase().trim();
-                        let existingProduct = null;
-
-                        if (itemNameLower) {
-                            existingProduct = inventory.find(p => {
-                                const pName = (p.name || '').toLowerCase().trim();
-                                return pName === itemNameLower || pName.includes(itemNameLower) || itemNameLower.includes(pName);
-                            });
-                        }
-
-                        if (!existingProduct && item.hsn) {
-                            existingProduct = inventory.find(p => p.hsn_code && p.hsn_code.trim() === item.hsn.trim());
-                        }
-
-                        // Code
-                        const codeInput = block.querySelector('.m-code');
-                        if (existingProduct) {
-                            codeInput.value = existingProduct.code;
-                            codeInput.style.borderColor = 'var(--dash-success)';
-                        } else {
-                            // Suggest code based on HSN or initials
-                            if (item.hsn) {
-                                codeInput.value = `HSN-${item.hsn}`;
-                            } else {
-                                const initials = item.name ? item.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 4) : 'PRD';
-                                codeInput.value = `${initials}-${Math.floor(100 + Math.random() * 900)}`;
-                            }
-                        }
-
-                        // Product Name
-                        const nameInput = block.querySelector('.m-name');
-                        nameInput.value = (existingProduct ? existingProduct.name : item.name) || '';
-
-                        // HSN
-                        const hsnInput = block.querySelector('.m-hsn');
-                        hsnInput.value = item.hsn || (existingProduct ? existingProduct.hsn_code : '') || '';
-
-                        // Category
-                        const catInput = block.querySelector('.m-category');
-                        catInput.value = (existingProduct ? existingProduct.category : 'General') || 'General';
-
-                        // Unit
-                        const unitSelect = block.querySelector('.m-unit');
-                        const rawUnit = (item.unit || (existingProduct ? existingProduct.unit : 'Pcs') || 'Pcs').toLowerCase();
-                        if (rawUnit.includes('pkt') || rawUnit.includes('pack')) unitSelect.value = 'Pkt';
-                        else if (rawUnit.includes('kg')) unitSelect.value = 'Kg';
-                        else if (rawUnit.includes('ltr') || rawUnit.includes('litre')) unitSelect.value = 'Ltr';
-                        else if (rawUnit.includes('box')) unitSelect.value = 'Box';
-                        else if (rawUnit.includes('bag')) unitSelect.value = 'Bags';
-                        else if (rawUnit.includes('roll')) unitSelect.value = 'Roll';
-                        else if (rawUnit.includes('nos')) unitSelect.value = 'Nos';
-                        else unitSelect.value = 'Pcs';
-
-                        // Quantity & Cost
-                        const qtyInput = block.querySelector('.m-qty');
-                        qtyInput.value = item.quantity || 1;
-
-                        const costInput = block.querySelector('.m-cost');
-                        const unitCost = item.unit_price || (existingProduct ? existingProduct.last_cost : 0) || 0;
-                        costInput.value = parseFloat(unitCost).toFixed(2);
-
-                        // Retail & Wholesale
-                        const retailInput = block.querySelector('.m-retail');
-                        const wholesaleInput = block.querySelector('.m-wholesale');
-                        if (existingProduct) {
-                            retailInput.value = existingProduct.price || 0;
-                            wholesaleInput.value = existingProduct.wholesale_price || 0;
-                        } else {
-                            const costNum = parseFloat(unitCost) || 0;
-                            retailInput.value = costNum > 0 ? (costNum * 1.25).toFixed(2) : '0.00';
-                            wholesaleInput.value = costNum > 0 ? (costNum * 1.15).toFixed(2) : '0.00';
-                        }
-
-                        // Discount %
-                        const discountInput = block.querySelector('.m-discount');
-                        let discPct = 0;
-                        if (item.discount_percent !== undefined && item.discount_percent !== null) {
-                            discPct = parseFloat(item.discount_percent);
-                        } else if (item.discount && item.quantity && unitCost) {
-                            const gross = parseFloat(item.quantity) * parseFloat(unitCost);
-                            if (gross > 0) {
-                                discPct = (parseFloat(item.discount) / gross) * 100;
-                            }
-                        }
-                        if (discountInput) {
-                            discountInput.value = discPct > 0 ? discPct.toFixed(2) : '0';
-                        }
-
-                        // GST Rate
-                        const gstRateInput = block.querySelector('.m-gst-rate');
-                        const gstPct = parseFloat(item.gst_percent) || (existingProduct ? parseFloat(existingProduct.gst_percent) : 0) || 0;
-                        gstRateInput.value = gstPct;
-
-                        // Reorder level
-                        const reorderInput = block.querySelector('.m-reorder');
-                        if (existingProduct && existingProduct.reorder_level) {
-                            reorderInput.value = existingProduct.reorder_level;
-                        }
-
-                        // Calculate item GST and highlight
-                        calculateItemTotals(blockId);
-                        block.classList.add('ocr-highlight');
-                        setTimeout(() => block.classList.remove('ocr-highlight'), 3000);
-                    });
-                }
-
                 // Round off
                 if (data.round_off && parseFloat(data.round_off) !== 0) {
                     fillAndHighlight('#round-off', parseFloat(data.round_off).toFixed(2));
                 }
 
-                // Recalculate Grand Totals
-                calculateGrandTotals();
+                // Open Post-Scan 2-Phase Popup Modal (Phase 1 -> 3.5s -> Phase 2 Pricing Console)
+                openScanPricingModal(data);
             } else {
                 statusBadge.className = 'ocr-badge ocr-badge-error';
                 statusBadge.innerText = 'Scan Failed';

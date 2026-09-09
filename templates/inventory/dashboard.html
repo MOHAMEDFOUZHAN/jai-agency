@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Inventory Intelligence | JAI AGENCIES{% endblock %}
+{% block title %}Stock Dashboard | JAI AGENCIES{% endblock %}
 
 {% block nav_links %}
 <a href="/inventory" class="active">Dashboard</a>
@@ -15,101 +15,107 @@
 {% block content %}
 <div class="dashboard-wrapper">
     {% if stats.expired_count > 0 %}
-    <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid var(--dash-danger); padding: 1.5rem; border-radius: 24px; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 1.5rem; animation: pulseGlow 2s infinite;">
-        <div style="width: 50px; height: 50px; background: var(--dash-danger); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; flex-shrink: 0;">
-            <i class="fas fa-biohazard"></i>
+    <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid var(--dash-danger); padding: 1rem 1.5rem; border-radius: 16px; display: flex; align-items: center; gap: 1rem; animation: pulseGlow 2s infinite;">
+        <div style="width: 40px; height: 40px; background: var(--dash-danger); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: white; flex-shrink: 0;">
+            <i class="fas fa-exclamation-triangle"></i>
         </div>
         <div>
-            <h4 style="margin: 0; color: white;">Critical System Alert: Expiry Detected</h4>
-            <p style="margin: 5px 0 0; color: var(--dash-secondary); font-size: 0.85rem; font-weight: 700;">You have <strong>{{ stats.expired_count }}</strong> batches that have already passed their expiry date. Immediate action required.</p>
+            <h4 style="margin: 0; color: white; font-size: 0.95rem;">Expired Stock Warning</h4>
+            <p style="margin: 2px 0 0; color: #fca5a5; font-size: 0.8rem;">You have <strong>{{ stats.expired_count }}</strong> batches that have passed expiry date.</p>
         </div>
-        <a href="/inventory/live-stock" class="btn-neural" style="margin-left: auto; background: var(--dash-danger); border: none;">RECONCILE NOW</a>
+        <a href="/inventory/live-stock" class="btn-neural" style="margin-left: auto; background: var(--dash-danger); border: none; font-size: 0.75rem; padding: 6px 14px;">REVIEW NOW</a>
     </div>
     {% endif %}
 
+    <!-- Modern Compact Header (No bulky boxes, No unwanted print button) -->
     <div class="dash-hero">
         <div class="hero-main">
-            <span class="hero-kicker">Inventory Command</span>
-            <h1>Stock overview and operational watchlist</h1>
-            <p>Keep reorder risks, valuation, and expiry movement visible in a calmer control-room layout.</p>
+            <h1>Stock Overview</h1>
+            <p>Live inventory status, reorder alerts & supplier balances.</p>
         </div>
         <div class="hero-actions">
-            <button onclick="window.print()" class="btn-neural hero-btn">
-                <i class="fas fa-print"></i> PRINT
-            </button>
+            <a href="/inventory/invoice/add" class="btn-neural primary hero-btn" style="background: var(--dash-primary); color: white; text-decoration: none;">
+                <i class="fas fa-plus-circle" style="margin-right: 6px;"></i> NEW INVOICE
+            </a>
+            <a href="/inventory/live-stock" class="btn-neural hero-btn" style="text-decoration: none;">
+                <i class="fas fa-stream" style="margin-right: 6px;"></i> LIVE FEED
+            </a>
         </div>
     </div>
 
+    <!-- Sleek Quick Status Bar -->
     <div class="hero-strip">
         <div class="hero-strip-item">
-            <span class="hero-strip-label">Active SKUs</span>
+            <span class="hero-strip-label"><i class="fas fa-boxes" style="color: var(--dash-primary); margin-right: 4px;"></i> Active Items</span>
             <strong>{{ stats.total_skus }}</strong>
         </div>
         <div class="hero-strip-item">
-            <span class="hero-strip-label">Low Stock</span>
-            <strong>{{ stats.low_stock_count }} items</strong>
+            <span class="hero-strip-label"><i class="fas fa-level-down-alt" style="color: var(--dash-danger); margin-right: 4px;"></i> Low Stock</span>
+            <strong style="color: var(--dash-danger);">{{ stats.low_stock_count }} items</strong>
         </div>
         <div class="hero-strip-item">
-            <span class="hero-strip-label">Already Expired</span>
+            <span class="hero-strip-label"><i class="fas fa-calendar-times" style="color: var(--dash-danger); margin-right: 4px;"></i> Expired</span>
             <strong style="color: var(--dash-danger);">{{ stats.expired_count }} batches</strong>
         </div>
         <div class="hero-strip-item">
-            <span class="hero-strip-label">Expiring Soon</span>
+            <span class="hero-strip-label"><i class="fas fa-clock" style="color: var(--dash-warning); margin-right: 4px;"></i> Expiring Soon</span>
             <strong style="color: var(--dash-warning);">{{ stats.expiring_soon_count }} batches</strong>
         </div>
         <div class="hero-strip-item">
-            <span class="hero-strip-label">Credit Due (7d+)</span>
-            <strong style="color: var(--dash-warning);">{{ stats.credit_overdue }} invoices</strong>
+            <span class="hero-strip-label"><i class="fas fa-file-invoice-dollar" style="color: #38bdf8; margin-right: 4px;"></i> Due (7d+)</span>
+            <strong style="color: #38bdf8;">{{ stats.credit_overdue }} bills</strong>
         </div>
         <div class="hero-strip-item">
-            <span class="hero-strip-label">Credit Overdue (14d+)</span>
-            <strong style="color: var(--dash-danger); animation: blink 1s infinite;">{{ stats.credit_critical }} critical</strong>
+            <span class="hero-strip-label"><i class="fas fa-exclamation-circle" style="color: var(--dash-danger); margin-right: 4px;"></i> Overdue (14d+)</span>
+            <strong style="color: var(--dash-danger); {% if stats.credit_critical > 0 %}animation: blink 1s infinite;{% endif %}">{{ stats.credit_critical }} critical</strong>
         </div>
     </div>
 
+    <!-- 3 Modern KPI Cards with Simple Words -->
     <div class="neural-grid" style="grid-template-columns: repeat(3, 1fr);">
         <div class="neural-card" style="--accent-color: var(--dash-primary);">
             <div class="card-meta">
-                <span class="card-label">Global SKU Count</span>
-                <div class="card-icon"><i class="fas fa-fingerprint"></i></div>
+                <span class="card-label">Total Items</span>
+                <div class="card-icon"><i class="fas fa-box-open"></i></div>
             </div>
             <div class="card-value">{{ stats.total_skus }}</div>
-            <div class="card-sub">Active master catalog indices</div>
+            <div class="card-sub">Registered products in catalog</div>
         </div>
 
         <div class="neural-card" style="--accent-color: var(--dash-danger);">
             <div class="card-meta">
-                <span class="card-label">Critical Vulnerability</span>
-                <div class="card-icon"><i class="fas fa-level-down-alt"></i></div>
+                <span class="card-label">Low Stock Alerts</span>
+                <div class="card-icon"><i class="fas fa-exclamation-circle"></i></div>
             </div>
-            <div class="card-value">{{ stats.low_stock_count }}</div>
-            <div class="card-sub">Units below reorder threshold</div>
+            <div class="card-value" style="color: var(--dash-danger);">{{ stats.low_stock_count }}</div>
+            <div class="card-sub">Items below minimum stock limit</div>
         </div>
 
         <div class="neural-card" style="--accent-color: var(--dash-warning);">
             <div class="card-meta">
-                <span class="card-label">Expiry Quarantine</span>
-                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                <span class="card-label">Expiring Soon</span>
+                <div class="card-icon"><i class="fas fa-hourglass-half"></i></div>
             </div>
-            <div class="card-value">{{ stats.expiring_count }}</div>
-            <div class="card-sub">Batches nearing end of life</div>
+            <div class="card-value" style="color: var(--dash-warning);">{{ stats.expiring_count }}</div>
+            <div class="card-sub">Batches nearing expiry date</div>
         </div>
     </div>
 
+    <!-- 3 Modern Tables (Low Stock, Expiry, Supplier Credits) -->
     <div class="analytics-block inventory-analytics">
         <div class="insight-card">
             <div class="panel-heading panel-heading-row">
-                <span class="card-label"><i class="fas fa-exclamation-triangle" style="color: var(--dash-danger); margin-right: 8px;"></i> Reorder Watchlist</span>
-                <span class="badge badge-danger">Low Stock</span>
+                <span class="card-label"><i class="fas fa-exclamation-triangle" style="color: var(--dash-danger); margin-right: 8px;"></i> Low Stock Items</span>
+                <span class="badge badge-danger">Needs Reorder</span>
             </div>
 
             <div class="neural-table-container">
                 <table class="neural-table">
                     <thead>
                         <tr>
-                            <th>PRODUCT / SKU</th>
+                            <th>ITEM / CODE</th>
                             <th>CATEGORY</th>
-                            <th style="text-align: right;">QTY</th>
+                            <th style="text-align: right;">STOCK</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -117,19 +123,21 @@
                         <tr>
                             <td>
                                 <div style="font-weight: 700; color: white;">{{ item.name }}</div>
-                                <div style="font-size: 0.7rem; color: var(--dash-secondary); font-family: 'DM Mono';">SKU_{{ item.code }}</div>
+                                <div style="font-size: 0.68rem; color: #94a3b8; font-family: 'DM Mono';">#{{ item.code }}</div>
                             </td>
                             <td><span class="badge badge-soft">{{ item.category }}</span></td>
                             <td style="text-align: right;">
-                                <div style="font-weight: 950; color: var(--dash-danger); font-size: 1.1rem; font-family: 'Outfit';">{{ item.stock }} <span style="font-size: 0.7rem; opacity: 0.6;">{{ item.unit }}</span></div>
+                                <div style="font-weight: 900; color: var(--dash-danger); font-size: 1rem;">
+                                    {{ item.stock }} <span style="font-size: 0.7rem; color: #94a3b8;">{{ item.unit }}</span>
+                                </div>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
                             <td colspan="3" style="padding: 0;">
                                 <div class="table-empty-state">
-                                    <i class="fas fa-check-double"></i>
-                                    <span>Stock levels OK</span>
+                                    <i class="fas fa-check-double" style="color: var(--dash-success);"></i>
+                                    <span>All stock levels are healthy</span>
                                 </div>
                             </td>
                         </tr>
@@ -142,15 +150,15 @@
         <div class="insight-card">
             <div class="panel-heading panel-heading-row">
                 <span class="card-label"><i class="fas fa-hourglass-end" style="color: var(--dash-warning); margin-right: 8px;"></i> Expiry Tracker</span>
-                <span class="badge badge-warning">Tracking</span>
+                <span class="badge badge-warning">Near Expiry</span>
             </div>
 
             <div class="neural-table-container">
                 <table class="neural-table">
                     <thead>
                         <tr>
-                            <th>PRODUCT / BATCH</th>
-                            <th style="text-align: right;">EXPIRY DATE</th>
+                            <th>ITEM / BATCH</th>
+                            <th style="text-align: right;">EXPIRY & DAYS LEFT</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -158,12 +166,12 @@
                         <tr>
                             <td>
                                 <div style="font-weight: 700; color: white;">{{ item.name }}</div>
-                                <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: 'DM Mono';">LOT_{{ item.batch_id }}</div>
+                                <div style="font-size: 0.68rem; color: #94a3b8; font-family: 'DM Mono';">Batch: {{ item.batch_id }}</div>
                             </td>
                             <td style="text-align: right;">
-                                <div style="font-weight: 800; color: white; font-family: 'Outfit';">{{ item.date }}</div>
-                                <div class="{% if item.days_remaining < 0 %}text-danger{% else %}text-warning{% endif %} overdue-label">
-                                    {{ item.days_remaining }} DAYS REMAINING
+                                <div style="font-weight: 800; color: white; font-size: 0.85rem;">{{ item.date }}</div>
+                                <div class="{% if item.days_remaining < 0 %}text-danger{% else %}text-warning{% endif %} overdue-label" style="font-size: 0.68rem; font-weight: 800;">
+                                    {{ item.days_remaining }} DAYS LEFT
                                 </div>
                             </td>
                         </tr>
@@ -171,8 +179,8 @@
                         <tr>
                             <td colspan="2" style="padding: 0;">
                                 <div class="table-empty-state">
-                                    <i class="fas fa-shield-alt"></i>
-                                    <span>No items expiring</span>
+                                    <i class="fas fa-shield-alt" style="color: var(--dash-success);"></i>
+                                    <span>No batches near expiry</span>
                                 </div>
                             </td>
                         </tr>
@@ -184,16 +192,16 @@
 
         <div class="insight-card">
             <div class="panel-heading panel-heading-row">
-                <span class="card-label"><i class="fas fa-money-bill-wave" style="color: var(--dash-success); margin-right: 8px;"></i> Credit Watchlist</span>
-                <span class="badge badge-success">Payments</span>
+                <span class="card-label"><i class="fas fa-money-bill-wave" style="color: var(--dash-success); margin-right: 8px;"></i> Supplier Balances</span>
+                <span class="badge badge-success">Pending Bills</span>
             </div>
 
             <div class="neural-table-container">
                 <table class="neural-table">
                     <thead>
                         <tr>
-                            <th>INV / SUPPLIER</th>
-                            <th style="text-align: right;">BALANCE DUE</th>
+                            <th>SUPPLIER & INV #</th>
+                            <th style="text-align: right;">BAL DUE</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -201,14 +209,14 @@
                         <tr>
                             <td>
                                 <div style="font-weight: 700; color: white;">{{ item.supplier_name }}</div>
-                                <div style="font-size: 0.7rem; color: var(--text-tertiary); font-family: 'DM Mono';">#{{ item.invoice_no }}</div>
+                                <div style="font-size: 0.68rem; color: #94a3b8; font-family: 'DM Mono';">Inv #{{ item.invoice_no }}</div>
                             </td>
                             <td style="text-align: right;">
-                                <div class="balance-due {% if item.is_critical %}text-danger blink-crit{% endif %}">
+                                <div class="balance-due {% if item.is_critical %}text-danger blink-crit{% endif %}" style="font-size: 0.95rem;">
                                     ₹ {{ "{:,.2f}".format(item.balance) }}
                                 </div>
-                                <div class="overdue-label {% if item.is_critical %}text-danger{% else %}text-secondary-label{% endif %}">
-                                    {{ item.age }} DAYS OVERDUE
+                                <div class="overdue-label {% if item.is_critical %}text-danger{% else %}text-secondary-label{% endif %}" style="font-size: 0.65rem;">
+                                    {{ item.age }} DAYS DUE
                                 </div>
                             </td>
                         </tr>
@@ -216,8 +224,8 @@
                         <tr>
                             <td colspan="2" style="padding: 0;">
                                 <div class="table-empty-state">
-                                    <i class="fas fa-hand-holding-usd"></i>
-                                    <span>All credits cleared</span>
+                                    <i class="fas fa-hand-holding-usd" style="color: var(--dash-success);"></i>
+                                    <span>All supplier dues cleared</span>
                                 </div>
                             </td>
                         </tr>
@@ -226,18 +234,20 @@
                 </table>
             </div>
             {% if outstanding_credits %}
-            <div style="margin-top: 1.5rem; text-align: right;">
-                <a href="/inventory/credit-purchase" style="font-size: 0.7rem; font-weight: 900; color: var(--dash-primary); text-transform: uppercase; letter-spacing: 2px; text-decoration: none;">
-                    VIEW CREDIT LOG <i class="fas fa-arrow-right" style="margin-left: 5px;"></i>
+            <div style="margin-top: 1rem; text-align: right;">
+                <a href="/inventory/credit-purchase" style="font-size: 0.72rem; font-weight: 800; color: var(--dash-primary); text-transform: uppercase; letter-spacing: 1px; text-decoration: none;">
+                    PAYMENTS & CREDIT LOG <i class="fas fa-arrow-right" style="margin-left: 4px;"></i>
                 </a>
             </div>
             {% endif %}
         </div>
     </div>
+</div>
+
 <style>
     @keyframes pulseGlow {
         0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-        70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+        70% { transform: scale(1.01); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
         100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
     @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
@@ -248,17 +258,15 @@
     .blink-crit { animation: blink 1s infinite; }
     
     .overdue-label {
-        font-size: 0.7rem; 
-        font-weight: 900; 
-        letter-spacing: 1px;
+        font-size: 0.68rem; 
+        font-weight: 800; 
+        letter-spacing: 0.5px;
         text-transform: uppercase;
     }
     .balance-due {
-        font-weight: 950;
+        font-weight: 900;
         color: white;
-        font-size: 1.1rem;
-        font-family: 'Outfit';
+        font-size: 0.95rem;
     }
 </style>
 {% endblock %}
-

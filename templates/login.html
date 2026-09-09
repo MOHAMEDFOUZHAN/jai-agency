@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Secure Entry | JAI AGENCIES{% endblock %}
+{% block title %}Login | JAI AGENCIES{% endblock %}
 
 {% block content %}
 <style>
@@ -257,16 +257,16 @@
     <div class="login-card" id="loginCard">
         <div class="login-branding">
             <div class="login-logo-pnl" style="background: #ffffff;">
-                <img src="{{ url_for('static', filename='css/images/logo.ico') }}" alt="MPLAE PRO Logo">
+                <img src="{{ url_for('static', filename='css/images/logo.ico') }}" alt="JAI AGENCIES Logo">
             </div>
-            <h1 class="login-title">Login</h1>
-            <p class="login-subtitle">Sales Management System</p>
+            <h1 class="login-title">Sign In</h1>
+            <p class="login-subtitle">Sales & Inventory System</p>
         </div>
 
         {% if error %}
-        <div class="error-toast">
-            <i class="fas fa-shield-virus"></i>
-            <span>Identification failed. Access is restricted.</span>
+        <div class="error-toast" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); padding: 10px 14px; border-radius: 12px; margin-bottom: 1.2rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Invalid username or password.</span>
         </div>
         {% endif %}
 
@@ -274,43 +274,42 @@
             <div class="form-control-group">
                 <div class="input-wrapper">
                     <input type="text" id="usernameInput" name="username" class="form-input" placeholder="Username" required autocomplete="username" autofocus>
-                    <i class="fas fa-user-shield"></i>
+                    <i class="fas fa-user"></i>
                 </div>
             </div>
 
             <div class="form-control-group">
                 <div class="input-wrapper">
                     <input type="password" name="password" class="form-input" placeholder="Password" required autocomplete="current-password">
-                    <i class="fas fa-key"></i>
+                    <i class="fas fa-lock"></i>
                 </div>
             </div>
 
             <button type="submit" class="btn-authenticate">
-                <span>AUTHENTICATE</span>
-                <i class="fas fa-chevron-right" style="font-size: 0.75rem; opacity: 0.7;"></i>
+                <span>SIGN IN</span>
+                <i class="fas fa-arrow-right" style="font-size: 0.85rem;"></i>
             </button>
         </form>
 
         <div class="login-footer">
-            <p style="font-family: 'Gill Sans MT', 'Gill Sans', Calibri, sans-serif;">© 2026 Managed by MPLAE PRO</p>
-            <p>Protocol V9.2 • End-to-End Encrypted</p>
+            <p>© 2026 JAI AGENCIES</p>
             <a class="auth-mgmt-link" onclick="openAuthModal()">
-                <i class="fas fa-key-skeleton" style="margin-right: 6px;"></i> MANAGE_CREDENTIALS
+                <i class="fas fa-key" style="margin-right: 6px;"></i> Change Password
             </a>
         </div>
     </div>
 </div>
 
-<!-- Auth Management Modal -->
+<!-- Password Change Modal -->
 <div class="auth-modal-overlay" id="authModal">
     <div class="auth-modal">
         <div class="modal-hdr">
-            <h2>Security Configuration</h2>
+            <h2>Change Password</h2>
             <button class="close-auth-modal" onclick="closeAuthModal()">&times;</button>
         </div>
 
         <div class="auth-form-row">
-            <label>TARGET_AUTHORIZATION_ROLE</label>
+            <label>Select Role</label>
             <select id="update_role" class="auth-select">
                 <option value="sales">Sales Executive</option>
                 <option value="inventory">Inventory Manager</option>
@@ -319,30 +318,30 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
             <div class="auth-form-row" style="margin-bottom: 0;">
-                <label>CURRENT_USERNAME</label>
-                <input type="text" id="old_user" class="auth-input" placeholder="Current user">
+                <label>Current Username</label>
+                <input type="text" id="old_user" class="auth-input" placeholder="Current username">
             </div>
             <div class="auth-form-row" style="margin-bottom: 0;">
-                <label>CURRENT_PASSWORD</label>
+                <label>Current Password</label>
                 <input type="password" id="old_pass" class="auth-input" placeholder="••••••••">
             </div>
         </div>
 
-        <div style="background: rgba(0,0,0,0.02); height: 1px; margin: 2rem 0;"></div>
+        <div style="background: rgba(0,0,0,0.06); height: 1px; margin: 1.5rem 0;"></div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
             <div class="auth-form-row" style="margin-bottom: 0;">
-                <label>NEW_IDENTITY</label>
+                <label>New Username</label>
                 <input type="text" id="new_user" class="auth-input" placeholder="New username">
             </div>
             <div class="auth-form-row" style="margin-bottom: 0;">
-                <label>NEW_ACCESS_KEY</label>
+                <label>New Password</label>
                 <input type="password" id="new_pass" class="auth-input" placeholder="New password">
             </div>
         </div>
 
-        <button class="btn btn-primary btn-lg" style="width: 100%; height: 52px;" onclick="commitAuthUpdate()">
-            APPLY_SECURITY_OVERRIDE
+        <button class="btn btn-primary btn-lg" style="width: 100%; height: 52px; font-weight: 700; background: var(--dash-primary, #6366f1); border: none; border-radius: 14px; color: white; cursor: pointer;" onclick="commitAuthUpdate()">
+            Save Changes
         </button>
     </div>
 </div>
@@ -385,7 +384,7 @@
         };
 
         if (Object.values(payload).some(v => !v)) {
-            alert("ALL_FIELDS_REQUIRED: Verification failed.");
+            alert("Please fill in all fields.");
             return;
         }
 
@@ -397,13 +396,13 @@
             });
             const data = await res.json();
             if (data.success) {
-                alert("Security credentials updated successfully.");
+                alert("Password updated successfully.");
                 location.reload();
             } else {
-                alert("ACCESS_DENIED: " + data.message);
+                alert(data.message || "Failed to update password.");
             }
         } catch (e) {
-            alert("SYSTEM_SYNC_ERROR: Neural handshake failed.");
+            alert("Connection error. Please try again.");
         }
     }
 </script>

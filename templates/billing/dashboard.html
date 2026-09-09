@@ -1,38 +1,40 @@
 {% extends "base.html" %}
 
-{% block title %}Neural Analytics | JAI AGENCIES{% endblock %}
+{% block title %}Sales Dashboard | JAI AGENCIES{% endblock %}
 
 {% block content %}
 <div class="dashboard-wrapper">
+    <!-- Sleek Compact Sales Header -->
     <div class="dash-hero">
         <div class="hero-main">
-            <span class="hero-kicker">Billing Control</span>
-            <h1>Sales Analysis for {{ display_date }}</h1>
+            <h1>Sales Overview</h1>
+            <p>Today's revenue, bill counts and live payment tracking • <strong>{{ display_date }}</strong></p>
         </div>
         <div class="hero-actions">
             <button onclick="window.print()" class="btn-intelligence secondary hero-btn">
-                <i class="fas fa-print"></i> Print Summary
+                <i class="fas fa-print"></i> Print
             </button>
             <button onclick="sendMail()" class="btn-intelligence primary hero-btn hero-btn-sync">
-                <i class="fas fa-sync-alt"></i> Sync Report
+                <i class="fas fa-envelope"></i> Email Report
             </button>
         </div>
     </div>
 
+    <!-- 4 Clean Modern Sales KPI Cards -->
     <div class="neural-grid">
         <div class="neural-card" style="--accent-color: #10b981;">
             <div class="card-meta">
                 <span class="card-label">Total Sales</span>
-                <div class="card-icon"><i class="fas fa-wave-square"></i></div>
+                <div class="card-icon"><i class="fas fa-wallet"></i></div>
             </div>
-            <div class="card-value">&#8377;{{ "{:,.2f}".format(total_today) }}</div>
+            <div class="card-value" style="color: #34d399;">&#8377;{{ "{:,.2f}".format(total_today) }}</div>
             <div class="card-sub"><span class="card-state is-live">Live</span> Revenue booked today</div>
         </div>
 
         <div class="neural-card" style="--accent-color: #6366f1;">
             <div class="card-meta">
                 <span class="card-label">Total Bills</span>
-                <div class="card-icon"><i class="fas fa-project-diagram"></i></div>
+                <div class="card-icon"><i class="fas fa-receipt"></i></div>
             </div>
             <div class="card-value">{{ count_today }}</div>
             <div class="card-sub">Bills generated today</div>
@@ -40,29 +42,30 @@
 
         <div class="neural-card" style="--accent-color: #f59e0b;">
             <div class="card-meta">
-                <span class="card-label">Average Order Value</span>
-                <div class="card-icon"><i class="fas fa-chart-area"></i></div>
+                <span class="card-label">Avg Bill Value</span>
+                <div class="card-icon"><i class="fas fa-chart-line"></i></div>
             </div>
             <div class="card-value">&#8377;{{ "{:,.2f}".format(average_sale) }}</div>
-            <div class="card-sub">Average amount per bill</div>
+            <div class="card-sub">Average value per customer</div>
         </div>
 
         <div class="neural-card" style="--accent-color: #0ea5e9;">
             <div class="card-meta">
-                <span class="card-label">Top Product</span>
-                <div class="card-icon"><i class="fas fa-medal"></i></div>
+                <span class="card-label">Top Selling Item</span>
+                <div class="card-icon"><i class="fas fa-fire"></i></div>
             </div>
             <div class="card-value card-value-compact">{{ top_moving }}</div>
-            <div class="card-sub">Most sold item today</div>
+            <div class="card-sub">Most sold product today</div>
         </div>
     </div>
 
+    <!-- Analytics Block: Sales Trend Chart & Split Breakdown -->
     <div class="analytics-block">
         <div class="chart-vessel">
             <div class="vessel-header">
                 <div class="vessel-title">
-                    <i class="fas fa-brain" style="color: var(--dash-primary);"></i>
-                    Sales Trend
+                    <i class="fas fa-chart-area" style="color: var(--dash-primary);"></i>
+                    Daily Sales Trend
                 </div>
                 <div class="badge badge-soft">Last 7 Days</div>
             </div>
@@ -72,17 +75,17 @@
         <div class="insight-vessel">
             <div class="insight-card">
                 <div class="panel-heading">
-                    <h4 class="card-label">Settlement Distribution</h4>
-                    <span class="panel-meta">Payment mix today</span>
+                    <h4 class="card-label">Payment Modes</h4>
+                    <span class="panel-meta">Cash vs Digital</span>
                 </div>
                 <div class="split-list">
-                    {% set mode_labels = {'CASH': 'CASH PAYMENTS', 'UPI': 'DIGITAL UPI', 'CARD': 'CREDIT/DEBIT CARD', 'CREDIT': 'CREDIT SALES'} %}
+                    {% set mode_labels = {'CASH': 'CASH', 'UPI': 'UPI (GPAY / PHONEPE)', 'CARD': 'CARD', 'CREDIT': 'CREDIT SALE'} %}
                     {% for mode, val in payment_split.items() %}
                     {% set split_pct = (val / total_today * 100) if total_today > 0 else 0 %}
                     <div class="split-item">
                         <div class="split-info">
-                            <span style="color: white; opacity: 0.8;">{{ mode_labels.get(mode, mode) }}</span>
-                            <span style="color: var(--dash-secondary);">&#8377;{{ "{:,.0f}".format(val) }}</span>
+                            <span style="color: white; font-weight: 700;">{{ mode_labels.get(mode, mode) }}</span>
+                            <span style="color: var(--dash-secondary); font-weight: 800;">&#8377;{{ "{:,.0f}".format(val) }} <small style="color: #64748b;">({{ "%.0f"|format(split_pct) }}%)</small></span>
                         </div>
                         <div class="split-track">
                             <div class="split-fill" style="width: {{ split_pct }}%;"></div>
@@ -94,11 +97,11 @@
 
             <div class="insight-card {% if low_stock_alert > 0 %}is-alert{% endif %}">
                 <div class="panel-heading">
-                    <h4 class="card-label">Stock Inventory</h4>
+                    <h4 class="card-label">Low Stock Warning</h4>
                     {% if low_stock_alert > 0 %}
-                    <span class="panel-alert">Alert</span>
+                    <span class="panel-alert">{{ low_stock_alert }} items</span>
                     {% else %}
-                    <span class="panel-meta">Stable</span>
+                    <span class="panel-meta">Healthy</span>
                     {% endif %}
                 </div>
                 {% if low_stock_items %}
@@ -118,7 +121,7 @@
                     <div class="empty-state-icon is-success">
                         <i class="fas fa-check"></i>
                     </div>
-                    <p>Stock levels are healthy</p>
+                    <p>All stock levels are healthy</p>
                 </div>
                 {% endif %}
             </div>
@@ -132,7 +135,7 @@
 <script>
     const chartOptions = {
         series: [{
-            name: 'Stream Volume',
+            name: 'Daily Sales (₹)',
             data: JSON.parse('{{ chart_values | tojson | safe }}')
         }],
         chart: {
@@ -194,15 +197,14 @@
     new ApexCharts(document.querySelector('#neural-chart'), chartOptions).render();
 
     async function sendMail() {
-        if (!confirm("Synchronize local intelligence nodes with master backup?")) return;
+        if (!confirm("Send today's sales report email?")) return;
         try {
             const res = await fetch('/api/send-report', { method: 'POST' });
             const data = await res.json();
-            alert(data.success ? "Neural Sync Complete." : "Node Error: " + data.message);
+            alert(data.success ? "Sales report email sent successfully." : "Error: " + data.message);
         } catch (e) {
-            alert("Core Comms Disrupted.");
+            alert("Failed to send report. Please check internet connection.");
         }
     }
 </script>
 {% endblock %}
-
